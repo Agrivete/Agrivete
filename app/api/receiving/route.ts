@@ -11,6 +11,7 @@ import { Replenishment } from '@/models/Replenishment';
 import { Supplier } from '@/models/Supplier';
 import { InventoryBalance } from '@/models/InventoryBalance';
 import { parseJsonBody } from '@/lib/parseJson';
+import { rateLimit, getUserRateLimitKey } from '@/lib/rateLimit';
 import mongoose from 'mongoose';
 
 export async function GET(req: NextRequest) {
@@ -48,6 +49,15 @@ export async function POST(req: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     if (!checkPermission(user.role, 'record_receiving'))
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
+    // Rate limit: 30 requests per user per minute
+    const rl = rateLimit(getUserRateLimitKey(req, user.userId), 30, 60 * 1000);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } }
+      );
+    }
 
     const parsedBody = await parseJsonBody(req);
     if ('error' in parsedBody) return parsedBody.error;

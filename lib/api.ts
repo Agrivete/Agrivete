@@ -4,8 +4,6 @@
  * to a Bearer token from localStorage when present.
  */
 
-import { getCached, setCached } from './apiCache';
-
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const headers: Record<string, string> = {
     ...(options.body ? { 'Content-Type': 'application/json' } : {}),

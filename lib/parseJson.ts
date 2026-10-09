@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { logger } from './logger';
 
 const MAX_BODY_SIZE = 1024 * 1024; // 1MB
 
 export async function parseJsonBody(req: NextRequest): Promise<{ data?: unknown; error?: NextResponse }> {
   const contentLength = req.headers.get('content-length');
   if (contentLength && parseInt(contentLength, 10) > MAX_BODY_SIZE) {
+    logger.warn('Request body too large', { contentLength });
     return {
       error: NextResponse.json({ error: 'Request body too large' }, { status: 413 }),
     };
@@ -26,6 +28,7 @@ export async function parseJsonBody(req: NextRequest): Promise<{ data?: unknown;
     totalSize += value.length;
 
     if (totalSize > MAX_BODY_SIZE) {
+      logger.warn('Request body too large during streaming', { totalSize });
       return {
         error: NextResponse.json({ error: 'Request body too large' }, { status: 413 }),
       };
@@ -37,7 +40,8 @@ export async function parseJsonBody(req: NextRequest): Promise<{ data?: unknown;
 
   try {
     return { data: JSON.parse(body) };
-  } catch {
+  } catch (err) {
+    logger.error('Invalid JSON in request body', err instanceof Error ? err : undefined);
     return {
       error: NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }),
     };

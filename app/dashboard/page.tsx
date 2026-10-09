@@ -5,7 +5,9 @@ import { LowStockTable } from './components/LowStockTable';
 import { ExpiringList } from './components/ExpiringList';
 import { RecentSales } from './components/RecentSales';
 import { KpiCardsSkeleton } from './components/KpiCardsSkeleton';
-import { TableSkeleton } from './components/TableSkeleton';
+import { TableSkeleton } from '@/components/ui';
+
+export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
   return (

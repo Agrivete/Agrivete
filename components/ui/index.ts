@@ -7,3 +7,4 @@ export { Table, Pagination, type Column } from './Table';
 export { Badge, StatusBadge } from './Badge';
 export { EmptyState, PageLoader } from './EmptyState';
 export { ToastProvider, useToast } from './Toast';
+export { TableSkeleton } from './TableSkeleton';

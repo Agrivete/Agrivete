@@ -6,8 +6,17 @@ import { logActivity } from '@/lib/logActivity';
 import { User } from '@/models/User';
 import { loginSchema } from '@/lib/validators';
 import { parseJsonBody } from '@/lib/parseJson';
+import { rateLimit, getLoginRateLimitKey } from '@/lib/rateLimit';
 
 export async function POST(req: NextRequest) {
+  const rl = rateLimit(getLoginRateLimitKey(req), 5, 15 * 60 * 1000);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: 'Too many requests' },
+      { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } }
+    );
+  }
+
   try {
     await connectDB();
 

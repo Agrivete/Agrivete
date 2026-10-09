@@ -3,15 +3,14 @@ import { Card, CardHeader, CardContent } from '@/components/ui';
 interface TableSkeletonProps {
   rows?: number;
   cols?: number;
+  title?: string;
+  description?: string;
 }
 
-export function TableSkeleton({ rows = 5, cols = 5 }: TableSkeletonProps) {
+export function TableSkeleton({ rows = 5, cols = 5, title = 'Loading...', description = 'Please wait' }: TableSkeletonProps) {
   return (
     <Card>
-      <CardHeader className="pb-0">
-        <div className="h-5 w-48 bg-slate-200 rounded animate-pulse mb-2" />
-        <div className="h-4 w-64 bg-slate-200 rounded animate-pulse" />
-      </CardHeader>
+      <CardHeader title={title} description={description} className="pb-0" />
       <CardContent className="p-0">
         <div className="divide-y divide-slate-200">
           <div className="grid gap-4 p-4 bg-slate-50" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>

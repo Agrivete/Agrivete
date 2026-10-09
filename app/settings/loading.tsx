@@ -1,12 +1,9 @@
 import { Card, CardHeader, CardContent } from '@/components/ui';
 
-function SectionSkeleton({ cols = 3 }) {
+function SectionSkeleton({ cols = 3, title = 'Settings', description = 'Configuration options' }) {
   return (
     <Card>
-      <CardHeader className="pb-0">
-        <div className="h-5 w-48 bg-slate-200 rounded animate-pulse mb-2" />
-        <div className="h-4 w-64 bg-slate-200 rounded animate-pulse" />
-      </CardHeader>
+      <CardHeader title={title} description={description} className="pb-0" />
       <CardContent className="space-y-4">
         <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
           {[...Array(cols * 2)].map((_, i) => (
@@ -21,8 +18,8 @@ function SectionSkeleton({ cols = 3 }) {
 export default function SettingsLoading() {
   return (
     <div className="space-y-6 p-6">
-      <SectionSkeleton cols={2} />
-      <SectionSkeleton cols={3} />
+      <SectionSkeleton cols={2} title="General" description="Basic configuration" />
+      <SectionSkeleton cols={3} title="Advanced" description="Advanced settings" />
     </div>
   );
 }

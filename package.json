@@ -10,6 +10,8 @@
     "lint": "next lint",
     "seed": "node --env-file=.env.local scripts/seed.js",
     "backup": "node --env-file=.env.local scripts/backup.js",
+    "cron": "node --env-file=.env.local scripts/cron.js",
+    "restore": "node --env-file=.env.local scripts/restore.js",
     "set-role": "node --env-file=.env.local scripts/setRole.js"
   },
   "dependencies": {
@@ -23,7 +25,6 @@
     "lucide-react": "^0.511.0",
     "pdfkit": "^0.15.2",
     "csv-writer": "^1.6.0",
-    "uuid": "^11.1.0",
     "node-cron": "^3.0.3"
   },
   "devDependencies": {
@@ -33,7 +34,6 @@
     "@types/jsonwebtoken": "^9.0.9",
     "@types/bcryptjs": "^2.4.6",
     "@types/pdfkit": "^0.13.9",
-    "@types/uuid": "^10.0.0",
     "typescript": "^5.8.3",
     "tailwindcss": "^4.1.8",
     "@tailwindcss/postcss": "^4.1.8",

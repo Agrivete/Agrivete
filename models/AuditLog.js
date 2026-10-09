@@ -12,11 +12,13 @@ const auditSchema = new mongoose.Schema({
   ipAddress: { type: String },
   userAgent: { type: String },
   timestamp: { type: Date, default: Date.now, index: true },
+  createdAt: { type: Date, default: Date.now },
   syncStatus: { type: String, enum: ['synced', 'pending', 'failed'], default: 'synced', index: true },
   localId: { type: String, index: true, sparse: true },
 });
 
 auditSchema.index({ entity: 1, entityId: 1, timestamp: -1 });
 auditSchema.index({ userId: 1, timestamp: -1 });
+auditSchema.index({ createdAt: 1 }, { expireAfterSeconds: 7776000 }); // 90 days TTL
 
 export const Audit = mongoose.models.Audit || mongoose.model('Audit', auditSchema);
