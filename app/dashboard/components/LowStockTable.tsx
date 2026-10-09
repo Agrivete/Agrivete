@@ -1,4 +1,4 @@
-import { api } from '@/lib/api';
+import { serverApi } from '@/lib/serverApi';
 import { Card, CardHeader, CardContent, Table, Badge } from '@/components/ui';
 
 interface AlertData {
@@ -14,7 +14,7 @@ interface AlertData {
 }
 
 async function getAlerts(): Promise<AlertData> {
-  const res = await api.get<AlertData>('/api/alerts');
+  const res = await serverApi.get<AlertData>('/api/alerts');
   return res;
 }
 

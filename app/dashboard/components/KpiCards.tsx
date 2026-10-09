@@ -1,4 +1,4 @@
-import { api } from '@/lib/api';
+import { serverApi } from '@/lib/serverApi';
 import { DollarSign, ShoppingCart, Package, CalendarClock, TrendingUp, Wallet } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui';
 
@@ -19,7 +19,7 @@ interface DashboardData {
 }
 
 async function getDashboardData(): Promise<DashboardData> {
-  const res = await api.get<DashboardData>('/api/dashboard');
+  const res = await serverApi.get<DashboardData>('/api/dashboard');
   return res;
 }
 

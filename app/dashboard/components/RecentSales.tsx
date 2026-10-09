@@ -1,4 +1,4 @@
-import { api } from '@/lib/api';
+import { serverApi } from '@/lib/serverApi';
 import { Card, CardHeader, CardContent, Table, StatusBadge } from '@/components/ui';
 
 interface DashboardData {
@@ -14,7 +14,7 @@ interface DashboardData {
 }
 
 async function getDashboardData(): Promise<DashboardData> {
-  const res = await api.get<DashboardData>('/api/dashboard');
+  const res = await serverApi.get<DashboardData>('/api/dashboard');
   return res;
 }
 
