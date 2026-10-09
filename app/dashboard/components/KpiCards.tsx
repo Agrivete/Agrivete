@@ -1,7 +1,6 @@
 import { api } from '@/lib/api';
 import { DollarSign, ShoppingCart, Package, CalendarClock, TrendingUp, Wallet } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui';
-import { useAuth } from '@/lib/AuthContext';
 
 interface DashboardData {
   kpis: {
@@ -24,11 +23,15 @@ async function getDashboardData(): Promise<DashboardData> {
   return res;
 }
 
-export async function KpiCards() {
-  const { hasRole } = useAuth();
+interface KpiCardsProps {
+  userRole: 'owner' | 'manager' | 'staff' | null;
+}
+
+export async function KpiCards({ userRole }: KpiCardsProps) {
   const data = await getDashboardData();
   const kpis = data.kpis;
   const peso = (n: number) => `₱${n.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const hasRole = (role: 'owner' | 'manager' | 'staff') => userRole === role;
 
   const cards = [
     { label: "Today's Sales", value: peso(kpis.todaysRevenue), detail: `${kpis.todaysTransactions} transactions`, icon: DollarSign, bg: 'bg-emerald-50 text-emerald-700' },
