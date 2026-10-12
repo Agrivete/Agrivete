@@ -45,11 +45,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={{ toasts, toast, dismiss }}>
       {children}
-      <div className="pointer-events-none fixed bottom-6 right-6 z-[100] flex w-80 flex-col gap-2">
+      <div className="pointer-events-none fixed bottom-4 right-4 left-4 z-[100] flex flex-col gap-2 sm:bottom-6 sm:right-6 sm:left-auto sm:w-80 sm:items-end">
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`pointer-events-auto flex items-start gap-3 rounded-xl border px-4 py-3 shadow-lg backdrop-blur animate-in fade-in slide-in-from-bottom-2 ${
+            className={`pointer-events-auto flex items-start gap-3 rounded-xl border px-4 py-3 shadow-lg backdrop-blur animate-in fade-in slide-in-from-bottom-2 w-full sm:w-auto max-w-sm ${
               t.type === 'success'
                 ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
                 : t.type === 'error'
@@ -66,10 +66,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                     : 'bg-slate-400'
               }`}
             />
-            <p className="flex-1 text-sm font-medium">{t.message}</p>
+            <p className="flex-1 text-sm font-medium break-words">{t.message}</p>
             <button
               onClick={() => dismiss(t.id)}
-              className="text-current opacity-50 transition hover:opacity-100"
+              className="text-current opacity-50 transition hover:opacity-100 shrink-0"
               aria-label="Dismiss"
             >
               ✕

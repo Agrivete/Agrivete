@@ -2,7 +2,13 @@
  * Client-side API helper.
  * Sends the httpOnly cookie (credentials: 'include') and falls back
  * to a Bearer token from localStorage when present.
+ *
+ * `api.get(url, { cache: true })` consults an in-memory TTL cache
+ * (lib/apiCache.ts) before hitting the network. Use for per-user
+ * read-only endpoints where a 60–300 s freshness window is acceptable.
  */
+
+import { getCached, setCached } from './apiCache';
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const headers: Record<string, string> = {
@@ -34,7 +40,15 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 }
 
 export const api = {
-  get<T>(url: string): Promise<T> {
+  get<T>(url: string, opts?: { cache?: boolean }): Promise<T> {
+    if (opts?.cache && typeof window !== 'undefined') {
+      const hit = getCached<T>(url);
+      if (hit !== null) return Promise.resolve(hit);
+      return request<T>(url).then((data) => {
+        setCached(url, data);
+        return data;
+      });
+    }
     return request<T>(url);
   },
   post<T>(url: string, data?: unknown): Promise<T> {

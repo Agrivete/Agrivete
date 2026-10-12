@@ -5,6 +5,7 @@ export interface Column<T> {
   header: string;
   accessor?: (row: T) => ReactNode;
   className?: string;
+  hideOnMobile?: boolean;
 }
 
 interface TableProps<T> {
@@ -30,7 +31,7 @@ export function Table<T>({
             {columns.map((col) => (
               <th
                 key={col.key}
-                className={`whitespace-nowrap px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500 ${col.className || ''}`}
+                className={`whitespace-nowrap px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500 ${col.className || ''} ${col.hideOnMobile ? 'hidden sm:table-cell' : ''}`}
               >
                 {col.header}
               </th>
@@ -59,7 +60,7 @@ export function Table<T>({
                 {columns.map((col) => (
                   <td
                     key={col.key}
-                    className={`px-4 py-3 text-slate-700 ${col.className || ''}`}
+                    className={`px-4 py-3 text-slate-700 ${col.className || ''} ${col.hideOnMobile ? 'hidden sm:table-cell' : ''}`}
                   >
                     {col.accessor ? col.accessor(row) : (row as unknown as Record<string, ReactNode>)[col.key]}
                   </td>
@@ -91,15 +92,15 @@ export function Pagination({
   );
 
   return (
-    <div className="flex items-center justify-between px-4 py-3">
-      <p className="text-xs text-slate-500">
+    <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-3 px-4 py-3">
+      <p className="text-xs text-slate-500 w-full sm:w-auto text-center sm:text-left">
         {total} record{total === 1 ? '' : 's'} · page {page} of {pages}
       </p>
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 w-full justify-center sm:justify-end">
         <button
           onClick={() => onPageChange(page - 1)}
           disabled={page <= 1}
-          className="rounded-lg px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-100 disabled:opacity-40"
+          className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-100 disabled:opacity-40"
         >
           Prev
         </button>
@@ -110,7 +111,7 @@ export function Pagination({
             )}
             <button
               onClick={() => onPageChange(n)}
-              className={`rounded-lg px-2.5 py-1 text-xs font-medium transition ${
+              className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition ${
                 n === page
                   ? 'bg-brand-700 text-white'
                   : 'text-slate-600 hover:bg-slate-100'
@@ -123,7 +124,7 @@ export function Pagination({
         <button
           onClick={() => onPageChange(page + 1)}
           disabled={page >= pages}
-          className="rounded-lg px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-100 disabled:opacity-40"
+          className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-100 disabled:opacity-40"
         >
           Next
         </button>

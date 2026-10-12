@@ -1,13 +1,14 @@
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
 
 type Variant = 'primary' | 'secondary' | 'outline' | 'danger' | 'ghost';
-type Size = 'sm' | 'md';
+type Size = 'sm' | 'md' | 'mobile';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
   size?: Size;
   loading?: boolean;
   leftIcon?: ReactNode;
+  fullWidth?: boolean;
 }
 
 const variants: Record<Variant, string> = {
@@ -24,6 +25,8 @@ const variants: Record<Variant, string> = {
 const sizes: Record<Size, string> = {
   sm: 'h-8 px-3 text-xs gap-1.5',
   md: 'h-10 px-4 text-sm gap-2',
+  // Mobile-first: 44px min height for touch targets
+  mobile: 'h-11 px-4 text-sm gap-2',
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -33,6 +36,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       size = 'md',
       loading = false,
       leftIcon,
+      fullWidth = false,
       className = '',
       disabled,
       children,
@@ -44,7 +48,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         disabled={disabled || loading}
-        className={`inline-flex items-center justify-center rounded-lg font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 disabled:cursor-not-allowed ${variants[variant]} ${sizes[size]} ${className}`}
+        className={`inline-flex items-center justify-center rounded-lg font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 disabled:cursor-not-allowed ${variants[variant]} ${sizes[size]} ${fullWidth ? 'w-full' : ''} ${className}`}
         {...props}
       >
         {loading ? (

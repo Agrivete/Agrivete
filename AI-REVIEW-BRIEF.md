@@ -1,9 +1,17 @@
+# Updated AI Review Brief — With Reliability, Performance, and Observability
+
+Below is the full updated brief. Copy-paste this into `agrivet-next/AI-REVIEW-BRIEF.md`, replacing the old version.
+
+---
+
+```markdown
 # Agrivet Next.js Migration — AI Review Brief
 
 > Purpose: hand this to an AI reviewer (with access to the project's data and
 > research documents) to find inconsistencies, bugs, RBAC/business-rule
-> violations, and improvement opportunities. Everything below is factual state
-> of the `agrivet-next/` codebase as of 2026-10-09.
+> violations, reliability gaps, performance issues, observability blind spots,
+> and improvement opportunities. Everything below is factual state of the
+> `agrivet-next/` codebase as of 2026-10-09.
 
 ## 1. Context
 
@@ -59,7 +67,7 @@ agrivet-next/
 │   └── users/route.ts, users/[id]/route.ts
 ├── lib/
 │   ├── mongodb.js                    # cached connectDB, throws if MONGODB_URI missing
-│   ├── auth.js                       # JWT generate/verify, getUserFromRequest (Bearer OR httpOnly cookie), setAuthCookie/clearAuthCookie; JSDoc SessionUser typedef
+│   ├── auth.js                       # JWT generate/verify, getUserFromRequest (Bearer OR httpOnly cookie), setAuthCookie/clearAuthCookie
 │   ├── permissions.js                # RBAC matrix + checkPermission/requirePermission
 │   ├── validators.js                 # all Zod schemas
 │   ├── inventory.js                  # adjustInventory(): $inc balance, negative-stock throw, writes movement
@@ -202,6 +210,83 @@ agrivet-next/
     user object (tamperable); server routes do enforce RBAC — confirm no
     action is reachable only through UI-hidden controls.
 
+## 9b. Reliability, Performance, and Observability Gaps (NEW)
+
+The following are known or suspected gaps in caching, prefetching, error
+tracking, CDN delivery, logging, load balancing, and recovery. Verify each
+and flag confirmed items as **PERF-xx** or **OBS-xx** in the output.
+
+### Navigation & Prefetching
+- **PERF-01**: Sidebar uses `<a href>` instead of `next/link` → full page
+  reloads on every tab change. Expected: client-side transitions with
+  prefetch. File: `components/layout/Sidebar.tsx`.
+- **PERF-02**: No `prefetch` prop set on nav links. Next.js default is
+  `prefetch={true}` for `<Link>`, but `<a>` bypasses it entirely.
+- **PERF-03**: No `<Suspense>` boundaries in `dashboard/page.tsx` — the
+  entire route blocks until all `Promise.all` fetches resolve.
+- **PERF-04**: No `loading.tsx` files anywhere in `app/` — no per-route
+  skeleton. Users see blank screen until data resolves.
+
+### Caching
+- **PERF-05**: No `unstable_cache` or `fetch` with `next: { revalidate }`
+  used anywhere. Every request hits MongoDB directly.
+- **PERF-06**: No `Cache-Control` headers set in `next.config.ts` for API
+  routes. Reports, alerts, and dashboard endpoints are uncached.
+- **PERF-07**: MongoDB connection is cached (`lib/mongodb.js`), but query
+  results are not. Repeated dashboard loads re-run the same aggregations.
+
+### Error Tracking
+- **OBS-01**: No Sentry, Axiom, Datadog, or equivalent error tracking.
+  `console.error` is the only output, and it is lost in production.
+- **OBS-02**: No `app/error.tsx` or `app/global-error.tsx` files. A thrown
+  error crashes the route segment with the default Next.js error page —
+  no user-facing recovery UI.
+- **OBS-03**: No structured logging. `lib/logActivity.js` writes to MongoDB
+  but console output is unstructured.
+- **OBS-04**: No error IDs returned to the client on 500 responses —
+  users cannot report a reference when something breaks.
+
+### CDN & Static Assets
+- **PERF-08**: No `assetPrefix` in `next.config.ts`. If self-hosting, static
+  assets are served from the app origin, not a CDN.
+- **PERF-09**: No `images.remotePatterns` or `images.domains` configured —
+  if any remote images are added, they will bypass Next.js image optimization.
+
+### Load Balancing & Availability
+- **OBS-05**: No load-balancer config (Nginx, Vercel edge). If self-hosted,
+  single instance is a single point of failure.
+- **OBS-06**: No health check endpoint (`/api/health`). Uptime monitors
+  cannot verify the app is alive.
+- **OBS-07**: No graceful shutdown handling for MongoDB connections.
+
+### Logs & Recovery
+- **OBS-08**: `node-cron` is declared in `package.json` but no scheduled
+  job exists. `/settings` copy claims "Automated daily backups (02:00)" —
+  this is false. Backup only runs via `npm run backup`.
+- **OBS-09**: No log retention policy for `AuditLog`. The collection grows
+  unbounded; no archive or TTL index.
+- **OBS-10**: No restore procedure documented. `lib/backup.js` writes JSON
+  but there is no `restore.js` counterpart.
+- **OBS-11**: No backup verification. The backup script does not check
+  that the written JSON is parseable or that collection counts match.
+
+### Traffic & Rate Limiting
+- **OBS-12**: No rate limiting on `/api/auth/login`. Brute-force attempts
+  are unlimited.
+- **OBS-13**: No rate limiting on any API route. A single client can
+  saturate MongoDB.
+- **OBS-14**: No request size limit on JSON bodies. Large payloads can
+  exhaust memory.
+- **OBS-15**: No CORS configuration in `next.config.ts`. Same-origin only
+  by default — verify no external integrations are planned.
+
+### Performance Budget
+- **PERF-10**: No `next.config.ts` `experimental.optimizePackageImports`
+  for `lucide-react` — all icons may be bundled instead of tree-shaken.
+- **PERF-11**: No `next/dynamic` for heavy components (reports page, PDF
+  export). They load on first visit even if never used.
+- **PERF-12**: No bundle analyzer configured. Bundle size is unknown.
+
 ## 10. Verification already performed
 
 - `npm install` OK; `npm run build` passes — 12 pages, 22 API routes,
@@ -230,14 +315,81 @@ npm run build && npm run start   # production
 
 ## 12. Improvement backlog (for later sessions)
 
+### Correctness
 - Fix BR06 dashboard leak; add cookie-clearing logout endpoint or
   middleware token validation to break the redirect loop.
 - Make `adjustInventory` atomic against negative stock.
 - Unify movement `referenceId` to the real document ID.
-- Wire the sales search input; replace Sidebar `<a>` with `next/link`.
-- Implement the node-cron daily backup job or remove the dependency and the
-  settings copy.
+- Wire the sales search input.
 - Remove unused `uuid` imports; add a 400 handler for malformed JSON.
-- Add unit/integration tests (none exist); commit baseline to git.
 - Add refresh-token flow (JWT_REFRESH_EXPIRES_IN is declared in .env.local
   but unused).
+
+### Performance
+- Replace Sidebar `<a>` with `next/link` + `prefetch={true}`.
+- Add `loading.tsx` to every route in `app/`.
+- Add `<Suspense>` boundaries to dashboard, inventory, reports.
+- Add `unstable_cache` to dashboard and alerts queries.
+- Set `Cache-Control` headers for read-only API routes.
+- Enable `optimizePackageImports` for `lucide-react`.
+- Lazy-load reports, PDF export, and heavy charts with `next/dynamic`.
+- Add bundle analyzer and set a performance budget.
+
+### Observability
+- Add Sentry (or equivalent) for client, server, and edge errors.
+- Add `app/error.tsx` and `app/global-error.tsx` to every route.
+- Add structured JSON logging with error IDs.
+- Add `/api/health` endpoint for uptime monitoring.
+- Add rate limiting to auth and write endpoints.
+- Add request size limits.
+
+### Operations
+- Implement the `node-cron` daily backup job — or remove the dependency
+  and the `/settings` copy claiming it exists.
+- Add `restore.js` counterpart to `backup.js` with verification.
+- Add TTL index on `AuditLog` or an archive policy.
+- Add load balancer config or document Vercel auto-scaling.
+- Document recovery procedure in `docs/RECOVERY.md`.
+- Commit baseline to git.
+
+### Testing
+- Add unit tests for `lib/inventory.js`, `lib/permissions.js`,
+  `lib/validators.js`.
+- Add integration tests for the 8 core API routes.
+- Add E2E tests for login → sale → receiving → alert flows.
+
+## 13. How to extend the reviewer's scope
+
+When running the audit, explicitly ask the reviewer to:
+
+- Treat Section 9b as a first-class review target, not an afterthought.
+- Classify each new issue as **PERF-xx** (performance), **OBS-xx**
+  (observability/operations), or **BUG-xx** (correctness).
+- For each confirmed issue, provide:
+  - File:Line
+  - Severity (critical / high / medium / low)
+  - Why it matters for a BAM-285 small-business system
+  - Recommended fix
+  - Whether the fix is required for the MVP defense or deferred
+
+- Cross-check Section 9b items against the BAM-285 NFR table:
+  - NFR01 Usability → navigation, loading states
+  - NFR02 Performance → caching, bundle size
+  - NFR03 Security → rate limiting, CORS
+  - NFR04 Reliability → backup, restore
+  - NFR05 Availability → health check, load balancing
+  - NFR07 Maintainability → tests, structure
+  - NFR10 Auditability → log retention, structured logging
+```
+
+---
+
+## Summary of Additions
+
+| New Section | What It Covers |
+|-------------|----------------|
+| **9b — Reliability, Performance, Observability** | 27 new items: PERF-01 to PERF-12, OBS-01 to OBS-15 |
+| **12 — Expanded Backlog** | Now split into Correctness, Performance, Observability, Operations, Testing |
+| **13 — Reviewer Instructions** | Tells the AI how to classify and prioritize the new items |
+
+The reviewer now has explicit targets for caching, prefetching, error tracking, CDN, logs, load balancing, and recovery — not just the business rules and RBAC matrix.

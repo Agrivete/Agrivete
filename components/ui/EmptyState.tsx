@@ -20,16 +20,16 @@ export function EmptyState({
   onAction,
 }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
-      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
-        {icon || <Inbox className="h-7 w-7" />}
+    <div className="flex flex-col items-center justify-center px-4 py-12 text-center">
+      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+        {icon || <Inbox className="h-6 w-6" />}
       </div>
-      <h3 className="mt-4 text-sm font-semibold text-slate-900">{title}</h3>
+      <h3 className="mt-4 text-base font-semibold text-slate-900">{title}</h3>
       {message && (
-        <p className="mt-1 max-w-sm text-xs text-slate-500">{message}</p>
+        <p className="mt-2 max-w-sm text-sm text-slate-500">{message}</p>
       )}
       {actionLabel && onAction && (
-        <Button className="mt-4" size="sm" onClick={onAction}>
+        <Button className="mt-4 w-full sm:w-auto" size="md" onClick={onAction}>
           {actionLabel}
         </Button>
       )}
@@ -39,10 +39,10 @@ export function EmptyState({
 
 export function PageLoader({ label = 'Loading...' }: { label?: string }) {
   return (
-    <div className="flex items-center justify-center py-24">
+    <div className="flex items-center justify-center py-16">
       <div className="flex flex-col items-center gap-3 text-slate-400">
         <span className="h-8 w-8 animate-spin rounded-full border-3 border-slate-200 border-t-brand-600" />
-        <p className="text-xs font-medium">{label}</p>
+        <p className="text-sm font-medium">{label}</p>
       </div>
     </div>
   );
