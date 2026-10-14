@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
-import { Plus, Search, Package, History, SlidersHorizontal } from 'lucide-react';
+import { Plus, Package, History, SlidersHorizontal } from 'lucide-react';
 import { AppLayout } from '@/components/layout';
 import {
   Card, CardHeader, CardContent, Table, Badge, Button, Input, Select, Modal, PageLoader, EmptyState,
@@ -207,29 +207,32 @@ export default function InventoryPage() {
           <CardHeader
             title="Stock Balances"
             description="BR04: flagged when on-hand ≤ threshold"
+            className="sm:[&>div:last-child]:shrink-0"
             action={
-              <div className="flex items-center gap-2">
-                <div className="relative">
-                  <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-                  <input
+              <div className="flex min-h-[44px] w-full flex-col gap-2 sm:w-max sm:flex-row sm:items-center sm:gap-3">
+                <div className="w-full sm:w-64">
+                  <Input
                     placeholder="Search products..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="h-8 w-48 rounded-lg border border-slate-300 pl-8 pr-2 text-xs"
+                    className="h-11 w-full text-sm"
                   />
                 </div>
-                <Select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  options={categories.map((c) => ({ value: c, label: c }))}
-                  placeholder="All categories"
-                  className="h-8 w-36 text-xs"
-                />
+                <div className="w-full sm:w-44">
+                  <Select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    options={categories.map((c) => ({ value: c, label: c }))}
+                    placeholder="All categories"
+                    className="h-11 w-full text-sm"
+                  />
+                </div>
                 <Button
-                  size="sm"
+                  size="md"
                   variant={lowOnly ? 'primary' : 'outline'}
                   onClick={() => setLowOnly(!lowOnly)}
-                  leftIcon={<SlidersHorizontal className="h-3 w-3" />}
+                  leftIcon={<SlidersHorizontal className="h-4 w-4 shrink-0" />}
+                  className="min-h-11 w-full whitespace-nowrap px-3 py-2 text-sm sm:w-auto"
                 >
                   Low stock only
                 </Button>

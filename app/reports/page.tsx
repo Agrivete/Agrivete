@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
-import { Download, BarChart3 } from 'lucide-react';
+import { BarChart3 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { AppLayout } from '@/components/layout';
 import { Card, CardHeader, CardContent, Table, Badge, Button, Select, Input, PageLoader, EmptyState } from '@/components/ui';
@@ -68,33 +68,71 @@ export default function ReportsPage() {
         </div>
 
         <Card>
-          <CardHeader title="Report Builder" description="Select a report type and date range" />
-          <CardContent>
-            <form onSubmit={fetchReport} className="flex flex-wrap items-end gap-3">
-              <Select
-                label="Report type"
-                value={type}
-                onChange={(e) => { setType(e.target.value as ReportType); setLoaded(false); }}
-                options={[
-                  { value: 'sales', label: 'Sales Report' },
-                  { value: 'inventory', label: 'Inventory Report' },
-                  ...(hasRole('owner') ? [{ value: 'profitability', label: 'Profitability (Owner Only)' }] : []),
-                  { value: 'supplier', label: 'Supplier Performance' },
-                ]}
-                className="w-52"
-              />
-              <Input label="Start date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-40" />
-              <Input label="End date" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-40" />
-              <ExportButton
-                type={type}
-                format={format}
-                startDate={startDate}
-                endDate={endDate}
-                onFormatChange={setFormat}
-              />
-              <Button type="submit" loading={loading} leftIcon={<BarChart3 className="h-4 w-4" />}>
-                Generate
-              </Button>
+          <CardHeader
+            title="Report Builder"
+            description="Select a report type and date range"
+            className="[&>div:first-child>h3]:text-lg [&>div:first-child>h3]:font-semibold [&>div:first-child>h3]:tracking-normal [&>div:first-child>p]:text-sm"
+          />
+          <CardContent className="sm:py-6">
+            <form onSubmit={fetchReport} className="space-y-5">
+              <div className="space-y-1.5">
+                <label htmlFor="report-type" className="block text-sm font-medium text-neutral-700">
+                  Report type
+                </label>
+                <Select
+                  id="report-type"
+                  value={type}
+                  onChange={(e) => { setType(e.target.value as ReportType); setLoaded(false); }}
+                  options={[
+                    { value: 'sales', label: 'Sales Report' },
+                    { value: 'inventory', label: 'Inventory Report' },
+                    ...(hasRole('owner') ? [{ value: 'profitability', label: 'Profitability (Owner Only)' }] : []),
+                    { value: 'supplier', label: 'Supplier Performance' },
+                  ]}
+                  className="!h-10 !rounded-lg !border-neutral-200 focus:!border-[#4d8c2f] focus:!outline-[#4d8c2f]"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label htmlFor="start-date" className="block text-sm font-medium text-neutral-700">
+                  Start date
+                </label>
+                <Input
+                  id="start-date"
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="!h-10 !rounded-lg !border-neutral-200 focus:!border-[#4d8c2f] focus:!outline-[#4d8c2f]"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label htmlFor="end-date" className="block text-sm font-medium text-neutral-700">
+                  End date
+                </label>
+                <Input
+                  id="end-date"
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="!h-10 !rounded-lg !border-neutral-200 focus:!border-[#4d8c2f] focus:!outline-[#4d8c2f]"
+                />
+              </div>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                <ExportButton
+                  type={type}
+                  format={format}
+                  startDate={startDate}
+                  endDate={endDate}
+                  onFormatChange={setFormat}
+                />
+                <Button
+                  type="submit"
+                  loading={loading}
+                  leftIcon={<BarChart3 className="h-4 w-4" />}
+                  className="h-10 w-full !bg-[#4d8c2f] px-4 text-sm hover:!bg-[#3f7526] sm:w-auto"
+                >
+                  Generate
+                </Button>
+              </div>
             </form>
           </CardContent>
         </Card>
