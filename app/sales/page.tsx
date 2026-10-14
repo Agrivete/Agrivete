@@ -164,30 +164,33 @@ export default function SalesPage() {
           </Button>
         </div>
 
-        <Card>
+        <Card className="min-h-0">
           <CardHeader
             title="Transactions"
             description="Completed sales auto-deduct stock (BR01)"
+            className="sm:[&>div:last-child]:shrink-0"
             action={
-              <div className="flex items-center gap-2">
-                <div className="relative">
+              <div className="flex w-full flex-col gap-2 sm:w-max sm:flex-row sm:items-center sm:gap-2">
+                <div className="relative w-full sm:w-64 sm:shrink-0">
                   <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
                   <input
                     placeholder="Search..."
-                    className="h-8 w-44 rounded-lg border border-slate-300 pl-8 pr-2 text-xs"
+                    className="h-11 w-full rounded-lg border border-slate-300 pl-8 pr-2 text-xs"
                   />
                 </div>
-                <Select
-                  value={statusFilter}
-                  onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-                  options={[
-                    { value: 'completed', label: 'Completed' },
-                    { value: 'cancelled', label: 'Cancelled' },
-                    { value: 'refunded', label: 'Refunded' },
-                  ]}
-                  placeholder="All statuses"
-                  className="h-8 w-36 text-xs"
-                />
+                <div className="w-full sm:w-44 sm:shrink-0">
+                  <Select
+                    value={statusFilter}
+                    onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+                    options={[
+                      { value: 'completed', label: 'Completed' },
+                      { value: 'cancelled', label: 'Cancelled' },
+                      { value: 'refunded', label: 'Refunded' },
+                    ]}
+                    placeholder="All statuses"
+                    className="h-11 w-full text-xs"
+                  />
+                </div>
               </div>
             }
           />
