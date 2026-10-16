@@ -8,7 +8,7 @@ import {
 } from '@/components/ui';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
-import { useToast } from '@/components/ui/Toast';
+import { toast } from 'sonner';
 
 interface UserRow {
   userId: string;
@@ -22,7 +22,6 @@ interface UserRow {
 
 export default function UsersPage() {
   const { user: currentUser, hasRole } = useAuth();
-  const { toast } = useToast();
 
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,7 +50,7 @@ export default function UsersPage() {
       const data = await api.get<UserRow[]>('/api/users');
       setUsers(data);
     } catch (err) {
-      toast(err instanceof Error ? err.message : 'Failed to load users', 'error');
+      toast.error(err instanceof Error ? err.message : 'Failed to load users');
     } finally {
       setLoading(false);
     }
@@ -74,12 +73,12 @@ export default function UsersPage() {
     setSubmitting(true);
     try {
       await api.post('/api/auth/register', { name, email, password, role });
-      toast(`User ${name} created (${role})`, 'success');
+      toast.success(`User ${name} created (${role})`);
       setCreateModal(false);
       setName(''); setEmail(''); setPassword(''); setRole('staff');
       load();
     } catch (err) {
-      toast(err instanceof Error ? err.message : 'Failed to create user', 'error');
+      toast.error(err instanceof Error ? err.message : 'Failed to create user');
     } finally {
       setSubmitting(false);
     }
@@ -90,11 +89,11 @@ export default function UsersPage() {
     setSubmitting(true);
     try {
       await api.patch(`/api/users/${editTarget.userId}`, { role: editRole, status: editStatus });
-      toast('User updated', 'success');
+      toast.success('User updated');
       setEditTarget(null);
       load();
     } catch (err) {
-      toast(err instanceof Error ? err.message : 'Update failed', 'error');
+      toast.error(err instanceof Error ? err.message : 'Update failed');
     } finally {
       setSubmitting(false);
     }
@@ -110,11 +109,11 @@ export default function UsersPage() {
         currentPassword,
         newPassword,
       });
-      toast('Password changed', 'success');
+      toast.success('Password changed');
       setPasswordTarget(null);
       setCurrentPassword(''); setNewPassword('');
     } catch (err) {
-      toast(err instanceof Error ? err.message : 'Password change failed', 'error');
+      toast.error(err instanceof Error ? err.message : 'Password change failed');
     } finally {
       setChangingPassword(false);
     }
@@ -126,11 +125,15 @@ export default function UsersPage() {
     try {
       const newStatus = deactivateTarget.status === 'active' ? 'inactive' : 'active';
       await api.patch(`/api/users/${deactivateTarget.userId}`, { status: newStatus });
-      toast(`User ${newStatus === 'active' ? 'reactivated' : 'deactivated'}`, 'success');
+      if (newStatus === 'active') {
+        toast.success('User reactivated');
+      } else {
+        toast.success('User deactivated');
+      }
       setDeactivateTarget(null);
       load();
     } catch (err) {
-      toast(err instanceof Error ? err.message : 'Update failed', 'error');
+      toast.error(err instanceof Error ? err.message : 'Update failed');
     } finally {
       setSubmitting(false);
     }

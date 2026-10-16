@@ -33,3 +33,6 @@ logs/
 
 # TypeScript
 *.tsbuildinfo
+
+# Test artifacts
+.taste-skill/

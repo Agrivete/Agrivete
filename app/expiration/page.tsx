@@ -5,7 +5,7 @@ import { CalendarClock, AlertTriangle } from 'lucide-react';
 import { AppLayout } from '@/components/layout';
 import { Card, CardHeader, CardContent, Table, Badge, PageLoader, EmptyState } from '@/components/ui';
 import { api } from '@/lib/api';
-import { useToast } from '@/components/ui/Toast';
+import { toast } from 'sonner';
 
 interface ExpiringLot {
   productId: string;
@@ -18,7 +18,6 @@ interface ExpiringLot {
 }
 
 export default function ExpirationPage() {
-  const { toast } = useToast();
   const [lots, setLots] = useState<ExpiringLot[]>([]);
   const [loading, setLoading] = useState(true);
   const [days, setDays] = useState(30);
@@ -29,7 +28,7 @@ export default function ExpirationPage() {
       const res = await api.get<{ expiring: ExpiringLot[] }>(`/api/alerts?type=expiring&days=${days}`);
       setLots(res.expiring);
     } catch (err) {
-      toast(err instanceof Error ? err.message : 'Failed to load expiration data', 'error');
+      toast.error(err instanceof Error ? err.message : 'Failed to load expiration data');
     } finally {
       setLoading(false);
     }

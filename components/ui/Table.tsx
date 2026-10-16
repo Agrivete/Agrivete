@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Inbox } from 'lucide-react';
 
 export interface Column<T> {
   key: string;
@@ -25,13 +26,13 @@ export function Table<T>({
 }: TableProps<T>) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-left text-sm">
+      <table className="w-full min-w-max text-left text-sm">
         <thead>
-          <tr className="border-b border-slate-200 bg-slate-50/60">
+          <tr className="border-b border-neutral-100">
             {columns.map((col) => (
               <th
                 key={col.key}
-                className={`whitespace-nowrap px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500 ${col.className || ''} ${col.hideOnMobile ? 'hidden sm:table-cell' : ''}`}
+                className={`whitespace-nowrap px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-neutral-500 first:sticky first:left-0 first:z-20 first:bg-white ${col.className || ''} ${col.hideOnMobile ? 'hidden sm:table-cell' : ''}`}
               >
                 {col.header}
               </th>
@@ -43,9 +44,12 @@ export function Table<T>({
             <tr>
               <td
                 colSpan={columns.length}
-                className="px-4 py-12 text-center text-sm text-slate-400"
+                className="px-4 py-8 text-center text-sm text-neutral-500"
               >
-                {emptyMessage}
+                <span className="flex flex-col items-center gap-3">
+                  <Inbox className="h-12 w-12 text-neutral-300" aria-hidden="true" />
+                  <span>{emptyMessage}</span>
+                </span>
               </td>
             </tr>
           ) : (
@@ -53,14 +57,14 @@ export function Table<T>({
               <tr
                 key={keyExtractor(row)}
                 onClick={onRowClick ? () => onRowClick(row) : undefined}
-                className={`border-b border-slate-100 transition-colors last:border-0 hover:bg-slate-50/60 ${
+                className={`h-11 border-b border-neutral-100 transition-colors even:bg-neutral-50/50 hover:bg-neutral-50 last:border-0 ${
                   onRowClick ? 'cursor-pointer' : ''
                 }`}
               >
                 {columns.map((col) => (
                   <td
                     key={col.key}
-                    className={`px-4 py-3 text-slate-700 ${col.className || ''} ${col.hideOnMobile ? 'hidden sm:table-cell' : ''}`}
+                    className={`px-4 py-3 text-slate-700 first:sticky first:left-0 first:z-10 first:bg-inherit ${col.className || ''} ${col.hideOnMobile ? 'hidden sm:table-cell' : ''}`}
                   >
                     {col.accessor ? col.accessor(row) : (row as unknown as Record<string, ReactNode>)[col.key]}
                   </td>

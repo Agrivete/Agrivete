@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Download, FileSpreadsheet, FileText, Loader2 } from 'lucide-react';
 import { Button, Select, Input } from '@/components/ui';
-import { useToast } from '@/components/ui/Toast';
+import { toast } from 'sonner';
 
 interface ExportButtonProps {
   type: string;
@@ -14,7 +14,6 @@ interface ExportButtonProps {
 }
 
 export function ExportButton({ type, format, startDate, endDate, onFormatChange }: ExportButtonProps) {
-  const { toast } = useToast();
   const [exporting, setExporting] = useState(false);
 
   const handleExport = async () => {
@@ -26,7 +25,7 @@ export function ExportButton({ type, format, startDate, endDate, onFormatChange 
       if (endDate) params.set('endDate', endDate);
       window.open(`/api/reports?${params}`, '_blank');
     } catch {
-      toast('Failed to export report', 'error');
+      toast.error('Failed to export report');
     } finally {
       setExporting(false);
     }

@@ -8,7 +8,7 @@ import {
 } from '@/components/ui';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
-import { useToast } from '@/components/ui/Toast';
+import { toast } from 'sonner';
 
 interface BalanceRow {
   productId: string;
@@ -47,7 +47,6 @@ interface ProductForm {
 
 export default function InventoryPage() {
   const { hasRole } = useAuth();
-  const { toast } = useToast();
 
   const [balances, setBalances] = useState<BalanceRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,7 +79,7 @@ export default function InventoryPage() {
       const res = await api.get<{ balances: BalanceRow[] }>(`/api/inventory?${params}`);
       setBalances(res.balances);
     } catch (err) {
-      toast(err instanceof Error ? err.message : 'Failed to load inventory', 'error');
+      toast.error(err instanceof Error ? err.message : 'Failed to load inventory');
     } finally {
       setLoading(false);
     }
@@ -110,7 +109,7 @@ export default function InventoryPage() {
     if (!adjustTarget) return;
     const qty = parseInt(adjustQty);
     if (!qty) {
-      toast('Enter a non-zero quantity (+ to add, − to subtract)', 'error');
+      toast.error('Enter a non-zero quantity (+ to add, − to subtract)');
       return;
     }
     setAdjusting(true);
@@ -121,11 +120,11 @@ export default function InventoryPage() {
         reason: adjustReason,
         notes: adjustNotes,
       });
-      toast(`Inventory adjusted: ${adjustTarget.name} (${qty > 0 ? '+' : ''}${qty})`, 'success');
+      toast.success(`Inventory adjusted: ${adjustTarget.name} (${qty > 0 ? '+' : ''}${qty})`);
       setAdjustTarget(null);
       load();
     } catch (err) {
-      toast(err instanceof Error ? err.message : 'Adjustment failed', 'error');
+      toast.error(err instanceof Error ? err.message : 'Adjustment failed');
     } finally {
       setAdjusting(false);
     }
@@ -139,7 +138,7 @@ export default function InventoryPage() {
       const res = await api.get<{ movements: MovementRow[] }>(`/api/inventory/movements?productId=${row.productId}&limit=25`);
       setMovements(res.movements);
     } catch (err) {
-      toast(err instanceof Error ? err.message : 'Failed to load history', 'error');
+      toast.error(err instanceof Error ? err.message : 'Failed to load history');
     } finally {
       setMovementsLoading(false);
     }
@@ -174,15 +173,15 @@ export default function InventoryPage() {
           sellingPrice: Number(form.sellingPrice) || undefined,
           buyingCost: Number(form.buyingCost) || undefined,
         });
-        toast('Product updated', 'success');
+        toast.success('Product updated');
       } else {
         await api.post('/api/products', { ...form, sellingPrice: Number(form.sellingPrice), buyingCost: Number(form.buyingCost) });
-        toast('Product created', 'success');
+        toast.success('Product created');
       }
       setProductModal(false);
       load();
     } catch (err) {
-      toast(err instanceof Error ? err.message : 'Product save failed', 'error');
+      toast.error(err instanceof Error ? err.message : 'Product save failed');
     } finally {
       setSubmitting(false);
     }

@@ -6,7 +6,7 @@ import { AppLayout } from '@/components/layout';
 import { Card, CardHeader, CardContent, Input, Button, Badge, PageLoader } from '@/components/ui';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
-import { useToast } from '@/components/ui/Toast';
+import { toast } from 'sonner';
 
 interface SyncStatus {
   pendingCount: number;
@@ -15,7 +15,6 @@ interface SyncStatus {
 
 export default function SettingsPage() {
   const { user } = useAuth();
-  const { toast } = useToast();
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -50,11 +49,11 @@ export default function SettingsPage() {
         currentPassword,
         newPassword,
       });
-      toast('Password changed', 'success');
+      toast.success('Password changed');
       setCurrentPassword('');
       setNewPassword('');
     } catch (err) {
-      toast(err instanceof Error ? err.message : 'Password change failed', 'error');
+      toast.error(err instanceof Error ? err.message : 'Password change failed');
     } finally {
       setChanging(false);
     }
@@ -64,17 +63,21 @@ export default function SettingsPage() {
     try {
       const pending = await (await import('@/lib/offlineQueue')).getPending();
       if (pending.length === 0) {
-        toast('No pending offline transactions', 'info');
+        toast.info('No pending offline transactions');
         await loadSync();
         return;
       }
       const result = await (await import('@/lib/offlineQueue')).syncPending(
         localStorage.getItem('agrivet_token') || ''
       );
-      toast(`Sync complete: ${result.synced} synced, ${result.failed} failed`, result.failed ? 'error' : 'success');
+      if (result.failed) {
+        toast.error(`Sync complete: ${result.synced} synced, ${result.failed} failed`);
+      } else {
+        toast.success(`Sync complete: ${result.synced} synced, ${result.failed} failed`);
+      }
       await loadSync();
     } catch (err) {
-      toast(err instanceof Error ? err.message : 'Sync failed', 'error');
+      toast.error(err instanceof Error ? err.message : 'Sync failed');
     }
   };
 

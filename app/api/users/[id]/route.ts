@@ -103,3 +103,49 @@ export async function PATCH(
     return NextResponse.json({ error: 'Failed to update user' }, { status: 500 });
   }
 }
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    await connectDB();
+    const currentUser = await getUserFromRequest(req);
+    if (!currentUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    // Only owners can deactivate users
+    if (!checkPermission(currentUser.role, 'deactivate_user')) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const { id } = await params;
+
+    // Prevent self-deactivation
+    if (id === currentUser.userId) {
+      return NextResponse.json({ error: 'Cannot deactivate your own account' }, { status: 400 });
+    }
+
+    const before = await User.findOne({ userId: id }).lean<{ status: string }>();
+    if (!before) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+
+    const updated = await User.findOneAndUpdate(
+      { userId: id },
+      { status: 'inactive', updatedAt: new Date() },
+      { new: true }
+    ).select('-passwordHash');
+
+    await logActivity({
+      userId: currentUser.userId,
+      action: 'user_deactivated',
+      entity: 'User',
+      entityId: id,
+      beforeState: { status: before.status },
+      afterState: { status: 'inactive' },
+      req,
+    });
+
+    return NextResponse.json(updated);
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to deactivate user' }, { status: 500 });
+  }
+}

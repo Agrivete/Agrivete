@@ -8,7 +8,7 @@ import {
 } from '@/components/ui';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
-import { useToast } from '@/components/ui/Toast';
+import { toast } from 'sonner';
 
 interface Replenishment {
   purchaseId: string;
@@ -32,7 +32,6 @@ interface ItemForm { productId: string; productName: string; orderedQuantity: nu
 
 export default function ReplenishmentsPage() {
   const { hasRole } = useAuth();
-  const { toast } = useToast();
 
   const [replenishments, setReplenishments] = useState<Replenishment[]>([]);
   const [total, setTotal] = useState(0);
@@ -64,7 +63,7 @@ export default function ReplenishmentsPage() {
       setTotal(res.total);
       setPages(res.pages);
     } catch (err) {
-      toast(err instanceof Error ? err.message : 'Failed to load replenishments', 'error');
+      toast.error(err instanceof Error ? err.message : 'Failed to load replenishments');
     } finally {
       setLoading(false);
     }
@@ -85,7 +84,7 @@ export default function ReplenishmentsPage() {
       setSupplierId(''); setExpectedDate(''); setReferenceNo(''); setItems([]);
       setModal(true);
     } catch (err) {
-      toast(err instanceof Error ? err.message : 'Failed to load data', 'error');
+      toast.error(err instanceof Error ? err.message : 'Failed to load data');
     }
   };
 
@@ -104,7 +103,7 @@ export default function ReplenishmentsPage() {
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     if (!supplierId || !items.length || items.some((it) => !it.productId)) {
-      toast('Supplier and at least one item are required', 'error');
+      toast.error('Supplier and at least one item are required');
       return;
     }
     setSubmitting(true);
@@ -116,11 +115,11 @@ export default function ReplenishmentsPage() {
         referenceNo: referenceNo || undefined,
         items: items.map((it) => ({ productId: it.productId, orderedQuantity: it.orderedQuantity, unitCost: it.unitCost })),
       });
-      toast('Purchase order created', 'success');
+      toast.success('Purchase order created');
       setModal(false);
       load();
     } catch (err) {
-      toast(err instanceof Error ? err.message : 'Failed to create PO', 'error');
+      toast.error(err instanceof Error ? err.message : 'Failed to create PO');
     } finally {
       setSubmitting(false);
     }
@@ -131,11 +130,11 @@ export default function ReplenishmentsPage() {
     setCancelling(true);
     try {
       await api.patch(`/api/replenishments/${statusTarget.purchaseId}`, { status: newStatus });
-      toast(`PO marked ${newStatus}`, 'success');
+      toast.success(`PO marked ${newStatus}`);
       setStatusTarget(null);
       load();
     } catch (err) {
-      toast(err instanceof Error ? err.message : 'Update failed', 'error');
+      toast.error(err instanceof Error ? err.message : 'Update failed');
     } finally {
       setCancelling(false);
     }

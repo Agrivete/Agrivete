@@ -22,12 +22,12 @@ export async function ExpiringList() {
   const alerts = await getAlerts();
 
   return (
-    <Card>
+    <Card className="h-full min-h-[280px]">
       <CardHeader title="Expiring Products" description="Within 30-day window (BR05) · FEFO order" />
       <CardContent className="p-0">
         <Table
           columns={[
-            { key: 'productName', header: 'Product', accessor: (r) => <span className="font-medium text-slate-900">{r.productName}</span> },
+            { key: 'productName', header: 'Product', accessor: (r) => <span className="font-medium text-neutral-900">{r.productName}</span> },
             { key: 'lotNo', header: 'Lot #', accessor: (r) => <code className="text-xs text-slate-500">{r.lotNo}</code> },
             { key: 'daysUntilExpiry', header: 'Days Left', accessor: (r) => (
               <Badge variant={r.daysUntilExpiry <= 7 ? 'danger' : r.daysUntilExpiry <= 14 ? 'warning' : 'info'}>

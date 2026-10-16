@@ -48,19 +48,21 @@ export async function KpiCards({ userRole }: KpiCardsProps) {
 
   return (
     <>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {cards.map((card) => {
           const Icon = card.icon;
           return (
-            <Card key={card.label}>
-              <CardContent className="flex items-center gap-4">
-                <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${card.bg}`}>
-                  <Icon className="h-5 w-5" />
+            <Card key={card.label} className="transition-shadow hover:shadow-md">
+              <CardContent className="grid gap-4 p-5">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500">{card.label}</p>
+                  <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${card.bg}`}>
+                    <Icon className="h-[18px] w-[18px]" />
+                  </div>
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">{card.label}</p>
-                  <p className="truncate text-xl font-bold text-slate-900">{card.value}</p>
-                  <p className="text-[11px] text-slate-400">{card.detail}</p>
+                  <p className="truncate text-[28px] font-bold tabular-nums tracking-tight text-neutral-900">{card.value}</p>
+                  <p className="mt-1 text-[13px] text-neutral-500">{card.detail}</p>
                 </div>
               </CardContent>
             </Card>
@@ -69,19 +71,21 @@ export async function KpiCards({ userRole }: KpiCardsProps) {
       </div>
 
       {hasRole('owner') && (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {ownerCards.map((card) => {
             const Icon = card.icon;
             return (
-              <Card key={card.label} className="border-brand-200 bg-brand-50/40">
-                <CardContent className="flex items-center gap-4">
-                  <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${card.bg}`}>
-                    <Icon className="h-5 w-5" />
+              <Card key={card.label} className="border-emerald-100 bg-white transition-shadow hover:shadow-md">
+                <CardContent className="grid gap-4 p-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-800">{card.label}</p>
+                    <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${card.bg}`}>
+                      <Icon className="h-[18px] w-[18px]" />
+                    </div>
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-brand-700">{card.label}</p>
-                    <p className="truncate text-xl font-bold text-slate-900">{card.value}</p>
-                    <p className="text-[11px] text-slate-400">{card.detail}</p>
+                    <p className="truncate text-[28px] font-bold tabular-nums tracking-tight text-neutral-900">{card.value}</p>
+                    <p className="mt-1 text-[13px] text-neutral-500">{card.detail}</p>
                   </div>
                 </CardContent>
               </Card>

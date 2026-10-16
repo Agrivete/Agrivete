@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react';
 import { Inbox } from 'lucide-react';
-import { Button } from './Button';
+import { Button } from './button';
 
 interface EmptyStateProps {
   title: string;
@@ -21,12 +21,12 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center px-4 py-12 text-center">
-      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-neutral-50 text-neutral-300">
         {icon || <Inbox className="h-6 w-6" />}
       </div>
-      <h3 className="mt-4 text-base font-semibold text-slate-900">{title}</h3>
+      <h3 className="mt-4 text-base font-semibold text-neutral-900">{title}</h3>
       {message && (
-        <p className="mt-2 max-w-sm text-sm text-slate-500">{message}</p>
+        <p className="mt-2 max-w-sm text-sm text-neutral-500">{message}</p>
       )}
       {actionLabel && onAction && (
         <Button className="mt-4 w-full sm:w-auto" size="md" onClick={onAction}>

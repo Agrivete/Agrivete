@@ -1,0 +1,77 @@
+.login-page {
+  --login-green-950: #0d2e10;
+  --login-green-900: #164f1b;
+  --login-green-800: #1b5e20;
+  --login-green-300: #aed581;
+  --login-paper: #fbfcf8;
+  --login-ink: #18231a;
+  min-height: 100svh;
+  background: radial-gradient(ellipse at top left, #e8f5e9 0%, #f7fbf7 65%);
+  color: var(--login-ink);
+  font-family: var(--font-sans);
+}
+
+.login-loading {
+  display: grid;
+  min-height: 100svh;
+  place-items: center;
+  background: var(--login-green-950, #0d2e10);
+  color: #aed581;
+}
+
+.login-loading svg {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.login-main {
+  display: grid;
+  min-height: 100svh;
+  place-items: center;
+  padding: clamp(1.5rem, 5vw, 5rem);
+}
+
+.login-form-wrap {
+  width: min(100%, 27rem);
+}
+
+.login-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #3f4b40;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.login-back svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  transition: transform 180ms ease;
+}
+
+.login-back:hover svg {
+  transform: translateX(-0.2rem);
+}
+
+@media (max-width: 640px) {
+  .login-main {
+    min-height: 100svh;
+    align-items: start;
+    padding: max(1.5rem, env(safe-area-inset-top)) 1.25rem max(2rem, env(safe-area-inset-bottom));
+  }
+
+  .login-form-wrap {
+    width: min(100%, 30rem);
+    margin-inline: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-page *,
+  .login-page *::before,
+  .login-page *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

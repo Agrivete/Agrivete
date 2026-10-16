@@ -8,7 +8,7 @@ import {
 } from '@/components/ui';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
-import { useToast } from '@/components/ui/Toast';
+import { toast } from 'sonner';
 
 interface SaleRow {
   saleId: string;
@@ -40,7 +40,6 @@ interface SaleFormItem {
 
 export default function SalesPage() {
   const { hasRole } = useAuth();
-  const { toast } = useToast();
 
   const [sales, setSales] = useState<SaleRow[]>([]);
   const [total, setTotal] = useState(0);
@@ -70,7 +69,7 @@ export default function SalesPage() {
       setTotal(res.total);
       setPages(res.pages);
     } catch (err) {
-      toast(err instanceof Error ? err.message : 'Failed to load sales', 'error');
+      toast.error(err instanceof Error ? err.message : 'Failed to load sales');
     } finally {
       setLoading(false);
     }
@@ -90,7 +89,7 @@ export default function SalesPage() {
       setDiscount('0');
       setSaleModal(true);
     } catch (err) {
-      toast(err instanceof Error ? err.message : 'Failed to load products', 'error');
+      toast.error(err instanceof Error ? err.message : 'Failed to load products');
     }
   };
 
@@ -115,7 +114,7 @@ export default function SalesPage() {
   const submitSale = async (e: FormEvent) => {
     e.preventDefault();
     if (!items.length || items.some((it) => !it.productId || it.quantity < 1)) {
-      toast('Add at least one valid item', 'error');
+      toast.error('Add at least one valid item');
       return;
     }
     setSubmitting(true);
@@ -126,11 +125,11 @@ export default function SalesPage() {
         customerName,
         discount: parseFloat(discount) || 0,
       });
-      toast('Sale recorded — inventory deducted (BR01)', 'success');
+      toast.success('Sale recorded — inventory deducted (BR01)');
       setSaleModal(false);
       load();
     } catch (err) {
-      toast(err instanceof Error ? err.message : 'Failed to record sale', 'error');
+      toast.error(err instanceof Error ? err.message : 'Failed to record sale');
     } finally {
       setSubmitting(false);
     }
@@ -141,11 +140,11 @@ export default function SalesPage() {
     setCancelling(true);
     try {
       await api.patch(`/api/sales/${cancelTarget.saleId}`, { action: 'cancel' });
-      toast('Sale cancelled — inventory restored', 'success');
+      toast.success('Sale cancelled — inventory restored');
       setCancelTarget(null);
       load();
     } catch (err) {
-      toast(err instanceof Error ? err.message : 'Failed to cancel sale', 'error');
+      toast.error(err instanceof Error ? err.message : 'Failed to cancel sale');
     } finally {
       setCancelling(false);
     }

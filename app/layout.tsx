@@ -1,12 +1,17 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import './landing-page.css';
 import { AuthProvider } from '@/lib/AuthContext';
-import { ToastProvider } from '@/components/ui/Toast';
+import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'Agrivet System',
-  description: 'Agrivet Sales, Inventory, and Supplier Management System',
-  icons: { icon: '/favicon.ico' },
+  title: {
+    default: 'Agrivet — Sales and stock, in step',
+    template: '%s | Agrivet',
+  },
+  description:
+    'Agrivet connects sales, inventory, suppliers, and expiry tracking for agricultural supply shops.',
+  icons: { icon: '/agrivet-icon.svg' },
 };
 
 export default function RootLayout({
@@ -16,14 +21,20 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body>
         <AuthProvider>
-          <ToastProvider>
-            {children}
-          </ToastProvider>
+          <Toaster />
+          {children}
         </AuthProvider>
       </body>
     </html>
   );
 }
-

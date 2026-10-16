@@ -7,7 +7,7 @@ import {
   Card, CardHeader, CardContent, Table, Badge, StatusBadge, Button, Input, Select, Modal, PageLoader, EmptyState, ConfirmModal,
 } from '@/components/ui';
 import { api } from '@/lib/api';
-import { useToast } from '@/components/ui/Toast';
+import { toast } from 'sonner';
 
 interface Supplier {
   supplierId: string;
@@ -43,8 +43,6 @@ interface ReceivingTx {
 }
 
 export default function SuppliersPage() {
-  const { toast } = useToast();
-
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -73,7 +71,7 @@ export default function SuppliersPage() {
       const data = await api.get<Supplier[]>('/api/suppliers');
       setSuppliers(data);
     } catch (err) {
-      toast(err instanceof Error ? err.message : 'Failed to load suppliers', 'error');
+      toast.error(err instanceof Error ? err.message : 'Failed to load suppliers');
     } finally {
       setLoading(false);
     }
@@ -105,15 +103,15 @@ export default function SuppliersPage() {
       const payload = { name, contactPerson, phone, email, address, paymentTerms, notes };
       if (editTarget) {
         await api.put(`/api/suppliers/${editTarget.supplierId}`, payload);
-        toast('Supplier updated', 'success');
+        toast.success('Supplier updated');
       } else {
         await api.post('/api/suppliers', payload);
-        toast('Supplier created', 'success');
+        toast.success('Supplier created');
       }
       setModal(false);
       load();
     } catch (err) {
-      toast(err instanceof Error ? err.message : 'Save failed', 'error');
+      toast.error(err instanceof Error ? err.message : 'Save failed');
     } finally {
       setSubmitting(false);
     }
@@ -123,11 +121,11 @@ export default function SuppliersPage() {
     if (!deactivateTarget) return;
     try {
       await api.delete(`/api/suppliers/${deactivateTarget.supplierId}`);
-      toast('Supplier deactivated', 'success');
+      toast.success('Supplier deactivated');
       setDeactivateTarget(null);
       load();
     } catch (err) {
-      toast(err instanceof Error ? err.message : 'Failed to deactivate', 'error');
+      toast.error(err instanceof Error ? err.message : 'Failed to deactivate');
     }
   };
 
@@ -143,7 +141,7 @@ export default function SuppliersPage() {
       setPurchases(reps.replenishments.filter((r) => r.supplierId === s.supplierId));
       setReceivings(recs.receivings.filter((r) => r.supplierId === s.supplierId));
     } catch (err) {
-      toast(err instanceof Error ? err.message : 'Failed to load transactions', 'error');
+      toast.error(err instanceof Error ? err.message : 'Failed to load transactions');
     } finally {
       setTxLoading(false);
     }

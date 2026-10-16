@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import connectDB from '@/lib/mongodb';
-import { generateToken, setAuthCookie, getUserFromRequest } from '@/lib/auth';
+import { generateToken, setAuthCookie } from '@/lib/auth';
 import { logActivity } from '@/lib/logActivity';
 import { User } from '@/models/User';
 import { registerSchema } from '@/lib/validators';
@@ -23,20 +23,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { name, email, password, role } = parsed.data;
-
-    // Check if registering a non-staff requires owner auth
-    const requestingUser = await getUserFromRequest(req);
-    if (role !== 'staff' && (!requestingUser || requestingUser.role !== 'owner')) {
-      return NextResponse.json(
-        { error: 'Only owners can register managers and other owners' },
-        { status: 403 }
-      );
-    }
+    const { name, email, password } = parsed.data;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return NextResponse.json({ error: 'Email already registered' }, { status: 400 });
+      return NextResponse.json({ error: 'Email already registered' }, { status: 409 });
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
@@ -47,18 +38,18 @@ export async function POST(req: NextRequest) {
       name,
       email,
       passwordHash,
-      role: role || 'staff',
+      role: 'staff',
       status: 'active',
     });
 
     await user.save();
 
     await logActivity({
-      userId: requestingUser?.userId || userId,
+      userId,
       action: 'user_registered',
       entity: 'User',
       entityId: userId,
-      afterState: { userId, name, email, role },
+      afterState: { userId, name, email, role: 'staff' },
       req,
     });
 
@@ -75,12 +66,7 @@ export async function POST(req: NextRequest) {
     };
 
     const response = NextResponse.json(responseData, { status: 201 });
-
-    // Only set cookie if it's a self-registration (no existing auth)
-    if (!requestingUser) {
-      return setAuthCookie(response, token);
-    }
-    return response;
+    return setAuthCookie(response, token);
   } catch (error) {
     console.error('Register error:', error);
     return NextResponse.json({ error: 'Registration failed' }, { status: 500 });

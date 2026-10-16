@@ -7,7 +7,7 @@ import { AppLayout } from '@/components/layout';
 import { Card, CardHeader, CardContent, Table, Badge, Button, Select, Input, PageLoader, EmptyState } from '@/components/ui';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
-import { useToast } from '@/components/ui/Toast';
+import { toast } from 'sonner';
 
 const ExportButton = dynamic(
   () => import('./components/ExportButton').then((mod) => mod.ExportButton),
@@ -18,7 +18,6 @@ type ReportType = 'sales' | 'inventory' | 'profitability' | 'supplier';
 
 export default function ReportsPage() {
   const { hasRole } = useAuth();
-  const { toast } = useToast();
 
   const [type, setType] = useState<ReportType>('sales');
   const [format, setFormat] = useState<'json' | 'csv' | 'pdf'>('json');
@@ -41,7 +40,7 @@ export default function ReportsPage() {
       setData(res.data);
       setLoaded(true);
     } catch (err) {
-      toast(err instanceof Error ? err.message : 'Failed to generate report', 'error');
+      toast.error(err instanceof Error ? err.message : 'Failed to generate report');
     } finally {
       setLoading(false);
     }

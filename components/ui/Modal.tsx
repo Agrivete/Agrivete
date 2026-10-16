@@ -2,7 +2,7 @@
 
 import { useEffect, type ReactNode } from 'react';
 import { X } from 'lucide-react';
-import { Button } from './Button';
+import { Button } from './button';
 
 interface ModalProps {
   open: boolean;
@@ -109,10 +109,10 @@ export function ConfirmModal({
       size="sm"
       footer={
         <>
-          <Button variant="ghost" onClick={onClose} className="w-full sm:w-auto">
+          <Button variant="agri-ghost" onClick={onClose} className="w-full sm:w-auto">
             Cancel
           </Button>
-          <Button variant="danger" onClick={onConfirm} loading={loading} className="w-full sm:w-auto">
+          <Button variant="agri-danger" onClick={onConfirm} loading={loading} className="w-full sm:w-auto">
             {confirmLabel}
           </Button>
         </>

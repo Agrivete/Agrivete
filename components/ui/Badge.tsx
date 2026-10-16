@@ -32,7 +32,7 @@ const STATUS_MAP: Record<string, BadgeProps['variant']> = {
   inactive: 'neutral',
   completed: 'success',
   cancelled: 'danger',
-  refunded: 'warning',
+  refunded: 'neutral',
   pending: 'warning',
   partial: 'info',
   received: 'success',
