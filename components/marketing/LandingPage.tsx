@@ -252,6 +252,32 @@ export default function LandingPage() {
     setActiveOverlay(null);
   }
 
+  function handleNavClick(event: React.MouseEvent<HTMLAnchorElement>, href: string) {
+    event.preventDefault();
+    closeOverlay();
+    document.body.style.overflow = '';
+    lastFocusedRef.current = null;
+
+    setTimeout(() => {
+      if (href === '#home') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        const id = href.replace('#', '');
+        const target = document.getElementById(id);
+        if (target) {
+          const headerOffset = 90;
+          const elementPosition = target.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth',
+          });
+        }
+      }
+      window.history.pushState(null, '', href);
+    }, 60);
+  }
+
   function handleRequestSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setRequestMessage(
@@ -270,10 +296,11 @@ export default function LandingPage() {
           <NavbarLogo href="#home" />
 
           <nav className="primary-nav hidden lg:flex" aria-label="Main navigation">
-            <a href="#home">Home</a>
-            <a href="#works">System</a>
-            <a href="#services">What it does</a>
-            <a href="#about">About</a>
+            <a href="#home" onClick={(e) => handleNavClick(e, '#home')}>Home</a>
+            <a href="#about" onClick={(e) => handleNavClick(e, '#about')}>About</a>
+            <a href="#works" onClick={(e) => handleNavClick(e, '#works')}>System</a>
+            <a href="#services" onClick={(e) => handleNavClick(e, '#services')}>Workflows</a>
+            <a href="#faq" onClick={(e) => handleNavClick(e, '#faq')}>Questions</a>
           </nav>
 
           <div className="header-actions">
@@ -676,7 +703,9 @@ export default function LandingPage() {
         </div>
         <nav className="nav-links" aria-label="Expanded navigation">
           {menuLinks.map(([label, href]) => (
-            <a href={href} key={href} onClick={closeOverlay}>{label}</a>
+            <a href={href} key={href} onClick={(e) => handleNavClick(e, href)}>
+              {label}
+            </a>
           ))}
           <Link href="/login" onClick={closeOverlay} className="sign-in-link">Sign in</Link>
         </nav>

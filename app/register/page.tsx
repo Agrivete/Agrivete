@@ -2,10 +2,23 @@
 
 import Link from 'next/link';
 import { Suspense, useState, type FormEvent, type ChangeEvent } from 'react';
-import { AlertCircle, ArrowLeft, ArrowRight, ShieldCheck, Eye, EyeOff, Lock } from 'lucide-react';
+import {
+  AlertCircle,
+  ArrowLeft,
+  ArrowRight,
+  ShieldCheck,
+  User,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  CheckCircle2,
+  TrendingUp,
+  Truck,
+  ShieldAlert,
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
-import { Button, Input, Card, CardContent } from '@/components/ui';
 import { AgrivetLogo } from '@/components/brand';
 import { toast } from 'sonner';
 
@@ -13,7 +26,7 @@ export default function RegisterPage() {
   return (
     <Suspense
       fallback={
-        <div className="register-loading" aria-label="Loading sign-up">
+        <div className="grid min-h-screen place-items-center bg-brand-950 text-brand-300">
           <AgrivetLogo size="md" variant="light" showWordmark={false} />
         </div>
       }
@@ -32,12 +45,13 @@ function RegisterForm() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const validateForm = () => {
     if (!name.trim()) {
-      setError('Name is required');
+      setError('Full name is required');
       return false;
     }
     if (name.trim().length < 2) {
@@ -45,11 +59,11 @@ function RegisterForm() {
       return false;
     }
     if (!email.trim()) {
-      setError('Email is required');
+      setError('Email address is required');
       return false;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError('Invalid email address');
+      setError('Please enter a valid email address');
       return false;
     }
     if (!password) {
@@ -81,7 +95,7 @@ function RegisterForm() {
       toast.success('Account created successfully');
       router.push('/dashboard');
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Registration failed';
+      const message = err instanceof Error ? err.message : 'Registration failed. Please try again.';
       setError(message);
       toast.error(message);
     } finally {
@@ -90,144 +104,273 @@ function RegisterForm() {
   };
 
   return (
-    <div className="register-page">
-      <main className="register-main">
-        <Card className="w-full">
-          <CardContent className="pt-6">
-            <div className="text-center mb-6">
-              <AgrivetLogo size="sm" variant="dark" href="/" showWordmark={true} />
-              <Link className="register-back" href="/">
-                <ArrowLeft aria-hidden="true" className="h-4 w-4 mr-1" />
-                Back to Agrivet
-              </Link>
+    <div className="min-h-screen w-full bg-slate-50 flex flex-col lg:grid lg:grid-cols-2">
+      {/* Left Column: Brand & Value Prop Showcase (Desktop / Widescreen) */}
+      <div className="relative hidden lg:flex flex-col justify-between overflow-hidden bg-gradient-to-br from-brand-950 via-brand-900 to-brand-800 p-12 text-white">
+        {/* Background Landscape Photo with Deep Overlay */}
+        <div className="absolute inset-0 z-0">
+          <img
+            src="/assets/hungduan-hapao-rice-terraces-flickr.jpg"
+            alt="Agricultural farm supply landscape"
+            className="h-full w-full object-cover opacity-20 mix-blend-luminosity"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-brand-950 via-brand-950/85 to-brand-900/50" />
+        </div>
+
+        {/* Top Header */}
+        <div className="relative z-10 flex items-center justify-between">
+          <AgrivetLogo size="md" variant="light" href="/" />
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1 text-xs font-medium text-brand-200 backdrop-blur-md border border-white/10">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            Poultry & Farm Management
+          </span>
+        </div>
+
+        {/* Center Content / Value Props */}
+        <div className="relative z-10 my-auto max-w-lg py-10">
+          <div className="inline-flex items-center gap-2 rounded-lg bg-brand-800/80 px-3 py-1.5 text-xs font-semibold text-brand-200 mb-6 border border-brand-700/60 shadow-inner">
+            <ShieldCheck className="h-4 w-4 text-brand-300" />
+            Team Member Registration
+          </div>
+
+          <h1 className="text-3xl sm:text-4xl xl:text-5xl font-bold tracking-tight text-white leading-tight">
+            Equip your store team with modern inventory tools.
+          </h1>
+
+          <p className="mt-4 text-base text-brand-100/85 leading-relaxed">
+            Join your shop's operations on Agrivet. Handle checkout transactions, receive supplier
+            shipments, and monitor stock balances with automated audit trails.
+          </p>
+
+          {/* Feature Highlights */}
+          <div className="mt-8 space-y-3.5">
+            <div className="flex items-start gap-3.5 rounded-xl bg-white/5 p-3.5 border border-white/10 backdrop-blur-sm transition-colors hover:bg-white/10">
+              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-brand-700 text-white font-bold">
+                <ShieldAlert className="h-4 w-4" />
+              </div>
+              <div>
+                <h2 className="text-sm font-semibold text-white">Strict Role-Based Protection</h2>
+                <p className="text-xs text-brand-200/80 mt-0.5">
+                  Buying costs, net margins, and profit metrics remain strictly restricted to the business Owner.
+                </p>
+              </div>
             </div>
 
-            <div className="space-y-2 text-center mb-6">
-              <h1 className="text-2xl font-bold text-neutral-900">Create your account</h1>
-              <p className="text-neutral-500">Join your team on Agrivet.</p>
+            <div className="flex items-start gap-3.5 rounded-xl bg-white/5 p-3.5 border border-white/10 backdrop-blur-sm transition-colors hover:bg-white/10">
+              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-brand-700 text-white font-bold">
+                <TrendingUp className="h-4 w-4" />
+              </div>
+              <div>
+                <h2 className="text-sm font-semibold text-white">Speedy Counter Checkout</h2>
+                <p className="text-xs text-brand-200/80 mt-0.5">
+                  Designed for 50–100+ daily customer purchases of feeds, medicines, and agricultural supplies.
+                </p>
+              </div>
             </div>
+
+            <div className="flex items-start gap-3.5 rounded-xl bg-white/5 p-3.5 border border-white/10 backdrop-blur-sm transition-colors hover:bg-white/10">
+              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-brand-700 text-white font-bold">
+                <Truck className="h-4 w-4" />
+              </div>
+              <div>
+                <h2 className="text-sm font-semibold text-white">Supplier & Purchase Orders</h2>
+                <p className="text-xs text-brand-200/80 mt-0.5">
+                  Keep purchase orders and stock receiving receipts connected in one seamless workflow.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Trust Note */}
+        <div className="relative z-10 flex items-center justify-between border-t border-white/10 pt-6 text-xs text-brand-200/70">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+            <span>Secure 256-bit encrypted credential storage</span>
+          </div>
+          <span>Automatic Audit Logging</span>
+        </div>
+      </div>
+
+      {/* Right Column: Clean, Polished Registration Form */}
+      <div className="flex min-h-screen flex-1 flex-col justify-between p-6 sm:p-10 lg:p-14 bg-white lg:bg-slate-50">
+        {/* Top bar with back to home link */}
+        <div className="flex items-center justify-between w-full">
+          <div className="lg:hidden">
+            <AgrivetLogo size="sm" variant="dark" href="/" />
+          </div>
+          <Link
+            href="/"
+            className="ml-auto inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-brand-900 transition-colors py-2 px-3 rounded-lg hover:bg-slate-100"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Back to Agrivet
+          </Link>
+        </div>
+
+        {/* Center Register Card */}
+        <div className="my-auto mx-auto w-full max-w-md py-6">
+          <div className="rounded-2xl border border-slate-200/90 bg-white p-8 shadow-sm">
+            <div className="text-center mb-6">
+              <div className="inline-flex justify-center mb-4 lg:hidden">
+                <AgrivetLogo size="md" variant="dark" href="/" />
+              </div>
+              <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Create your account</h2>
+              <p className="text-sm text-slate-500 mt-1">
+                Join your team on the Agrivet operations terminal.
+              </p>
+            </div>
+
+            {error && (
+              <div
+                className="mb-5 flex items-start gap-2.5 rounded-lg bg-red-50 p-3.5 text-xs text-red-700 border border-red-200"
+                role="alert"
+              >
+                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-red-600" />
+                <span>{error}</span>
+              </div>
+            )}
 
             <form className="space-y-4" onSubmit={handleSubmit}>
-              {error && (
-                <div className="flex items-center gap-2 p-3 rounded-lg bg-red-50 text-red-700 text-sm" role="alert">
-                  <AlertCircle className="h-4 w-4 flex-shrink-0" />
-                  <span>{error}</span>
-                </div>
-              )}
-
-              {/* Name field */}
-              <Input
-                id="name"
-                label="Full name"
-                type="text"
-                placeholder="Juan Dela Cruz"
-                value={name}
-                onChange={(event: ChangeEvent<HTMLInputElement>) => setName(event.target.value)}
-                required
-                autoComplete="name"
-                disabled={loading}
-              />
-
-              {/* Email field */}
-              <Input
-                id="email"
-                label="Email address"
-                type="email"
-                placeholder="you@agrivet.com"
-                value={email}
-                onChange={(event: ChangeEvent<HTMLInputElement>) => setEmail(event.target.value)}
-                required
-                autoComplete="email"
-                disabled={loading}
-              />
-
-              {/* Password field */}
               <div>
-                <label htmlFor="password" className="mb-1.5 block text-xs font-semibold text-slate-700">
-                  Password
+                <label htmlFor="name" className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  Full name
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" aria-hidden="true" />
-                  <Input
+                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                    <User className="h-4 w-4" />
+                  </div>
+                  <input
+                    id="name"
+                    type="text"
+                    placeholder="Juan Dela Cruz"
+                    value={name}
+                    onChange={(event: ChangeEvent<HTMLInputElement>) => setName(event.target.value)}
+                    required
+                    autoComplete="name"
+                    disabled={loading}
+                    className="h-11 w-full rounded-lg border border-slate-300 bg-white pl-10 pr-3.5 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="email" className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  Email address
+                </label>
+                <div className="relative">
+                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                    <Mail className="h-4 w-4" />
+                  </div>
+                  <input
+                    id="email"
+                    type="email"
+                    placeholder="you@agrivet.com"
+                    value={email}
+                    onChange={(event: ChangeEvent<HTMLInputElement>) => setEmail(event.target.value)}
+                    required
+                    autoComplete="email"
+                    disabled={loading}
+                    className="h-11 w-full rounded-lg border border-slate-300 bg-white pl-10 pr-3.5 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="password" className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  Password (min. 8 characters)
+                </label>
+                <div className="relative">
+                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                    <Lock className="h-4 w-4" />
+                  </div>
+                  <input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
-                    className="pr-10"
-                    placeholder="Create a password (min 8 characters)"
+                    placeholder="Create a password"
                     value={password}
-                    onChange={(event) => setPassword(event.target.value)}
+                    onChange={(event: ChangeEvent<HTMLInputElement>) => setPassword(event.target.value)}
                     required
                     autoComplete="new-password"
                     disabled={loading}
-                    error={error && password && password.length < 8 ? 'Password must be at least 8 characters' : undefined}
+                    className="h-11 w-full rounded-lg border border-slate-300 bg-white pl-10 pr-10 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
                   />
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors p-1"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400 hover:text-slate-600 transition-colors"
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    aria-pressed={showPassword}
                   >
-                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
               </div>
 
-              {/* Confirm password field */}
               <div>
-                <label htmlFor="confirmPassword" className="mb-1.5 block text-xs font-semibold text-slate-700">
+                <label htmlFor="confirmPassword" className="block text-xs font-semibold text-slate-700 mb-1.5">
                   Confirm password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" aria-hidden="true" />
-                  <Input
+                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                    <Lock className="h-4 w-4" />
+                  </div>
+                  <input
                     id="confirmPassword"
-                    type={showPassword ? 'text' : 'password'}
-                    className="pr-10"
+                    type={showConfirmPassword ? 'text' : 'password'}
                     placeholder="Confirm your password"
                     value={confirmPassword}
-                    onChange={(event) => setConfirmPassword(event.target.value)}
+                    onChange={(event: ChangeEvent<HTMLInputElement>) => setConfirmPassword(event.target.value)}
                     required
                     autoComplete="new-password"
                     disabled={loading}
-                    error={error && confirmPassword && password !== confirmPassword ? 'Passwords do not match' : undefined}
+                    className="h-11 w-full rounded-lg border border-slate-300 bg-white pl-10 pr-10 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
                   />
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors p-1"
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    aria-pressed={showPassword}
+                    onClick={() => setShowConfirmPassword((prev) => !prev)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400 hover:text-slate-600 transition-colors"
+                    aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
                   >
-                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
               </div>
 
-              <Button
+              <button
                 type="submit"
-                loading={loading}
-                size="mobile"
-                fullWidth
-                className="mt-2"
+                disabled={loading}
+                className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-brand-800 px-4 text-sm font-semibold text-white shadow-sm transition-all hover:bg-brand-900 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                <span>Create account</span>
-                <ArrowRight aria-hidden="true" className="h-4 w-4" />
-              </Button>
+                {loading ? (
+                  <span>Creating account...</span>
+                ) : (
+                  <>
+                    <span>Create Account</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </>
+                )}
+              </button>
             </form>
 
-            <p className="flex items-center justify-center gap-2 text-sm text-neutral-500 mt-6">
-              <ShieldCheck className="h-4 w-4" />
-              Role-based access for owners, managers, and staff
-            </p>
+            <div className="mt-6 flex items-center justify-center gap-2 rounded-lg bg-slate-50 p-2.5 text-xs text-slate-500 border border-slate-100">
+              <ShieldCheck className="h-4 w-4 text-brand-700" />
+              <span>Role-based access: Owner, Manager, and Staff</span>
+            </div>
 
-            <p className="text-center text-sm text-neutral-500 mt-4">
-              Already have an account? <Link href="/login" className="text-brand-700 font-medium hover:underline">Sign in</Link>
-            </p>
+            <div className="mt-5 text-center text-xs text-slate-500">
+              Already have an account?{' '}
+              <Link href="/login" className="font-semibold text-brand-800 hover:text-brand-900 hover:underline">
+                Sign in
+              </Link>
+            </div>
+          </div>
+        </div>
 
-            <p className="text-center text-xs text-neutral-400 mt-8">Agrivet · Sales, inventory, and supplier management</p>
-          </CardContent>
-        </Card>
-      </main>
+        {/* Footer */}
+        <div className="text-center text-xs text-slate-400 py-2">
+          Agrivet · Sales, Inventory, and Supplier Management System
+        </div>
+      </div>
     </div>
   );
 }

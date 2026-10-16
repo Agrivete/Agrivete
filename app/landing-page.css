@@ -346,17 +346,32 @@
       }
 
       .marketing-page .menu-button {
-        display: inline-flex;
-        min-height: 2.8rem;
-        align-items: center;
-        gap: 0.65rem;
-        padding: 0.65rem 0.85rem;
-        background: rgb(13 46 16 / 35%);
-        color: var(--white);
-        border-radius: 0.5rem;
-        font-size: clamp(13px, 0.9vw, 14px);
-        font-weight: 600;
-        transition: background 180ms ease;
+        display: none;
+      }
+
+      @media (max-width: 1023px) {
+        .marketing-page .menu-button {
+          display: inline-flex;
+          min-height: 2.8rem;
+          align-items: center;
+          gap: 0.65rem;
+          padding: 0.65rem 0.85rem;
+          background: rgb(13 46 16 / 35%);
+          color: var(--white);
+          border-radius: 0.5rem;
+          font-size: clamp(13px, 0.9vw, 14px);
+          font-weight: 600;
+          transition: background 180ms ease;
+        }
+      }
+
+      @media (min-width: 1024px) {
+        .marketing-page .menu-button {
+          display: none !important;
+        }
+        .marketing-page .nav-overlay {
+          display: none !important;
+        }
       }
 
       .marketing-page .menu-button:hover {
