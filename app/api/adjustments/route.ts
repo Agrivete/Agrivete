@@ -9,6 +9,7 @@ import { Product } from '@/models/Product';
 import { InventoryBalance } from '@/models/InventoryBalance';
 import { InventoryMovement } from '@/models/InventoryMovement';
 import { parseJsonBody } from '@/lib/parseJson';
+import { rateLimit, getUserRateLimitKey } from '@/lib/rateLimit';
 import mongoose from 'mongoose';
 
 export async function GET(req: NextRequest) {
@@ -54,6 +55,15 @@ export async function POST(req: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     if (!checkPermission(user.role, 'adjust_inventory'))
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
+    const rl = await rateLimit(`adjustments:${getUserRateLimitKey(req, user.userId)}`, 30, 60 * 1000);
+    if (!rl.allowed) {
+      await dbSession.abortTransaction();
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } }
+      );
+    }
 
     const parsedBody = await parseJsonBody(req);
     if ('error' in parsedBody) return parsedBody.error;

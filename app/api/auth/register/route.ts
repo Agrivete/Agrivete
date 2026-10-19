@@ -6,6 +6,7 @@ import { logActivity } from '@/lib/logActivity';
 import { User } from '@/models/User';
 import { registerSchema } from '@/lib/validators';
 import { parseJsonBody } from '@/lib/parseJson';
+import { rateLimit, getLoginRateLimitKey } from '@/lib/rateLimit';
 
 export async function GET() {
   try {
@@ -21,6 +22,14 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     await connectDB();
+
+    const rl = await rateLimit(`register:${getLoginRateLimitKey(req)}`, 5, 15 * 60 * 1000);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } }
+      );
+    }
 
     const userCount = await User.countDocuments();
     if (userCount > 0) {

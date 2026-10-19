@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
     // Rate limit: 30 requests per user per minute
-    const rl = rateLimit(getUserRateLimitKey(req, user.userId), 30, 60 * 1000);
+    const rl = await rateLimit(getUserRateLimitKey(req, user.userId), 30, 60 * 1000);
     if (!rl.allowed) {
       return NextResponse.json(
         { error: 'Too many requests' },

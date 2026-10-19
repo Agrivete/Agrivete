@@ -12,6 +12,7 @@ import { Product } from '@/models/Product';
 import { InventoryBalance } from '@/models/InventoryBalance';
 import { Supplier } from '@/models/Supplier';
 import { Replenishment } from '@/models/Replenishment';
+import { rateLimit, getUserRateLimitKey } from '@/lib/rateLimit';
 import mongoose from 'mongoose';
 
 // BR08: Offline transactions retain unique local ID and sync state to prevent duplicates.
@@ -23,6 +24,14 @@ export async function POST(req: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     if (!checkPermission(user.role, 'sync_offline'))
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
+    const rl = await rateLimit(`sync:${getUserRateLimitKey(req, user.userId)}`, 20, 60 * 1000);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } }
+      );
+    }
 
     const body = await req.json();
     const parsed = syncSchema.safeParse(body);

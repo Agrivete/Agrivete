@@ -1,24 +1,66 @@
-const buckets = new Map<string, { count: number; resetAt: number }>();
+import connectDB from '@/lib/mongodb';
+import { RateLimitBucket } from '@/models/RateLimitBucket';
 
-export function rateLimit(
+export async function rateLimit(
   key: string,
   limit: number,
   windowMs: number
-): { allowed: boolean; retryAfter?: number } {
-  const now = Date.now();
-  const bucket = buckets.get(key);
+): Promise<{ allowed: boolean; retryAfter?: number }> {
+  await connectDB();
 
-  if (!bucket || bucket.resetAt < now) {
-    buckets.set(key, { count: 1, resetAt: now + windowMs });
+  const now = new Date();
+  const nextReset = new Date(now.getTime() + windowMs);
+
+  // Atomically reset expired bucket or insert a new one
+  const resetOrInsert = await RateLimitBucket.findOneAndUpdate(
+    {
+      key,
+      $or: [{ resetAt: { $lte: now } }, { resetAt: { $exists: false } }],
+    },
+    { $set: { count: 1, resetAt: nextReset } },
+    { new: true }
+  ).lean<{ count: number; resetAt: Date }>();
+
+  if (resetOrInsert) {
     return { allowed: true };
   }
 
-  if (bucket.count >= limit) {
-    return { allowed: false, retryAfter: Math.ceil((bucket.resetAt - now) / 1000) };
-  }
+  // Otherwise increment existing active bucket atomically (upserting if not present)
+  try {
+    const bucket = await RateLimitBucket.findOneAndUpdate(
+      { key },
+      {
+        $inc: { count: 1 },
+        $setOnInsert: { resetAt: nextReset },
+      },
+      { upsert: true, new: true }
+    ).lean<{ count: number; resetAt: Date }>();
 
-  bucket.count++;
-  return { allowed: true };
+    if (!bucket) {
+      return { allowed: true };
+    }
+
+    if (bucket.count > limit) {
+      const retryAfter = Math.max(1, Math.ceil((new Date(bucket.resetAt).getTime() - now.getTime()) / 1000));
+      return { allowed: false, retryAfter };
+    }
+
+    return { allowed: true };
+  } catch {
+    // Handle concurrent upsert duplicate key race
+    const bucket = await RateLimitBucket.findOneAndUpdate(
+      { key },
+      { $inc: { count: 1 } },
+      { new: true }
+    ).lean<{ count: number; resetAt: Date }>();
+
+    if (bucket && bucket.count > limit) {
+      const retryAfter = Math.max(1, Math.ceil((new Date(bucket.resetAt).getTime() - now.getTime()) / 1000));
+      return { allowed: false, retryAfter };
+    }
+
+    return { allowed: true };
+  }
 }
 
 function getClientIp(req: Request): string {

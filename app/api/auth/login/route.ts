@@ -9,16 +9,16 @@ import { parseJsonBody } from '@/lib/parseJson';
 import { rateLimit, getLoginRateLimitKey } from '@/lib/rateLimit';
 
 export async function POST(req: NextRequest) {
-  const rl = rateLimit(getLoginRateLimitKey(req), 5, 15 * 60 * 1000);
-  if (!rl.allowed) {
-    return NextResponse.json(
-      { error: 'Too many requests' },
-      { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } }
-    );
-  }
-
   try {
     await connectDB();
+
+    const rl = await rateLimit(getLoginRateLimitKey(req), 5, 15 * 60 * 1000);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } }
+      );
+    }
 
     const parsedBody = await parseJsonBody(req);
     if ('error' in parsedBody) return parsedBody.error;

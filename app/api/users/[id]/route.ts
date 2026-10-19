@@ -6,6 +6,7 @@ import { userUpdateSchema, changePasswordSchema } from '@/lib/validators';
 import { logActivity } from '@/lib/logActivity';
 import { User } from '@/models/User';
 import { parseJsonBody } from '@/lib/parseJson';
+import { rateLimit, getUserRateLimitKey } from '@/lib/rateLimit';
 import bcrypt from 'bcryptjs';
 
 export async function GET(
@@ -40,6 +41,14 @@ export async function PATCH(
     await connectDB();
     const currentUser = await getUserFromRequest(req);
     if (!currentUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const rl = await rateLimit(`users_patch:${getUserRateLimitKey(req, currentUser.userId)}`, 10, 60 * 1000);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } }
+      );
+    }
 
     const { id } = await params;
     const parsedBody = await parseJsonBody(req);
