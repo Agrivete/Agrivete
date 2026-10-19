@@ -15,7 +15,7 @@ export function TopProductsChart({ data = [] }: { data?: TopProductData[] }) {
       <Card className="h-full">
         <CardHeader title="Top Selling Products" description="Top 5 by quantity sold (30 days)" />
         <CardContent className="h-[240px] flex items-center justify-center">
-          <p className="text-slate-500">No product data available</p>
+          <p className="text-slate-500 dark:text-slate-400">No product data available</p>
         </CardContent>
       </Card>
     );
@@ -33,27 +33,33 @@ export function TopProductsChart({ data = [] }: { data?: TopProductData[] }) {
     <Card className="h-full">
       <CardHeader title="Top Selling Products" description="Top 5 by quantity sold (30 days)" />
       <CardContent>
-        <div className="h-[240px] w-full">
+        <div className="h-[240px] w-full text-slate-600 dark:text-slate-400">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} layout="vertical" margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" horizontal={false} />
-              <XAxis type="number" tick={{ fontSize: 11, fill: '#737373' }} axisLine={false} tickLine={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
+              <XAxis
+                type="number"
+                tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }}
+                axisLine={false}
+                tickLine={false}
+              />
               <YAxis
                 type="category"
                 dataKey="name"
-                tick={{ fontSize: 11, fill: '#18231a' }}
-                axisLine={{ stroke: '#e5e7eb' }}
+                tick={{ fontSize: 11, fill: 'var(--foreground)' }}
+                axisLine={{ stroke: 'var(--border)' }}
                 tickLine={false}
                 width={120}
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: '#fff',
-                  border: '1px solid #e5e7eb',
+                  backgroundColor: 'var(--card)',
+                  color: 'var(--card-foreground)',
+                  border: '1px solid var(--border)',
                   borderRadius: '8px',
                   boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
                 }}
-                labelStyle={{ color: '#18231a', fontWeight: 600 }}
+                labelStyle={{ color: 'var(--card-foreground)', fontWeight: 600 }}
                 formatter={(value: any, name: any) => [
                   (value ?? 0).toLocaleString(),
                   name === 'quantity' ? 'Units Sold' : 'Revenue',

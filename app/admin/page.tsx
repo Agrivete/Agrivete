@@ -95,8 +95,8 @@ export default function AdminDashboardPage() {
       <div className="space-y-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-xl font-bold text-slate-900">Platform Admin Dashboard</h1>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-50">Platform Admin Dashboard</h1>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               Review and approve Agrivet business owner registrations across the platform.
             </p>
           </div>
@@ -109,42 +109,42 @@ export default function AdminDashboardPage() {
         {/* Summary KPI Strip */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Card className="p-5 flex items-center gap-4">
-            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-amber-100 text-amber-800">
+            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
               <Clock className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-xs font-medium text-neutral-500">Pending Approvals</p>
-              <p className="text-2xl font-bold text-neutral-900 tabular-nums">{pendingOwners.length}</p>
+              <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Pending Approvals</p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-slate-50 tabular-nums">{pendingOwners.length}</p>
             </div>
           </Card>
 
           <Card className="p-5 flex items-center gap-4">
-            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-emerald-100 text-emerald-800">
+            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
               <Building2 className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-xs font-medium text-neutral-500">Active Businesses</p>
-              <p className="text-2xl font-bold text-neutral-900 tabular-nums">{activeOwners.length}</p>
+              <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Active Businesses</p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-slate-50 tabular-nums">{activeOwners.length}</p>
             </div>
           </Card>
 
           <Card className="p-5 flex items-center gap-4">
-            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-100 text-brand-800">
+            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-100 text-brand-800 dark:bg-emerald-950/60 dark:text-emerald-300">
               <ShieldCheck className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-xs font-medium text-neutral-500">Total Platform Users</p>
-              <p className="text-2xl font-bold text-neutral-900 tabular-nums">{users.length}</p>
+              <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Total Platform Users</p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-slate-50 tabular-nums">{users.length}</p>
             </div>
           </Card>
         </div>
 
         {/* Pending Approvals Table */}
         <Card className="p-0 overflow-hidden">
-          <div className="flex items-center justify-between border-b border-neutral-200 px-6 py-4">
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-6 py-4">
             <div>
-              <h2 className="text-base font-semibold text-neutral-900">Pending Approvals</h2>
-              <p className="text-xs text-neutral-500 mt-0.5">
+              <h2 className="text-base font-semibold text-slate-900 dark:text-slate-50">Pending Approvals</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 Business owners waiting for platform verification before they can sign in.
               </p>
             </div>
@@ -178,12 +178,12 @@ export default function AdminDashboardPage() {
                 <tbody>
                   {pendingOwners.map((owner) => (
                     <tr key={owner.userId}>
-                      <td className="font-semibold text-neutral-900">
+                      <td className="font-semibold text-slate-900 dark:text-slate-100">
                         {owner.businessName || 'Agrivet Store'}
                       </td>
-                      <td className="font-medium text-neutral-800">{owner.name}</td>
-                      <td className="text-neutral-600">{owner.email}</td>
-                      <td className="text-xs text-neutral-500">
+                      <td className="font-medium text-slate-800 dark:text-slate-200">{owner.name}</td>
+                      <td className="text-slate-600 dark:text-slate-300">{owner.email}</td>
+                      <td className="text-xs text-slate-500 dark:text-slate-400">
                         {owner.createdAt ? formatDateTime(owner.createdAt) : '—'}
                       </td>
                       <td className="text-right">

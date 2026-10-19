@@ -3,9 +3,25 @@ import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
 
 const PUBLIC_PATHS = ['/login', '/register'];
+
+const ADMIN_ONLY_PREFIXES = ['/admin'];
+const BUSINESS_ONLY_PREFIXES = [
+  '/dashboard',
+  '/sales',
+  '/inventory',
+  '/receiving',
+  '/expiration',
+  '/suppliers',
+  '/replenishments',
+  '/reports',
+  '/users',
+];
+const SHARED_PROTECTED_PREFIXES = ['/settings'];
+
 const PROTECTED_PREFIXES = [
-  '/admin', '/dashboard', '/sales', '/inventory', '/receiving', '/expiration',
-  '/suppliers', '/replenishments', '/reports', '/users', '/settings',
+  ...ADMIN_ONLY_PREFIXES,
+  ...BUSINESS_ONLY_PREFIXES,
+  ...SHARED_PROTECTED_PREFIXES,
 ];
 
 export async function middleware(req: NextRequest) {
@@ -38,6 +54,21 @@ export async function middleware(req: NextRequest) {
   if (valid && PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
     const target = userRole === 'admin' ? '/admin' : '/dashboard';
     return NextResponse.redirect(new URL(target, req.url));
+  }
+
+  if (valid) {
+    const isAdminRoute = ADMIN_ONLY_PREFIXES.some((p) => pathname.startsWith(p));
+    const isBusinessRoute = BUSINESS_ONLY_PREFIXES.some((p) => pathname.startsWith(p));
+
+    // Force Platform Admin away from business routes (/dashboard, /sales, /inventory, etc.)
+    if (userRole === 'admin' && isBusinessRoute) {
+      return NextResponse.redirect(new URL('/admin', req.url));
+    }
+
+    // Force Business users (owner, manager, staff) away from /admin routes
+    if (userRole !== 'admin' && isAdminRoute) {
+      return NextResponse.redirect(new URL('/dashboard', req.url));
+    }
   }
 
   return NextResponse.next();

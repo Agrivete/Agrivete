@@ -28,11 +28,11 @@ export function Table<T>({
     <div className="overflow-x-auto">
       <table className="w-full min-w-max text-left text-sm">
         <thead>
-          <tr className="border-b border-neutral-100">
+          <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40">
             {columns.map((col) => (
               <th
                 key={col.key}
-                className={`whitespace-nowrap px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-neutral-500 first:sticky first:left-0 first:z-20 first:bg-white ${col.className || ''} ${col.hideOnMobile ? 'hidden sm:table-cell' : ''}`}
+                className={`whitespace-nowrap border-b border-slate-200 dark:border-slate-800 px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 first:sticky first:left-0 first:z-20 first:bg-slate-50 dark:first:bg-slate-900 ${col.className || ''} ${col.hideOnMobile ? 'hidden sm:table-cell' : ''}`}
               >
                 {col.header}
               </th>
@@ -44,10 +44,10 @@ export function Table<T>({
             <tr>
               <td
                 colSpan={columns.length}
-                className="px-4 py-8 text-center text-sm text-neutral-500"
+                className="px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400"
               >
                 <span className="flex flex-col items-center gap-3">
-                  <Inbox className="h-12 w-12 text-neutral-300" aria-hidden="true" />
+                  <Inbox className="h-12 w-12 text-slate-300 dark:text-slate-600" aria-hidden="true" />
                   <span>{emptyMessage}</span>
                 </span>
               </td>
@@ -57,14 +57,14 @@ export function Table<T>({
               <tr
                 key={keyExtractor(row)}
                 onClick={onRowClick ? () => onRowClick(row) : undefined}
-                className={`h-11 border-b border-neutral-100 transition-colors even:bg-neutral-50/50 hover:bg-neutral-50 last:border-0 ${
+                className={`h-11 border-b border-slate-200 dark:border-slate-800 transition-colors even:bg-slate-50/40 dark:even:bg-slate-800/20 hover:bg-slate-50 dark:hover:bg-slate-800/60 last:border-0 ${
                   onRowClick ? 'cursor-pointer' : ''
                 }`}
               >
                 {columns.map((col) => (
                   <td
                     key={col.key}
-                    className={`px-4 py-3 text-slate-700 first:sticky first:left-0 first:z-10 first:bg-inherit ${col.className || ''} ${col.hideOnMobile ? 'hidden sm:table-cell' : ''}`}
+                    className={`px-4 py-3 text-slate-700 dark:text-slate-200 first:sticky first:left-0 first:z-10 first:bg-inherit ${col.className || ''} ${col.hideOnMobile ? 'hidden sm:table-cell' : ''}`}
                   >
                     {col.accessor ? col.accessor(row) : (row as unknown as Record<string, ReactNode>)[col.key]}
                   </td>
@@ -96,15 +96,15 @@ export function Pagination({
   );
 
   return (
-    <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-3 px-4 py-3">
-      <p className="text-xs text-slate-500 w-full sm:w-auto text-center sm:text-left">
+    <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-3 border-t border-slate-200 dark:border-slate-800 px-4 py-3">
+      <p className="text-xs text-slate-500 dark:text-slate-400 w-full sm:w-auto text-center sm:text-left">
         {total} record{total === 1 ? '' : 's'} · page {page} of {pages}
       </p>
       <div className="flex items-center gap-1 w-full justify-center sm:justify-end">
         <button
           onClick={() => onPageChange(page - 1)}
           disabled={page <= 1}
-          className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-100 disabled:opacity-40"
+          className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 transition hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40"
         >
           Prev
         </button>
@@ -118,7 +118,7 @@ export function Pagination({
               className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition ${
                 n === page
                   ? 'bg-brand-700 text-white'
-                  : 'text-slate-600 hover:bg-slate-100'
+                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
             >
               {n}
@@ -128,7 +128,7 @@ export function Pagination({
         <button
           onClick={() => onPageChange(page + 1)}
           disabled={page >= pages}
-          className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-100 disabled:opacity-40"
+          className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 transition hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40"
         >
           Next
         </button>

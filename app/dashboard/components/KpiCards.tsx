@@ -34,16 +34,16 @@ export async function KpiCards({ userRole }: KpiCardsProps) {
   const hasRole = (role: 'owner' | 'manager' | 'staff' | 'admin') => userRole === role;
 
   const cards = [
-    { label: "Today's Sales", value: peso(kpis.todaysRevenue), detail: `${kpis.todaysTransactions} transactions`, icon: DollarSign, bg: 'bg-emerald-50 text-emerald-700' },
-    { label: 'Items Sold Today', value: kpis.todaysItemsSold.toLocaleString(), detail: 'across all sales', icon: ShoppingCart, bg: 'bg-sky-50 text-sky-700' },
-    { label: 'Total Products', value: kpis.totalProducts.toString(), detail: `${kpis.lowStockCount} low stock`, icon: Package, bg: 'bg-violet-50 text-violet-700' },
-    { label: 'Expiring Soon', value: kpis.expiringCount.toString(), detail: 'within 30 days', icon: CalendarClock, bg: 'bg-orange-50 text-orange-600' },
+    { label: "Today's Sales", value: peso(kpis.todaysRevenue), detail: `${kpis.todaysTransactions} transactions`, icon: DollarSign, bg: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300' },
+    { label: 'Items Sold Today', value: kpis.todaysItemsSold.toLocaleString(), detail: 'across all sales', icon: ShoppingCart, bg: 'bg-sky-50 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300' },
+    { label: 'Total Products', value: kpis.totalProducts.toString(), detail: `${kpis.lowStockCount} low stock`, icon: Package, bg: 'bg-violet-50 text-violet-700 dark:bg-violet-950/60 dark:text-violet-300' },
+    { label: 'Expiring Soon', value: kpis.expiringCount.toString(), detail: 'within 30 days', icon: CalendarClock, bg: 'bg-orange-50 text-orange-600 dark:bg-orange-950/60 dark:text-orange-300' },
   ];
 
   const ownerCards = [
-    { label: "Today's Profit", value: peso(kpis.todaysProfit ?? 0), detail: `margin ${(kpis.todaysMargin ?? 0).toFixed(1)}%`, icon: TrendingUp, bg: 'bg-emerald-50 text-emerald-700' },
-    { label: "Today's Cost", value: peso(kpis.todaysCost ?? 0), detail: 'COGS', icon: Wallet, bg: 'bg-slate-100 text-slate-700' },
-    { label: 'Monthly Revenue', value: peso(kpis.monthlyRevenue), detail: `profit ${peso(kpis.monthlyProfit ?? 0)}`, icon: TrendingUp, bg: 'bg-brand-50 text-brand-700' },
+    { label: "Today's Profit", value: peso(kpis.todaysProfit ?? 0), detail: `margin ${(kpis.todaysMargin ?? 0).toFixed(1)}%`, icon: TrendingUp, bg: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300' },
+    { label: "Today's Cost", value: peso(kpis.todaysCost ?? 0), detail: 'COGS', icon: Wallet, bg: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300' },
+    { label: 'Monthly Revenue', value: peso(kpis.monthlyRevenue), detail: `profit ${peso(kpis.monthlyProfit ?? 0)}`, icon: TrendingUp, bg: 'bg-brand-50 text-brand-700 dark:bg-emerald-950/60 dark:text-emerald-300' },
   ];
 
   return (
@@ -55,14 +55,14 @@ export async function KpiCards({ userRole }: KpiCardsProps) {
             <Card key={card.label} className="transition-shadow hover:shadow-md">
               <CardContent className="grid gap-4 p-5">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500">{card.label}</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">{card.label}</p>
                   <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${card.bg}`}>
                     <Icon className="h-[18px] w-[18px]" />
                   </div>
                 </div>
                 <div className="min-w-0">
-                  <p className="truncate text-[28px] font-bold tabular-nums tracking-tight text-neutral-900">{card.value}</p>
-                  <p className="mt-1 text-[13px] text-neutral-500">{card.detail}</p>
+                  <p className="truncate text-[28px] font-bold tabular-nums tracking-tight text-slate-900 dark:text-slate-50">{card.value}</p>
+                  <p className="mt-1 text-[13px] text-slate-500 dark:text-slate-400">{card.detail}</p>
                 </div>
               </CardContent>
             </Card>
@@ -75,17 +75,17 @@ export async function KpiCards({ userRole }: KpiCardsProps) {
           {ownerCards.map((card) => {
             const Icon = card.icon;
             return (
-              <Card key={card.label} className="border-emerald-100 bg-white transition-shadow hover:shadow-md">
+              <Card key={card.label} className="border-emerald-200 dark:border-emerald-900/60 transition-shadow hover:shadow-md">
                 <CardContent className="grid gap-4 p-5">
                   <div className="flex items-center justify-between gap-3">
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-800">{card.label}</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-800 dark:text-emerald-400">{card.label}</p>
                     <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${card.bg}`}>
                       <Icon className="h-[18px] w-[18px]" />
                     </div>
                   </div>
                   <div className="min-w-0">
-                    <p className="truncate text-[28px] font-bold tabular-nums tracking-tight text-neutral-900">{card.value}</p>
-                    <p className="mt-1 text-[13px] text-neutral-500">{card.detail}</p>
+                    <p className="truncate text-[28px] font-bold tabular-nums tracking-tight text-slate-900 dark:text-slate-50">{card.value}</p>
+                    <p className="mt-1 text-[13px] text-slate-500 dark:text-slate-400">{card.detail}</p>
                   </div>
                 </CardContent>
               </Card>

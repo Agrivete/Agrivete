@@ -21,7 +21,7 @@ export function InventoryStatusChart({
       <Card className="h-full">
         <CardHeader title="Inventory Status" description="Stock health overview" />
         <CardContent className="h-[240px] flex items-center justify-center">
-          <p className="text-slate-500">No inventory data available</p>
+          <p className="text-slate-500 dark:text-slate-400">No inventory data available</p>
         </CardContent>
       </Card>
     );
@@ -37,7 +37,7 @@ export function InventoryStatusChart({
     <Card className="h-full">
       <CardHeader title="Inventory Status" description="Stock health overview" />
       <CardContent>
-        <div className="h-[240px] w-full flex flex-col items-center justify-center">
+        <div className="h-[240px] w-full flex flex-col items-center justify-center text-slate-700 dark:text-slate-300">
           <ResponsiveContainer width="100%" height={180}>
             <PieChart>
               <Pie
@@ -58,8 +58,9 @@ export function InventoryStatusChart({
               </Pie>
               <Tooltip
                 contentStyle={{
-                  backgroundColor: '#fff',
-                  border: '1px solid #e5e7eb',
+                  backgroundColor: 'var(--card)',
+                  color: 'var(--card-foreground)',
+                  border: '1px solid var(--border)',
                   borderRadius: '8px',
                   boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
                 }}
@@ -71,7 +72,7 @@ export function InventoryStatusChart({
                 verticalAlign="middle"
                 iconType="circle"
                 iconSize={8}
-                wrapperStyle={{ paddingTop: '20px' }}
+                wrapperStyle={{ paddingTop: '20px', color: 'var(--foreground)' }}
               />
             </PieChart>
           </ResponsiveContainer>

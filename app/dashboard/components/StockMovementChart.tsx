@@ -16,7 +16,7 @@ export function StockMovementChart({ data = [] }: { data?: MovementData[] }) {
       <Card className="h-full min-w-0">
         <CardHeader title="Stock Movement (14 Days)" description="Daily stock in/out/adjustments" />
         <CardContent className="h-[240px] flex items-center justify-center">
-          <p className="text-slate-500">No movement data available</p>
+          <p className="text-slate-500 dark:text-slate-400">No movement data available</p>
         </CardContent>
       </Card>
     );
@@ -33,33 +33,34 @@ export function StockMovementChart({ data = [] }: { data?: MovementData[] }) {
     <Card className="h-full min-w-0">
       <CardHeader title="Stock Movement (14 Days)" description="Daily stock in/out/adjustments" />
       <CardContent>
-        <div className="h-[240px] w-full">
+        <div className="h-[240px] w-full text-slate-600 dark:text-slate-400">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
               <XAxis
                 dataKey="date"
-                tick={{ fontSize: 11, fill: '#737373' }}
-                axisLine={{ stroke: '#e5e7eb' }}
+                tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }}
+                axisLine={{ stroke: 'var(--border)' }}
                 tickLine={false}
                 interval="preserveStartEnd"
               />
               <YAxis
-                tick={{ fontSize: 11, fill: '#737373' }}
+                tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }}
                 axisLine={false}
                 tickLine={false}
                 tickFormatter={(value) => value.toLocaleString()}
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: '#fff',
-                  border: '1px solid #e5e7eb',
+                  backgroundColor: 'var(--card)',
+                  color: 'var(--card-foreground)',
+                  border: '1px solid var(--border)',
                   borderRadius: '8px',
                   boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
                 }}
-                labelStyle={{ color: '#18231a', fontWeight: 600 }}
+                labelStyle={{ color: 'var(--card-foreground)', fontWeight: 600 }}
               />
-              <Legend />
+              <Legend wrapperStyle={{ color: 'var(--foreground)' }} />
               <Bar dataKey="sales" fill="#ef4444" name="Sales (Out)" radius={[4, 4, 0, 0]} maxBarSize={30} stackId="a" />
               <Bar dataKey="receivings" fill="#558b2f" name="Receivings (In)" radius={[4, 4, 0, 0]} maxBarSize={30} stackId="a" />
               <Bar dataKey="adjustments" fill="#7cb342" name="Adjustments" radius={[4, 4, 0, 0]} maxBarSize={30} stackId="a" />

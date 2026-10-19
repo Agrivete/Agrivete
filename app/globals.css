@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-brand-50: #f1f8e9;
   --color-brand-100: #dcedc8;
@@ -13,56 +15,77 @@
   --color-brand-900: #164f1b;
   --color-brand-950: #0d2e10;
 
-  /* shadcn/ui semantic colors for Tailwind utilities */
-  --color-background: #ffffff;
-  --color-foreground: #18231a;
-  --color-card: #ffffff;
-  --color-card-foreground: #18231a;
-  --color-popover: #ffffff;
-  --color-popover-foreground: #18231a;
-  --color-primary: #558b2f;           /* brand-700 */
-  --color-primary-foreground: #ffffff;
-  --color-secondary: #f1f8e9;         /* brand-50 */
-  --color-secondary-foreground: #1b5e20;
-  --color-muted: #f5f7fa;
-  --color-muted-foreground: #737373;
-  --color-accent: #dcedc8;            /* brand-100 */
-  --color-accent-foreground: #1b5e20;
-  --color-destructive: #dc2626;
-  --color-destructive-foreground: #ffffff;
-  --color-border: rgba(15, 23, 42, 0.08);
-  --color-input: rgba(15, 23, 42, 0.08);
-  --color-ring: #7cb342;              /* brand-600 */
+  /* shadcn/ui semantic colors mapped to CSS variables */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
 
   --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
   --radius: 0.5rem;
 }
 
-/* shadcn/ui CSS variables (for components using hsl(var(--primary)) pattern) */
-:root {
-  --background: #ffffff;
-  --foreground: #18231a;
-  --card: #ffffff;
-  --card-foreground: #18231a;
-  --popover: #ffffff;
-  --popover-foreground: #18231a;
-  --primary: #558b2f;
-  --primary-foreground: #ffffff;
-  --secondary: #f1f8e9;
-  --secondary-foreground: #1b5e20;
-  --muted: #f5f7fa;
-  --muted-foreground: #737373;
-  --accent: #dcedc8;
-  --accent-foreground: #1b5e20;
-  --destructive: #dc2626;
-  --destructive-foreground: #ffffff;
-  --border: rgba(15, 23, 42, 0.08);
-  --input: rgba(15, 23, 42, 0.08);
-  --ring: #7cb342;
-  --radius: 0.5rem;
-}
-
 @layer base {
+  :root {
+    --background: #f8fafc;
+    --foreground: #0f172a;
+    --card: #ffffff;
+    --card-foreground: #0f172a;
+    --popover: #ffffff;
+    --popover-foreground: #0f172a;
+    --primary: #558b2f;
+    --primary-foreground: #ffffff;
+    --secondary: #f1f8e9;
+    --secondary-foreground: #1b5e20;
+    --muted: #f1f5f9;
+    --muted-foreground: #64748b;
+    --accent: #dcedc8;
+    --accent-foreground: #1b5e20;
+    --destructive: #dc2626;
+    --destructive-foreground: #ffffff;
+    --border: #e2e8f0;
+    --input: #e2e8f0;
+    --ring: #7cb342;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: #020617;
+    --foreground: #f8fafc;
+    --card: #0f172a;
+    --card-foreground: #f8fafc;
+    --popover: #0f172a;
+    --popover-foreground: #f8fafc;
+    --primary: #7cb342;
+    --primary-foreground: #020617;
+    --secondary: #1e293b;
+    --secondary-foreground: #f8fafc;
+    --muted: #1e293b;
+    --muted-foreground: #94a3b8;
+    --accent: #1e293b;
+    --accent-foreground: #f8fafc;
+    --destructive: #ef4444;
+    --destructive-foreground: #f8fafc;
+    --border: #1e293b;
+    --input: #1e293b;
+    --ring: #8bc34a;
+  }
+
   *, *::before, *::after {
     box-sizing: border-box;
   }
@@ -102,16 +125,38 @@
     @apply bg-transparent;
   }
   ::-webkit-scrollbar-thumb {
-    @apply bg-slate-300 rounded-full;
+    @apply bg-slate-300 dark:bg-slate-700 rounded-full;
   }
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-slate-400;
+    @apply bg-slate-400 dark:bg-slate-600;
   }
 }
 
 @layer components {
   .app-background {
-    background: radial-gradient(ellipse at top left, #e8f5e9 0%, #f7fbf7 65%);
+    background-color: var(--background);
+    background-image: radial-gradient(ellipse at top left, rgba(85, 139, 47, 0.08) 0%, transparent 65%);
+  }
+
+  .dark .app-background {
+    background-color: #020617;
+    background-image: radial-gradient(ellipse at top left, rgba(124, 179, 66, 0.08) 0%, transparent 65%);
+  }
+
+  .data-table {
+    @apply w-full min-w-max text-left text-sm;
+  }
+  .data-table thead tr {
+    @apply border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/80;
+  }
+  .data-table th {
+    @apply whitespace-nowrap px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800;
+  }
+  .data-table tbody tr {
+    @apply h-11 border-b border-slate-200 dark:border-slate-800 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60 last:border-0;
+  }
+  .data-table td {
+    @apply px-4 py-3 text-slate-700 dark:text-slate-200;
   }
 }
 

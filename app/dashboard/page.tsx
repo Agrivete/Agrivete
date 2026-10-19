@@ -183,8 +183,8 @@ export default async function DashboardPage() {
         {businessName && (
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold text-slate-900">{businessName}</h1>
-              <p className="text-xs text-slate-500">Store Operations & Inventory Overview</p>
+              <h1 className="text-xl font-bold text-slate-900 dark:text-slate-50">{businessName}</h1>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Store Operations & Inventory Overview</p>
             </div>
           </div>
         )}

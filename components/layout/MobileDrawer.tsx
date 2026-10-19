@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
-import { X, LayoutDashboard, ShoppingCart, Package, PackageCheck, CalendarClock, Truck, ClipboardList, BarChart3, Users, Settings, LogOut } from 'lucide-react';
+import { X, LayoutDashboard, ShoppingCart, Package, PackageCheck, CalendarClock, Truck, ClipboardList, BarChart3, Users, Settings, LogOut, Building2 } from 'lucide-react';
 import { useAuth, type UserRole } from '@/lib/AuthContext';
 import { Badge } from '../ui';
 import { NavbarLogo } from '@/components/brand';
@@ -17,24 +17,34 @@ interface NavItem {
   badge?: string;
 }
 
-const NAV_ITEMS: NavItem[] = [
-  { label: 'Admin Dashboard', href: '/admin', icon: LayoutDashboard, roles: ['admin'] },
+const ADMIN_NAV_ITEMS: NavItem[] = [
+  { label: 'Platform Dashboard', href: '/admin', icon: LayoutDashboard, roles: ['admin'] },
+  { label: 'Businesses', href: '/admin/businesses', icon: Building2, roles: ['admin'] },
+  { label: 'Settings', href: '/settings', icon: Settings, roles: ['admin'] },
+];
+
+const BUSINESS_NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['owner', 'manager', 'staff'] },
   { label: 'Sales', href: '/sales', icon: ShoppingCart, roles: ['owner', 'manager', 'staff'] },
   { label: 'Inventory', href: '/inventory', icon: Package, roles: ['owner', 'manager', 'staff'] },
   { label: 'Receiving', href: '/receiving', icon: PackageCheck, roles: ['owner', 'manager'] },
   { label: 'Expiration', href: '/expiration', icon: CalendarClock, roles: ['owner', 'manager', 'staff'] },
   { label: 'Suppliers', href: '/suppliers', icon: Truck, roles: ['owner', 'manager'] },
+  { label: 'Supplier Directory', href: '/suppliers/directory', icon: Truck, roles: ['owner', 'manager', 'staff'] },
   { label: 'Replenishments', href: '/replenishments', icon: ClipboardList, roles: ['owner', 'manager'] },
   { label: 'Reports', href: '/reports', icon: BarChart3, roles: ['owner', 'manager'] },
   { label: 'Users', href: '/users', icon: Users, roles: ['owner'] },
-  { label: 'Settings', href: '/settings', icon: Settings, roles: ['owner', 'manager', 'admin'] },
+  { label: 'Settings', href: '/settings', icon: Settings, roles: ['owner', 'manager'] },
 ];
 
 export function MobileDrawer({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const { user, logout } = useAuth();
 
-  const items = NAV_ITEMS.filter((item) => user && item.roles.includes(user.role));
+  const items = !user
+    ? []
+    : user.role === 'admin'
+      ? ADMIN_NAV_ITEMS
+      : BUSINESS_NAV_ITEMS.filter((item) => item.roles.includes(user.role));
 
   const handleLogout = async () => {
     await logout();
@@ -55,9 +65,9 @@ export function MobileDrawer({ open, onOpenChange }: { open: boolean; onOpenChan
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full max-w-[320px] sm:max-w-[320px] p-0">
-        <SheetHeader className="flex items-center justify-between border-b border-neutral-200 px-5 py-5">
-          <NavbarLogo href="/dashboard" />
+      <SheetContent side="right" className="w-full max-w-[320px] sm:max-w-[320px] p-0 dark:bg-slate-900 dark:border-slate-800">
+        <SheetHeader className="flex items-center justify-between border-b border-neutral-200 dark:border-slate-800 px-5 py-5">
+          <NavbarLogo href={user?.role === 'admin' ? '/admin' : '/dashboard'} />
           <SheetDescription className="sr-only">Main navigation drawer</SheetDescription>
         </SheetHeader>
 
