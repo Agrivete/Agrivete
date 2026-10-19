@@ -8,6 +8,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { api } from './api';
 
 export type UserRole = 'owner' | 'manager' | 'staff';
@@ -38,12 +39,15 @@ interface AuthContextType {
 }
 
 const USER_KEY = 'agrivet_user';
+const PUBLIC_PATHS = ['/', '/login', '/register'];
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const pathname = usePathname();
+  const router = useRouter();
 
   const applySession = useCallback((newUser: AuthUser | null) => {
     setUser(newUser);
@@ -54,16 +58,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshUser = useCallback(async () => {
+    const currentPath =
+      typeof window !== 'undefined' ? window.location.pathname : pathname || '/';
+    const isPublicAuthPage =
+      currentPath === '/register' ||
+      currentPath === '/login' ||
+      currentPath.startsWith('/register/') ||
+      currentPath.startsWith('/login/');
+
     try {
       const current = await api.get<AuthUser>('/api/auth/me');
       applySession(current);
     } catch {
+      if (isPublicAuthPage) {
+        // On /register or /login, do NOT redirect or force logout on 401; just set user = null
+        setUser(null);
+        return;
+      }
       applySession(null);
+      const isPublicRoute = PUBLIC_PATHS.includes(currentPath);
+      if (!isPublicRoute) {
+        router.replace(`/login?redirect=${encodeURIComponent(currentPath)}`);
+      }
     }
-  }, [applySession]);
+  }, [applySession, pathname, router]);
 
   useEffect(() => {
     (async () => {
+      const currentPath =
+        typeof window !== 'undefined' ? window.location.pathname : pathname || '/';
+      const isPublicAuthPage =
+        currentPath === '/register' ||
+        currentPath === '/login' ||
+        currentPath.startsWith('/register/') ||
+        currentPath.startsWith('/login/');
+
+      if (isPublicAuthPage) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
       const storedUser = typeof localStorage !== 'undefined' ? localStorage.getItem(USER_KEY) : null;
 
       if (storedUser) {
@@ -77,7 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await refreshUser();
       setLoading(false);
     })();
-  }, [refreshUser]);
+  }, [refreshUser, pathname]);
 
   const login = useCallback(
     async (email: string, password: string) => {

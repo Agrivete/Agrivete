@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Suspense, useEffect, useState, type FormEvent, type ChangeEvent } from 'react';
+import { Suspense, useState, type FormEvent, type ChangeEvent } from 'react';
 import {
   AlertCircle,
   ArrowLeft,
@@ -50,23 +50,6 @@ function RegisterForm() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    let active = true;
-    fetch('/api/auth/register')
-      .then((res) => res.json())
-      .then((data: { canRegister?: boolean }) => {
-        if (active && data.canRegister === false) {
-          router.replace('/login');
-        }
-      })
-      .catch(() => {
-        // Ignore network errors during initial status check
-      });
-    return () => {
-      active = false;
-    };
-  }, [router]);
 
   const validateForm = () => {
     if (!name.trim()) {
