@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import connectDB from '@/lib/mongodb';
-import { generateToken, setAuthCookie } from '@/lib/auth';
 import { logActivity } from '@/lib/logActivity';
 import { User } from '@/models/User';
 import { registerSchema } from '@/lib/validators';
@@ -9,14 +8,7 @@ import { parseJsonBody } from '@/lib/parseJson';
 import { rateLimit, getLoginRateLimitKey } from '@/lib/rateLimit';
 
 export async function GET() {
-  try {
-    await connectDB();
-    const userCount = await User.countDocuments();
-    return NextResponse.json({ canRegister: userCount === 0 });
-  } catch (error) {
-    console.error('Register status error:', error);
-    return NextResponse.json({ canRegister: false });
-  }
+  return NextResponse.json({ canRegister: true });
 }
 
 export async function POST(req: NextRequest) {
@@ -43,28 +35,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { name, email, password, role: requestedRole } = parsed.data;
-
-    const userCount = await User.countDocuments();
-    let assignedRole: 'owner' | 'staff' = 'owner';
-
-    if (userCount === 0) {
-      assignedRole = 'owner';
-    } else if (requestedRole === 'owner') {
-      return NextResponse.json(
-        { error: 'Owner account already exists. Contact your administrator.' },
-        { status: 403 }
-      );
-    } else {
-      // Existing database + role === 'staff': allow only if SEC-01 bootstrap rule permits
-      if (process.env.ALLOW_PUBLIC_STAFF_REGISTRATION !== 'true') {
-        return NextResponse.json(
-          { error: 'Account creation is Owner-only. Contact your administrator.' },
-          { status: 403 }
-        );
-      }
-      assignedRole = 'staff';
-    }
+    const { name, email, password, businessName } = parsed.data;
 
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
@@ -79,11 +50,12 @@ export async function POST(req: NextRequest) {
 
     const user = new User({
       userId,
-      name,
+      name: name.trim(),
+      businessName: businessName.trim(),
       email: email.toLowerCase(),
       passwordHash,
-      role: assignedRole,
-      status: 'active',
+      role: 'owner',
+      status: 'pending',
     });
 
     await user.save();
@@ -93,26 +65,23 @@ export async function POST(req: NextRequest) {
       action: 'user_registered',
       entity: 'User',
       entityId: userId,
-      afterState: { userId, name, email: email.toLowerCase(), role: assignedRole },
+      afterState: {
+        userId,
+        name: user.name,
+        businessName: user.businessName,
+        email: user.email,
+        role: 'owner',
+        status: 'pending',
+      },
       req,
     });
 
-    const token = generateToken(user);
-
-    const responseData = {
-      user: {
-        userId: user.userId,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
-    };
-
-    const response = NextResponse.json(responseData, { status: 201 });
-    return setAuthCookie(response, token);
+    return NextResponse.json(
+      { message: 'Registration successful. Please wait for admin approval.' },
+      { status: 201 }
+    );
   } catch (error) {
     console.error('Register error:', error);
     return NextResponse.json({ error: 'Registration failed' }, { status: 500 });
   }
 }
-

@@ -18,6 +18,7 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
+  { label: 'Admin Dashboard', href: '/admin', icon: LayoutDashboard, roles: ['admin'] },
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['owner', 'manager', 'staff'] },
   { label: 'Sales', href: '/sales', icon: ShoppingCart, roles: ['owner', 'manager', 'staff'] },
   { label: 'Inventory', href: '/inventory', icon: Package, roles: ['owner', 'manager', 'staff'] },
@@ -27,7 +28,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Replenishments', href: '/replenishments', icon: ClipboardList, roles: ['owner', 'manager'] },
   { label: 'Reports', href: '/reports', icon: BarChart3, roles: ['owner', 'manager'] },
   { label: 'Users', href: '/users', icon: Users, roles: ['owner'] },
-  { label: 'Settings', href: '/settings', icon: Settings, roles: ['owner', 'manager'] },
+  { label: 'Settings', href: '/settings', icon: Settings, roles: ['owner', 'manager', 'admin'] },
 ];
 
 export function MobileDrawer({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {

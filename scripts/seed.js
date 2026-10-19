@@ -14,13 +14,42 @@ import { Sale } from '../models/Sale.js';
 import { InventoryBalance } from '../models/InventoryBalance.js';
 import { InventoryMovement } from '../models/InventoryMovement.js';
 
+const ADMIN_ID = 'USR-SEED-ADMIN';
+const ADMIN_EMAIL = 'admin@agrivet.local';
+const ADMIN_PASSWORD = 'admin123';
+
 const OWNER_ID = 'USR-SEED-OWNER';
 const OWNER_EMAIL = 'owner@agrivet.local';
 const OWNER_PASSWORD = 'owner123';
 
+async function seedAdmin() {
+  const existing = await User.findOne({ email: ADMIN_EMAIL });
+  if (existing) {
+    console.log('✓ Platform Admin already exists');
+    return existing;
+  }
+  const passwordHash = await bcrypt.hash(ADMIN_PASSWORD, 12);
+  const admin = new User({
+    userId: ADMIN_ID,
+    name: 'Platform Admin',
+    businessName: 'Agrivet Platform',
+    email: ADMIN_EMAIL,
+    passwordHash,
+    role: 'admin',
+    status: 'active',
+  });
+  await admin.save();
+  console.log(`✓ Platform Admin created — ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}`);
+  return admin;
+}
+
 async function seedOwner() {
   const existing = await User.findOne({ userId: OWNER_ID });
   if (existing) {
+    if (!existing.businessName) {
+      existing.businessName = 'Agrivet Demo Store';
+      await existing.save();
+    }
     console.log('✓ Owner already exists');
     return existing;
   }
@@ -28,6 +57,7 @@ async function seedOwner() {
   const owner = new User({
     userId: OWNER_ID,
     name: 'System Owner',
+    businessName: 'Agrivet Demo Store',
     email: OWNER_EMAIL,
     passwordHash,
     role: 'owner',
@@ -313,6 +343,7 @@ async function main() {
   await connectDB();
   console.log('Seeding Agrivet demo data...\n');
 
+  await seedAdmin();
   await seedOwner();
   await seedSuppliers();
   await seedProductsAndStock();
@@ -321,8 +352,8 @@ async function main() {
   await seedSales();
 
   console.log('\nSeed complete. Sign in at /login with:');
-  console.log(`  email:    ${OWNER_EMAIL}`);
-  console.log(`  password: ${OWNER_PASSWORD}`);
+  console.log(`  Platform Admin: ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}`);
+  console.log(`  Store Owner:    ${OWNER_EMAIL} / ${OWNER_PASSWORD}`);
   process.exit(0);
 }
 

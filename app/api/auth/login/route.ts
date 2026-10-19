@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
 
     const { email, password } = parsed.data;
 
-    const user = await User.findOne({ email, status: 'active' });
+    const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
@@ -42,6 +42,20 @@ export async function POST(req: NextRequest) {
     const isValid = await bcrypt.compare(password, user.passwordHash);
     if (!isValid) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+    }
+
+    if (user.status === 'pending') {
+      return NextResponse.json(
+        { error: 'Your account is pending approval by the platform administrator.' },
+        { status: 403 }
+      );
+    }
+
+    if (user.status === 'inactive') {
+      return NextResponse.json(
+        { error: 'Your account has been deactivated.' },
+        { status: 403 }
+      );
     }
 
     user.lastLoginAt = new Date();
@@ -62,6 +76,7 @@ export async function POST(req: NextRequest) {
       user: {
         userId: user.userId,
         name: user.name,
+        businessName: user.businessName,
         email: user.email,
         role: user.role,
       },

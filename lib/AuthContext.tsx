@@ -11,11 +11,12 @@ import {
 import { usePathname, useRouter } from 'next/navigation';
 import { api } from './api';
 
-export type UserRole = 'owner' | 'manager' | 'staff';
+export type UserRole = 'owner' | 'manager' | 'staff' | 'admin';
 
 export interface AuthUser {
   userId: string;
   name: string;
+  businessName?: string;
   email: string;
   role: UserRole;
 }
@@ -24,15 +25,15 @@ interface RegisterData {
   name: string;
   email: string;
   password: string;
-  role?: UserRole;
+  businessName: string;
 }
 
 interface AuthContextType {
   user: AuthUser | null;
   token: string | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (data: RegisterData) => Promise<void>;
+  login: (email: string, password: string) => Promise<AuthUser>;
+  register: (data: RegisterData) => Promise<{ message: string }>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   hasRole: (...roles: UserRole[]) => boolean;
@@ -121,18 +122,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password,
       });
       applySession(response.user);
+      return response.user;
     },
     [applySession]
   );
 
   const register = useCallback(
     async (data: RegisterData) => {
-      const response = await api.post<{ user: AuthUser }>('/api/auth/register', data);
-      if (response.user) {
-        applySession(response.user);
-      }
+      return api.post<{ message: string }>('/api/auth/register', data);
     },
-    [applySession]
+    []
   );
 
   const logout = useCallback(async () => {

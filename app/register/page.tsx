@@ -8,6 +8,7 @@ import {
   ArrowRight,
   ShieldCheck,
   User,
+  Building2,
   Mail,
   Lock,
   Eye,
@@ -17,10 +18,8 @@ import {
   Truck,
   ShieldAlert,
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
 import { AgrivetLogo } from '@/components/brand';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
 
 export default function RegisterPage() {
@@ -38,20 +37,28 @@ export default function RegisterPage() {
 }
 
 function RegisterForm() {
-  const router = useRouter();
   const { register } = useAuth();
 
   const [name, setName] = useState('');
+  const [businessName, setBusinessName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState<'owner' | 'staff'>('owner');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   const validateForm = () => {
+    if (!businessName.trim()) {
+      setError('Business name is required');
+      return false;
+    }
+    if (businessName.trim().length < 2) {
+      setError('Business name must be at least 2 characters');
+      return false;
+    }
     if (!name.trim()) {
       setError('Full name is required');
       return false;
@@ -93,9 +100,14 @@ function RegisterForm() {
 
     setLoading(true);
     try {
-      await register({ name: name.trim(), email: email.trim().toLowerCase(), password, role });
-      toast.success('Account created successfully');
-      router.push('/dashboard');
+      await register({
+        name: name.trim(),
+        businessName: businessName.trim(),
+        email: email.trim().toLowerCase(),
+        password,
+      });
+      setSubmitted(true);
+      toast.success('Registration submitted! An admin will review your business shortly.');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Registration failed. Please try again.';
       setError(message);
@@ -132,7 +144,7 @@ function RegisterForm() {
         <div className="relative z-10 my-auto max-w-lg py-10">
           <div className="inline-flex items-center gap-2 rounded-lg bg-brand-800/80 px-3 py-1.5 text-xs font-semibold text-brand-200 mb-6 border border-brand-700/60 shadow-inner">
             <ShieldCheck className="h-4 w-4 text-brand-300" />
-            Team Member Registration
+            Business Onboarding
           </div>
 
           <h1 className="text-3xl sm:text-4xl xl:text-5xl font-bold tracking-tight text-white leading-tight">
@@ -140,8 +152,8 @@ function RegisterForm() {
           </h1>
 
           <p className="mt-4 text-base text-brand-100/85 leading-relaxed">
-            Join your shop's operations on Agrivet. Handle checkout transactions, receive supplier
-            shipments, and monitor stock balances with automated audit trails.
+            Register your agricultural supply store on Agrivet. Once approved by our platform team,
+            manage checkout transactions, receive shipments, and invite your store staff.
           </p>
 
           {/* Feature Highlights */}
@@ -213,192 +225,208 @@ function RegisterForm() {
         {/* Center Register Card */}
         <div className="my-auto mx-auto w-full max-w-md py-6">
           <div className="rounded-2xl border border-slate-200/90 bg-white p-8 shadow-sm">
-            <div className="text-center mb-6">
-              <div className="inline-flex justify-center mb-4 lg:hidden">
-                <AgrivetLogo size="md" variant="dark" href="/" />
-              </div>
-              <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Create your account</h2>
-              <p className="text-sm text-slate-500 mt-1">
-                Join your team on the Agrivet operations terminal.
-              </p>
-            </div>
-
-            {error && (
-              <div
-                className="mb-5 flex items-start gap-2.5 rounded-lg bg-red-50 p-3.5 text-xs text-red-700 border border-red-200"
-                role="alert"
-              >
-                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-red-600" />
-                <span>{error}</span>
-              </div>
-            )}
-
-            <form className="space-y-4" onSubmit={handleSubmit}>
-              <div>
-                <label htmlFor="name" className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Full name
-                </label>
-                <div className="relative">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
-                    <User className="h-4 w-4" />
-                  </div>
-                  <input
-                    id="name"
-                    type="text"
-                    placeholder="Juan Dela Cruz"
-                    value={name}
-                    onChange={(event: ChangeEvent<HTMLInputElement>) => setName(event.target.value)}
-                    required
-                    autoComplete="name"
-                    disabled={loading}
-                    className="h-11 w-full rounded-lg border border-slate-300 bg-white pl-10 pr-3.5 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
-                  />
+            {submitted ? (
+              <div className="text-center py-6 space-y-4">
+                <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-emerald-100 text-emerald-700">
+                  <CheckCircle2 className="h-7 w-7" />
                 </div>
-              </div>
-
-              <div>
-                <label htmlFor="email" className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Email address
-                </label>
-                <div className="relative">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
-                    <Mail className="h-4 w-4" />
-                  </div>
-                  <input
-                    id="email"
-                    type="email"
-                    placeholder="you@agrivet.com"
-                    value={email}
-                    onChange={(event: ChangeEvent<HTMLInputElement>) => setEmail(event.target.value)}
-                    required
-                    autoComplete="email"
-                    disabled={loading}
-                    className="h-11 w-full rounded-lg border border-slate-300 bg-white pl-10 pr-3.5 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="password" className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Password (min. 8 characters)
-                </label>
-                <div className="relative">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
-                    <Lock className="h-4 w-4" />
-                  </div>
-                  <input
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="Create a password"
-                    value={password}
-                    onChange={(event: ChangeEvent<HTMLInputElement>) => setPassword(event.target.value)}
-                    required
-                    autoComplete="new-password"
-                    disabled={loading}
-                    className="h-11 w-full rounded-lg border border-slate-300 bg-white pl-10 pr-10 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((prev) => !prev)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400 hover:text-slate-600 transition-colors"
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
+                  Registration submitted! An admin will review your business shortly.
+                </h2>
+                <p className="text-sm text-slate-500 leading-relaxed">
+                  Your account for <span className="font-semibold text-slate-800">{businessName}</span> is currently
+                  pending approval by the platform administrator. Once approved, you can sign in and create staff
+                  accounts for your business.
+                </p>
+                <div className="pt-4">
+                  <Link
+                    href="/login"
+                    className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-brand-800 px-4 text-sm font-semibold text-white shadow-sm transition-all hover:bg-brand-900"
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="confirmPassword" className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Confirm password
-                </label>
-                <div className="relative">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
-                    <Lock className="h-4 w-4" />
-                  </div>
-                  <input
-                    id="confirmPassword"
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    placeholder="Confirm your password"
-                    value={confirmPassword}
-                    onChange={(event: ChangeEvent<HTMLInputElement>) => setConfirmPassword(event.target.value)}
-                    required
-                    autoComplete="new-password"
-                    disabled={loading}
-                    className="h-11 w-full rounded-lg border border-slate-300 bg-white pl-10 pr-10 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword((prev) => !prev)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400 hover:text-slate-600 transition-colors"
-                    aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
-                  >
-                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <span className="block text-xs font-semibold text-slate-700 mb-2">
-                  Account role
-                </span>
-                <RadioGroup
-                  value={role}
-                  onValueChange={(val) => setRole(val as 'owner' | 'staff')}
-                  className="grid grid-cols-2 gap-3"
-                >
-                  <label
-                    htmlFor="role-owner"
-                    className={`flex cursor-pointer items-center gap-2.5 rounded-lg border p-3 text-xs font-semibold transition ${
-                      role === 'owner'
-                        ? 'border-brand-700 bg-brand-50/60 text-brand-900 ring-1 ring-brand-700/30'
-                        : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
-                    }`}
-                  >
-                    <RadioGroupItem value="owner" id="role-owner" />
-                    <span>Business Owner</span>
-                  </label>
-                  <label
-                    htmlFor="role-staff"
-                    className={`flex cursor-pointer items-center gap-2.5 rounded-lg border p-3 text-xs font-semibold transition ${
-                      role === 'staff'
-                        ? 'border-brand-700 bg-brand-50/60 text-brand-900 ring-1 ring-brand-700/30'
-                        : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
-                    }`}
-                  >
-                    <RadioGroupItem value="staff" id="role-staff" />
-                    <span>Staff</span>
-                  </label>
-                </RadioGroup>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-brand-800 px-4 text-sm font-semibold text-white shadow-sm transition-all hover:bg-brand-900 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {loading ? (
-                  <span>Creating account...</span>
-                ) : (
-                  <>
-                    <span>Create Account</span>
+                    <span>Return to Sign In</span>
                     <ArrowRight className="h-4 w-4" />
-                  </>
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="text-center mb-6">
+                  <div className="inline-flex justify-center mb-4 lg:hidden">
+                    <AgrivetLogo size="md" variant="dark" href="/" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
+                    Register your Agrivet Business
+                  </h2>
+                  <p className="text-sm text-slate-500 mt-1">
+                    Submit your store details for platform administrator approval.
+                  </p>
+                </div>
+
+                {error && (
+                  <div
+                    className="mb-5 flex items-start gap-2.5 rounded-lg bg-red-50 p-3.5 text-xs text-red-700 border border-red-200"
+                    role="alert"
+                  >
+                    <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-red-600" />
+                    <span>{error}</span>
+                  </div>
                 )}
-              </button>
-            </form>
 
-            <div className="mt-6 flex items-center justify-center gap-2 rounded-lg bg-slate-50 p-2.5 text-xs text-slate-500 border border-slate-100">
-              <ShieldCheck className="h-4 w-4 text-brand-700" />
-              <span>Role-based access: Owner, Manager, and Staff</span>
-            </div>
+                <form className="space-y-4" onSubmit={handleSubmit}>
+                  <div>
+                    <label htmlFor="businessName" className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      Business Name
+                    </label>
+                    <div className="relative">
+                      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                        <Building2 className="h-4 w-4" />
+                      </div>
+                      <input
+                        id="businessName"
+                        type="text"
+                        placeholder="GreenFields Agrivet Supply"
+                        value={businessName}
+                        onChange={(event: ChangeEvent<HTMLInputElement>) => setBusinessName(event.target.value)}
+                        required
+                        disabled={loading}
+                        className="h-11 w-full rounded-lg border border-slate-300 bg-white pl-10 pr-3.5 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
+                      />
+                    </div>
+                  </div>
 
-            <div className="mt-5 text-center text-xs text-slate-500">
-              Already have an account?{' '}
-              <Link href="/login" className="font-semibold text-brand-800 hover:text-brand-900 hover:underline">
-                Sign in
-              </Link>
-            </div>
+                  <div>
+                    <label htmlFor="name" className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      Owner Full Name
+                    </label>
+                    <div className="relative">
+                      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                        <User className="h-4 w-4" />
+                      </div>
+                      <input
+                        id="name"
+                        type="text"
+                        placeholder="Juan Dela Cruz"
+                        value={name}
+                        onChange={(event: ChangeEvent<HTMLInputElement>) => setName(event.target.value)}
+                        required
+                        autoComplete="name"
+                        disabled={loading}
+                        className="h-11 w-full rounded-lg border border-slate-300 bg-white pl-10 pr-3.5 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label htmlFor="email" className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      Email address
+                    </label>
+                    <div className="relative">
+                      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                        <Mail className="h-4 w-4" />
+                      </div>
+                      <input
+                        id="email"
+                        type="email"
+                        placeholder="owner@agrivet.com"
+                        value={email}
+                        onChange={(event: ChangeEvent<HTMLInputElement>) => setEmail(event.target.value)}
+                        required
+                        autoComplete="email"
+                        disabled={loading}
+                        className="h-11 w-full rounded-lg border border-slate-300 bg-white pl-10 pr-3.5 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label htmlFor="password" className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      Password (min. 8 characters)
+                    </label>
+                    <div className="relative">
+                      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                        <Lock className="h-4 w-4" />
+                      </div>
+                      <input
+                        id="password"
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="Create a password"
+                        value={password}
+                        onChange={(event: ChangeEvent<HTMLInputElement>) => setPassword(event.target.value)}
+                        required
+                        autoComplete="new-password"
+                        disabled={loading}
+                        className="h-11 w-full rounded-lg border border-slate-300 bg-white pl-10 pr-10 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((prev) => !prev)}
+                        className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400 hover:text-slate-600 transition-colors"
+                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label htmlFor="confirmPassword" className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      Confirm password
+                    </label>
+                    <div className="relative">
+                      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                        <Lock className="h-4 w-4" />
+                      </div>
+                      <input
+                        id="confirmPassword"
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        placeholder="Confirm your password"
+                        value={confirmPassword}
+                        onChange={(event: ChangeEvent<HTMLInputElement>) => setConfirmPassword(event.target.value)}
+                        required
+                        autoComplete="new-password"
+                        disabled={loading}
+                        className="h-11 w-full rounded-lg border border-slate-300 bg-white pl-10 pr-10 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword((prev) => !prev)}
+                        className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400 hover:text-slate-600 transition-colors"
+                        aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                      >
+                        {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-brand-800 px-4 text-sm font-semibold text-white shadow-sm transition-all hover:bg-brand-900 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {loading ? (
+                      <span>Submitting registration...</span>
+                    ) : (
+                      <>
+                        <span>Register Business</span>
+                        <ArrowRight className="h-4 w-4" />
+                      </>
+                    )}
+                  </button>
+                </form>
+
+                <div className="mt-6 flex items-center justify-center gap-2 rounded-lg bg-slate-50 p-2.5 text-xs text-slate-500 border border-slate-100">
+                  <ShieldCheck className="h-4 w-4 text-brand-700" />
+                  <span>Owner accounts require Platform Admin approval</span>
+                </div>
+
+                <div className="mt-5 text-center text-xs text-slate-500">
+                  Already have an approved account?{' '}
+                  <Link href="/login" className="font-semibold text-brand-800 hover:text-brand-900 hover:underline">
+                    Sign in
+                  </Link>
+                </div>
+              </>
+            )}
           </div>
         </div>
 

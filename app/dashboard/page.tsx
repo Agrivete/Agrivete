@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { verifyToken } from '@/lib/auth';
 import { AppLayout } from '@/components/layout';
 import { KpiCards } from './components/KpiCards';
@@ -15,12 +16,18 @@ import { KpiCardsSkeleton } from './components/KpiCardsSkeleton';
 import { TableSkeleton } from '@/components/ui';
 import { CardSkeleton } from '@/components/ui';
 
-async function getUserRole(): Promise<'owner' | 'manager' | 'staff' | null> {
+async function getSessionInfo(): Promise<{
+  role: 'owner' | 'manager' | 'staff' | 'admin' | null;
+  businessName?: string;
+}> {
   const cookieStore = await cookies();
   const token = cookieStore.get('agrivet_token')?.value;
-  if (!token) return null;
+  if (!token) return { role: null };
   const payload = verifyToken(token);
-  return (payload?.role as 'owner' | 'manager' | 'staff') ?? null;
+  return {
+    role: (payload?.role as 'owner' | 'manager' | 'staff' | 'admin') ?? null,
+    businessName: payload?.businessName,
+  };
 }
 
 export const dynamic = 'force-dynamic';
@@ -35,11 +42,24 @@ function ChartSkeleton() {
 }
 
 export default async function DashboardPage() {
-  const userRole = await getUserRole();
+  const { role: userRole, businessName } = await getSessionInfo();
+
+  if (userRole === 'admin') {
+    redirect('/admin');
+  }
 
   return (
     <AppLayout>
       <div className="space-y-6">
+        {businessName && (
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-xl font-bold text-slate-900">{businessName}</h1>
+              <p className="text-xs text-slate-500">Store Operations & Inventory Overview</p>
+            </div>
+          </div>
+        )}
+
         {/* Row 1: KPI Cards */}
         <Suspense fallback={<KpiCardsSkeleton />}>
           <KpiCards userRole={userRole} />

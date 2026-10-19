@@ -32,6 +32,7 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
+  { label: 'Admin Dashboard', href: '/admin', icon: LayoutDashboard, roles: ['admin'] },
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['owner', 'manager', 'staff'] },
   { label: 'Sales', href: '/sales', icon: ShoppingCart, roles: ['owner', 'manager', 'staff'] },
   { label: 'Inventory', href: '/inventory', icon: Package, roles: ['owner', 'manager', 'staff'] },
@@ -42,7 +43,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Replenishments', href: '/replenishments', icon: ClipboardList, roles: ['owner', 'manager'] },
   { label: 'Reports', href: '/reports', icon: BarChart3, roles: ['owner', 'manager'] },
   { label: 'Users', href: '/users', icon: Users, roles: ['owner'] },
-  { label: 'Settings', href: '/settings', icon: Settings, roles: ['owner', 'manager'] },
+  { label: 'Settings', href: '/settings', icon: Settings, roles: ['owner', 'manager', 'admin'] },
 ];
 
 export function Sidebar() {
@@ -96,6 +97,9 @@ export function Sidebar() {
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold text-white">{user.name}</p>
+              {user.businessName && (
+                <p className="truncate text-[11px] text-white/70">{user.businessName}</p>
+              )}
               <Badge variant="default" className="mt-1 bg-white/10 px-2 text-[10px] uppercase tracking-wide text-green-100">
                 {user.role}
               </Badge>
@@ -112,7 +116,7 @@ export function Sidebar() {
         )}
         <div className="mt-3 flex items-center gap-2 text-[11px] text-white/50">
           <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
-          <span>RBAC enabled · 3 roles</span>
+          <span>RBAC enabled · 4 roles</span>
         </div>
       </div>
     </aside>

@@ -37,7 +37,7 @@ export default function LoginPage() {
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get('redirect') || '/dashboard';
+  const redirectParam = searchParams.get('redirect');
   const { login } = useAuth();
 
   const [email, setEmail] = useState('');
@@ -51,8 +51,12 @@ function LoginForm() {
     setError('');
     setLoading(true);
     try {
-      await login(email, password);
-      router.push(redirectTo);
+      const loggedInUser = await login(email, password);
+      if (loggedInUser.role === 'admin') {
+        router.push(redirectParam && redirectParam !== '/dashboard' ? redirectParam : '/admin');
+      } else {
+        router.push(redirectParam || '/dashboard');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed. Please check your credentials.');
     } finally {

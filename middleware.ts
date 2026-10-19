@@ -4,7 +4,7 @@ import { jwtVerify } from 'jose';
 
 const PUBLIC_PATHS = ['/login', '/register'];
 const PROTECTED_PREFIXES = [
-  '/dashboard', '/sales', '/inventory', '/receiving', '/expiration',
+  '/admin', '/dashboard', '/sales', '/inventory', '/receiving', '/expiration',
   '/suppliers', '/replenishments', '/reports', '/users', '/settings',
 ];
 
@@ -13,11 +13,13 @@ export async function middleware(req: NextRequest) {
   const token = req.cookies.get('agrivet_token')?.value;
 
   let valid = false;
+  let userRole: string | undefined;
   if (token && process.env.JWT_SECRET) {
     try {
       const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-      await jwtVerify(token, secret);
+      const { payload } = await jwtVerify(token, secret);
       valid = true;
+      userRole = typeof payload.role === 'string' ? payload.role : undefined;
     } catch {
       valid = false;
     }
@@ -34,7 +36,8 @@ export async function middleware(req: NextRequest) {
   }
 
   if (valid && PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
-    return NextResponse.redirect(new URL('/dashboard', req.url));
+    const target = userRole === 'admin' ? '/admin' : '/dashboard';
+    return NextResponse.redirect(new URL(target, req.url));
   }
 
   return NextResponse.next();

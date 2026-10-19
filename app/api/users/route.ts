@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import connectDB from '@/lib/mongodb';
 import { getUserFromRequest } from '@/lib/auth';
 import { checkPermission } from '@/lib/permissions';
-import { registerSchema } from '@/lib/validators';
+import { createUserSchema } from '@/lib/validators';
 import { parseJsonBody } from '@/lib/parseJson';
 import { logActivity } from '@/lib/logActivity';
 import { User } from '@/models/User';
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     const parsedBody = await parseJsonBody(req);
     if ('error' in parsedBody) return parsedBody.error;
     const body = parsedBody.data as Record<string, unknown>;
-    const parsed = registerSchema.safeParse(body);
+    const parsed = createUserSchema.safeParse(body);
     if (!parsed.success)
       return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 });
 
@@ -46,12 +46,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Email already registered' }, { status: 409 });
     }
 
+    const ownerRecord = await User.findOne({ userId: currentUser.userId }).lean();
+    const businessName =
+      (ownerRecord as { businessName?: string } | null)?.businessName ||
+      currentUser.businessName ||
+      'Agrivet Store';
+
     const passwordHash = await bcrypt.hash(password, 12);
     const userId = `USR-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
 
     const newUser = new User({
       userId,
       name,
+      businessName,
       email: email.toLowerCase(),
       passwordHash,
       role: requestedRole,
