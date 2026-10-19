@@ -118,7 +118,7 @@ function RegisterForm() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-slate-50 flex flex-col lg:grid lg:grid-cols-2">
+    <div className="min-h-screen w-full bg-brand-50/25 dark:bg-slate-950 flex flex-col lg:grid lg:grid-cols-2">
       {/* Left Column: Brand & Value Prop Showcase (Desktop / Widescreen) */}
       <div className="relative hidden lg:flex flex-col justify-between overflow-hidden bg-gradient-to-br from-brand-950 via-brand-900 to-brand-800 p-12 text-white">
         {/* Background Landscape Photo with Deep Overlay */}
@@ -207,15 +207,15 @@ function RegisterForm() {
       </div>
 
       {/* Right Column: Clean, Polished Registration Form */}
-      <div className="flex min-h-screen flex-1 flex-col justify-between p-6 sm:p-10 lg:p-14 bg-white lg:bg-slate-50">
+      <div className="flex h-full min-h-screen lg:h-screen lg:overflow-hidden flex-1 flex-col justify-between p-3.5 sm:p-5 lg:px-8 lg:py-4 bg-brand-50/25 dark:bg-slate-950">
         {/* Top bar with back to home link */}
-        <div className="flex items-center justify-between w-full">
+        <div className="flex items-center justify-between w-full shrink-0">
           <div className="lg:hidden">
             <AgrivetLogo size="sm" variant="dark" href="/" />
           </div>
           <Link
             href="/"
-            className="ml-auto inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-brand-900 transition-colors py-2 px-3 rounded-lg hover:bg-slate-100"
+            className="ml-auto inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-brand-900 transition-colors py-1 px-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
             Back to Agrivet
@@ -223,25 +223,25 @@ function RegisterForm() {
         </div>
 
         {/* Center Register Card */}
-        <div className="my-auto mx-auto w-full max-w-md py-6">
-          <div className="rounded-2xl border border-slate-200/90 bg-white p-8 shadow-sm">
+        <div className="my-auto mx-auto w-full max-w-md py-1">
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 sm:p-6 shadow-sm">
             {submitted ? (
-              <div className="text-center py-6 space-y-4">
-                <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-emerald-100 text-emerald-700">
-                  <CheckCircle2 className="h-7 w-7" />
+              <div className="text-center py-4 space-y-3">
+                <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-emerald-100 text-emerald-700">
+                  <CheckCircle2 className="h-6 w-6" />
                 </div>
-                <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
+                <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50 tracking-tight">
                   Registration submitted! An admin will review your business shortly.
                 </h2>
-                <p className="text-sm text-slate-500 leading-relaxed">
-                  Your account for <span className="font-semibold text-slate-800">{businessName}</span> is currently
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Your account for <span className="font-semibold text-slate-800 dark:text-slate-200">{businessName}</span> is currently
                   pending approval by the platform administrator. Once approved, you can sign in and create staff
                   accounts for your business.
                 </p>
-                <div className="pt-4">
+                <div className="pt-2">
                   <Link
                     href="/login"
-                    className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-brand-800 px-4 text-sm font-semibold text-white shadow-sm transition-all hover:bg-brand-900"
+                    className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-brand-800 px-4 text-sm font-semibold text-white shadow-sm transition-all hover:bg-brand-900"
                   >
                     <span>Return to Sign In</span>
                     <ArrowRight className="h-4 w-4" />
@@ -250,35 +250,35 @@ function RegisterForm() {
               </div>
             ) : (
               <>
-                <div className="text-center mb-6">
-                  <div className="inline-flex justify-center mb-4 lg:hidden">
+                <div className="text-center mb-3">
+                  <div className="inline-flex justify-center mb-2 lg:hidden">
                     <AgrivetLogo size="md" variant="dark" href="/" />
                   </div>
-                  <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
+                  <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-50 tracking-tight">
                     Register your Agrivet Business
                   </h2>
-                  <p className="text-sm text-slate-500 mt-1">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                     Submit your store details for platform administrator approval.
                   </p>
                 </div>
 
                 {error && (
                   <div
-                    className="mb-5 flex items-start gap-2.5 rounded-lg bg-red-50 p-3.5 text-xs text-red-700 border border-red-200"
+                    className="mb-3 flex items-start gap-2 rounded-lg bg-red-50 dark:bg-red-950/50 p-2.5 text-xs text-red-700 dark:text-red-300 border border-red-200 dark:border-red-900"
                     role="alert"
                   >
-                    <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-red-600" />
+                    <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-red-600 dark:text-red-400" />
                     <span>{error}</span>
                   </div>
                 )}
 
-                <form className="space-y-4" onSubmit={handleSubmit}>
+                <form className="space-y-2.5" onSubmit={handleSubmit}>
                   <div>
-                    <label htmlFor="businessName" className="block text-xs font-semibold text-slate-700 mb-1.5">
+                    <label htmlFor="businessName" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                       Business Name
                     </label>
                     <div className="relative">
-                      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                         <Building2 className="h-4 w-4" />
                       </div>
                       <input
@@ -289,17 +289,17 @@ function RegisterForm() {
                         onChange={(event: ChangeEvent<HTMLInputElement>) => setBusinessName(event.target.value)}
                         required
                         disabled={loading}
-                        className="h-11 w-full rounded-lg border border-slate-300 bg-white pl-10 pr-3.5 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
+                        className="h-9 sm:h-10 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 pl-9 pr-3 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label htmlFor="name" className="block text-xs font-semibold text-slate-700 mb-1.5">
+                    <label htmlFor="name" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                       Owner Full Name
                     </label>
                     <div className="relative">
-                      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                         <User className="h-4 w-4" />
                       </div>
                       <input
@@ -311,17 +311,17 @@ function RegisterForm() {
                         required
                         autoComplete="name"
                         disabled={loading}
-                        className="h-11 w-full rounded-lg border border-slate-300 bg-white pl-10 pr-3.5 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
+                        className="h-9 sm:h-10 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 pl-9 pr-3 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label htmlFor="email" className="block text-xs font-semibold text-slate-700 mb-1.5">
+                    <label htmlFor="email" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                       Email address
                     </label>
                     <div className="relative">
-                      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                         <Mail className="h-4 w-4" />
                       </div>
                       <input
@@ -333,17 +333,17 @@ function RegisterForm() {
                         required
                         autoComplete="email"
                         disabled={loading}
-                        className="h-11 w-full rounded-lg border border-slate-300 bg-white pl-10 pr-3.5 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
+                        className="h-9 sm:h-10 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 pl-9 pr-3 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label htmlFor="password" className="block text-xs font-semibold text-slate-700 mb-1.5">
+                    <label htmlFor="password" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                       Password (min. 8 characters)
                     </label>
                     <div className="relative">
-                      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                         <Lock className="h-4 w-4" />
                       </div>
                       <input
@@ -355,12 +355,12 @@ function RegisterForm() {
                         required
                         autoComplete="new-password"
                         disabled={loading}
-                        className="h-11 w-full rounded-lg border border-slate-300 bg-white pl-10 pr-10 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
+                        className="h-9 sm:h-10 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 pl-9 pr-9 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword((prev) => !prev)}
-                        className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400 hover:text-slate-600 transition-colors"
+                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
                         aria-label={showPassword ? 'Hide password' : 'Show password'}
                       >
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -369,11 +369,11 @@ function RegisterForm() {
                   </div>
 
                   <div>
-                    <label htmlFor="confirmPassword" className="block text-xs font-semibold text-slate-700 mb-1.5">
+                    <label htmlFor="confirmPassword" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                       Confirm password
                     </label>
                     <div className="relative">
-                      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                         <Lock className="h-4 w-4" />
                       </div>
                       <input
@@ -385,12 +385,12 @@ function RegisterForm() {
                         required
                         autoComplete="new-password"
                         disabled={loading}
-                        className="h-11 w-full rounded-lg border border-slate-300 bg-white pl-10 pr-10 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
+                        className="h-9 sm:h-10 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 pl-9 pr-9 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
                       />
                       <button
                         type="button"
                         onClick={() => setShowConfirmPassword((prev) => !prev)}
-                        className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400 hover:text-slate-600 transition-colors"
+                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
                         aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
                       >
                         {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -401,7 +401,7 @@ function RegisterForm() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-brand-800 px-4 text-sm font-semibold text-white shadow-sm transition-all hover:bg-brand-900 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="mt-2.5 flex h-9 sm:h-10 w-full items-center justify-center gap-2 rounded-lg bg-brand-800 px-4 text-sm font-semibold text-white shadow-sm transition-all hover:bg-brand-900 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {loading ? (
                       <span>Submitting registration...</span>
@@ -414,14 +414,14 @@ function RegisterForm() {
                   </button>
                 </form>
 
-                <div className="mt-6 flex items-center justify-center gap-2 rounded-lg bg-slate-50 p-2.5 text-xs text-slate-500 border border-slate-100">
-                  <ShieldCheck className="h-4 w-4 text-brand-700" />
+                <div className="mt-3 flex items-center justify-center gap-2 rounded-lg bg-slate-50 dark:bg-slate-800/60 p-2 text-[11px] text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-slate-800">
+                  <ShieldCheck className="h-3.5 w-3.5 text-brand-700 dark:text-brand-400" />
                   <span>Owner accounts require Platform Admin approval</span>
                 </div>
 
-                <div className="mt-5 text-center text-xs text-slate-500">
+                <div className="mt-2.5 text-center text-xs text-slate-500 dark:text-slate-400">
                   Already have an approved account?{' '}
-                  <Link href="/login" className="font-semibold text-brand-800 hover:text-brand-900 hover:underline">
+                  <Link href="/login" className="font-semibold text-brand-800 dark:text-brand-400 hover:text-brand-900 hover:underline">
                     Sign in
                   </Link>
                 </div>
@@ -431,7 +431,7 @@ function RegisterForm() {
         </div>
 
         {/* Footer */}
-        <div className="text-center text-xs text-slate-400 py-2">
+        <div className="text-center text-xs text-slate-400 dark:text-slate-500 py-1 shrink-0">
           Agrivet · Sales, Inventory, and Supplier Management System
         </div>
       </div>
