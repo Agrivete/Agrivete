@@ -72,7 +72,7 @@ export default function UsersPage() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await api.post('/api/auth/register', { name, email, password, role });
+      await api.post('/api/users', { name, email, password, role });
       toast.success(`User ${name} created (${role})`);
       setCreateModal(false);
       setName(''); setEmail(''); setPassword(''); setRole('staff');
