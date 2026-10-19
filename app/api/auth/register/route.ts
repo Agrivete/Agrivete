@@ -7,9 +7,28 @@ import { User } from '@/models/User';
 import { registerSchema } from '@/lib/validators';
 import { parseJsonBody } from '@/lib/parseJson';
 
+export async function GET() {
+  try {
+    await connectDB();
+    const userCount = await User.countDocuments();
+    return NextResponse.json({ canRegister: userCount === 0 });
+  } catch (error) {
+    console.error('Register status error:', error);
+    return NextResponse.json({ canRegister: false });
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     await connectDB();
+
+    const userCount = await User.countDocuments();
+    if (userCount > 0) {
+      return NextResponse.json(
+        { error: 'Account creation is Owner-only. Contact your administrator.' },
+        { status: 403 }
+      );
+    }
 
     const parsedBody = await parseJsonBody(req);
     if ('error' in parsedBody) return parsedBody.error;
@@ -25,9 +44,12 @@ export async function POST(req: NextRequest) {
 
     const { name, email, password } = parsed.data;
 
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
-      return NextResponse.json({ error: 'Email already registered' }, { status: 409 });
+      return NextResponse.json(
+        { error: 'Unable to complete registration. Please check your details and try again.' },
+        { status: 400 }
+      );
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
@@ -38,7 +60,7 @@ export async function POST(req: NextRequest) {
       name,
       email,
       passwordHash,
-      role: 'staff',
+      role: 'owner',
       status: 'active',
     });
 
@@ -49,7 +71,7 @@ export async function POST(req: NextRequest) {
       action: 'user_registered',
       entity: 'User',
       entityId: userId,
-      afterState: { userId, name, email, role: 'staff' },
+      afterState: { userId, name, email, role: user.role },
       req,
     });
 
