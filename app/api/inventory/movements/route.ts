@@ -39,8 +39,13 @@ export async function GET(req: NextRequest) {
       InventoryMovement.countDocuments(query),
     ]);
 
+    const sanitizedMovements =
+      user.role === 'owner'
+        ? movements
+        : movements.map(({ unitCost: _uc, ...m }: any) => m);
+
     return NextResponse.json({
-      movements,
+      movements: sanitizedMovements,
       total,
       page,
       pages: Math.ceil(total / limit),

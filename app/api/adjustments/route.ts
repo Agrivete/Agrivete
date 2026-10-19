@@ -32,7 +32,12 @@ export async function GET(req: NextRequest) {
       InventoryMovement.countDocuments(query),
     ]);
 
-    return NextResponse.json({ adjustments: movements, total, page, pages: Math.ceil(total / limit) });
+    const sanitizedAdjustments =
+      user.role === 'owner'
+        ? movements
+        : movements.map(({ unitCost: _uc, ...m }: any) => m);
+
+    return NextResponse.json({ adjustments: sanitizedAdjustments, total, page, pages: Math.ceil(total / limit) });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch adjustments' }, { status: 500 });
   }
@@ -107,12 +112,14 @@ export async function POST(req: NextRequest) {
     );
 
     await dbSession.commitTransaction();
+    const rawMovement = typeof result.movement.toObject === 'function' ? result.movement.toObject() : result.movement;
+    const { unitCost: _uc, ...safeMovement } = rawMovement as Record<string, unknown>;
     return NextResponse.json({
       message: 'Inventory adjusted',
       referenceId,
       previousQty,
       newQty,
-      movement: result.movement,
+      movement: user.role === 'owner' ? rawMovement : safeMovement,
     });
   } catch (error) {
     await dbSession.abortTransaction();
