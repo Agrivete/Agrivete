@@ -7,10 +7,16 @@ export { Table, Pagination, type Column } from './Table';
 export { Badge, StatusBadge } from './Badge';
 export { EmptyState, PageLoader } from './EmptyState';
 export { TableSkeleton } from './TableSkeleton';
-export { SmoothInput } from '@/components/v1/skiper106';
-export { Sheet, SheetPortal, SheetOverlay, SheetTrigger, SheetClose, SheetContent, SheetHeader, SheetFooter, SheetTitle, SheetDescription } from './sheet';
-export { Avatar, AvatarImage, AvatarFallback } from './avatar';
-export { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuCheckboxItem, DropdownMenuRadioItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuGroup, DropdownMenuPortal, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuRadioGroup } from './dropdown-menu';
-export { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator, BreadcrumbEllipsis } from './breadcrumb';
-export { Progress } from './progress';
-export { Tabs, TabsList, TabsTrigger, TabsContent } from './tabs';
+export {
+  Sheet,
+  SheetPortal,
+  SheetOverlay,
+  SheetTrigger,
+  SheetClose,
+  SheetContent,
+  SheetHeader,
+  SheetFooter,
+  SheetTitle,
+  SheetDescription,
+} from './sheet';
+export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from './tooltip';

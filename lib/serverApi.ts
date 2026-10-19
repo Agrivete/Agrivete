@@ -2,11 +2,29 @@
  * Server-side API helper for use in Server Components.
  * Uses absolute URLs and reads auth from cookies.
  */
-import { cookies } from 'next/headers';
+import { cookies, headers as nextHeaders } from 'next/headers';
 import { verifyToken } from '@/lib/auth';
 
-function getServerUrl(): string {
-  return process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+/**
+ * Resolve the app's own origin for server-side fetches.
+ * Order: current request host (works on Vercel/any host) -> NEXT_PUBLIC_APP_URL
+ * -> VERCEL_URL -> localhost (dev only).
+ */
+async function getServerUrl(): Promise<string> {
+  try {
+    const h = await nextHeaders();
+    const host = h.get('x-forwarded-host') || h.get('host');
+    if (host) {
+      const proto =
+        h.get('x-forwarded-proto') || (host.startsWith('localhost') || host.startsWith('127.') ? 'http' : 'https');
+      return `${proto}://${host}`;
+    }
+  } catch {
+    // headers() unavailable outside a request context
+  }
+  if (process.env.NEXT_PUBLIC_APP_URL) return process.env.NEXT_PUBLIC_APP_URL;
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return 'http://localhost:3000';
 }
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
@@ -23,7 +41,7 @@ async function getAuthHeaders(): Promise<Record<string, string>> {
 }
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const baseUrl = getServerUrl();
+  const baseUrl = await getServerUrl();
   const url = endpoint.startsWith('http') ? endpoint : `${baseUrl}${endpoint}`;
   
   const authHeaders = await getAuthHeaders();
