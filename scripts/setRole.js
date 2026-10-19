@@ -6,7 +6,7 @@
 import { User } from '../models/User.js';
 import connectDB from '../lib/mongodb.js';
 
-const VALID_ROLES = ['owner', 'manager', 'staff'];
+const VALID_ROLES = ['owner', 'manager', 'staff', 'admin'];
 
 async function main() {
   const email = process.argv[2];
@@ -14,7 +14,7 @@ async function main() {
 
   if (!email || !role) {
     console.error('Usage: npm run set-role -- <email> <role>');
-    console.error('Roles: owner | manager | staff');
+    console.error('Roles: owner | manager | staff | admin');
     process.exit(1);
   }
 

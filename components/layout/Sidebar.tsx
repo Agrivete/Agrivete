@@ -17,7 +17,7 @@ import {
   AlertTriangle,
   RefreshCw,
   LogOut,
-  Building2,
+  Building,
 } from 'lucide-react';
 import { useAuth, type UserRole } from '@/lib/AuthContext';
 import { Badge } from '../ui';
@@ -28,17 +28,17 @@ interface NavItem {
   label: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
-  roles: UserRole[];
+  roles?: UserRole[];
   badge?: string;
 }
 
-const ADMIN_NAV_ITEMS: NavItem[] = [
-  { label: 'Platform Dashboard', href: '/admin', icon: LayoutDashboard, roles: ['admin'] },
-  { label: 'Businesses', href: '/admin/businesses', icon: Building2, roles: ['admin'] },
-  { label: 'Settings', href: '/settings', icon: Settings, roles: ['admin'] },
+const adminLinks: NavItem[] = [
+  { label: 'Platform Dashboard', href: '/admin', icon: LayoutDashboard },
+  { label: 'Businesses', href: '/admin/businesses', icon: Building },
+  { label: 'Settings', href: '/settings', icon: Settings },
 ];
 
-const BUSINESS_NAV_ITEMS: NavItem[] = [
+const businessLinks: (NavItem & { roles: UserRole[] })[] = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['owner', 'manager', 'staff'] },
   { label: 'Sales', href: '/sales', icon: ShoppingCart, roles: ['owner', 'manager', 'staff'] },
   { label: 'Inventory', href: '/inventory', icon: Package, roles: ['owner', 'manager', 'staff'] },
@@ -57,11 +57,13 @@ export function Sidebar() {
   const router = useRouter();
   const { user, logout } = useAuth();
 
-  const items = !user
-    ? []
-    : user.role === 'admin'
-      ? ADMIN_NAV_ITEMS
-      : BUSINESS_NAV_ITEMS.filter((item) => item.roles.includes(user.role));
+  const isAdmin = user?.role === 'admin';
+
+  const navItems = isAdmin
+    ? adminLinks
+    : user
+      ? businessLinks.filter((item) => item.roles.includes(user.role))
+      : [];
 
   const handleLogout = async () => {
     await logout();
@@ -76,7 +78,7 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-        {items.map((item) => {
+        {navItems.map((item) => {
           const Icon = item.icon;
           const isActive =
             item.href === '/dashboard'
@@ -109,6 +111,7 @@ export function Sidebar() {
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold text-white">{user.name}</p>
+              <p className="truncate text-[11px] text-white/60">{user.email}</p>
               {user.businessName && (
                 <p className="truncate text-[11px] text-white/70">{user.businessName}</p>
               )}
