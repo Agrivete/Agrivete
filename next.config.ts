@@ -16,9 +16,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'Cache-Control',
-            // Browser: no caching (per-user credentialed data).
-            // Edge/CDN: short shared-max with SWR fallback.
-            value: 'public, max-age=0, s-maxage=60, stale-while-revalidate=300',
+            value: 'private, no-store, no-cache, must-revalidate',
           },
         ],
       },
@@ -27,7 +25,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=0, s-maxage=60, stale-while-revalidate=300',
+            value: 'private, no-store, no-cache, must-revalidate',
           },
         ],
       },
@@ -36,7 +34,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=0, s-maxage=300, stale-while-revalidate=600',
+            value: 'private, no-store, no-cache, must-revalidate',
           },
         ],
       },
