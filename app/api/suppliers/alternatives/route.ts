@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
     await connectDB();
     const user = await getUserFromRequest(req);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    if (!checkPermission(user.role, 'view_supplier_alternatives') && !checkPermission(user.role, 'view_suppliers'))
+    if (!checkPermission(user.role, 'view_supplier_alternatives'))
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
     const { searchParams } = new URL(req.url);
