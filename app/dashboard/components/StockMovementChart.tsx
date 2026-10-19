@@ -3,23 +3,14 @@
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { Card, CardHeader, CardContent } from '@/components/ui';
 
-interface MovementData {
+export interface MovementData {
   date: string;
   sales: number;
   receivings: number;
   adjustments: number;
 }
 
-async function getStockMovements(): Promise<MovementData[]> {
-  const res = await fetch('/api/inventory/movements?days=14');
-  if (!res.ok) return [];
-  const data = await res.json();
-  return data.movements || [];
-}
-
-export async function StockMovementChart() {
-  const data = await getStockMovements();
-
+export function StockMovementChart({ data = [] }: { data?: MovementData[] }) {
   if (data.length === 0) {
     return (
       <Card className="h-full min-w-0">
@@ -60,7 +51,12 @@ export async function StockMovementChart() {
                 tickFormatter={(value) => value.toLocaleString()}
               />
               <Tooltip
-                contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                contentStyle={{
+                  backgroundColor: '#fff',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                }}
                 labelStyle={{ color: '#18231a', fontWeight: 600 }}
               />
               <Legend />

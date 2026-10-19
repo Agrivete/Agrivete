@@ -3,23 +3,14 @@
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { Card, CardHeader, CardContent } from '@/components/ui';
 
-interface SalesTrendData {
+export interface SalesTrendData {
   date: string;
   revenue: number;
   transactions: number;
   total?: number;
 }
 
-async function getSalesTrend(): Promise<SalesTrendData[]> {
-  const res = await fetch('/api/reports?type=sales&format=json&days=30');
-  if (!res.ok) return [];
-  const data = await res.json();
-  return data.data || [];
-}
-
-export async function SalesTrendChart() {
-  const data = await getSalesTrend();
-
+export function SalesTrendChart({ data = [] }: { data?: SalesTrendData[] }) {
   if (data.length === 0) {
     return (
       <Card className="h-full">
@@ -56,12 +47,22 @@ export async function SalesTrendChart() {
                 tick={{ fontSize: 11, fill: '#737373' }}
                 axisLine={false}
                 tickLine={false}
-                tickFormatter={(value) => value >= 1000 ? `₱${(value / 1000).toFixed(1)}k` : `₱${value}`}
+                tickFormatter={(value) => (value >= 1000 ? `₱${(value / 1000).toFixed(1)}k` : `₱${value}`)}
               />
+              <YAxis yAxisId="right" orientation="right" hide />
               <Tooltip
-                contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                contentStyle={{
+                  backgroundColor: '#fff',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                }}
                 labelStyle={{ color: '#18231a', fontWeight: 600 }}
-                formatter={(value: any) => [`₱${(value ?? 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`, 'Revenue']}
+                formatter={(value: any, name: any) =>
+                  name === 'Revenue'
+                    ? [`₱${(value ?? 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`, 'Revenue']
+                    : [(value ?? 0).toLocaleString(), 'Transactions']
+                }
               />
               <Legend />
               <Line

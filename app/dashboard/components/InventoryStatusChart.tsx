@@ -3,30 +3,17 @@
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { Card, CardHeader, CardContent } from '@/components/ui';
 
-interface InventoryStatusData {
+export interface InventoryStatusData {
   healthy: number;
   lowStock: number;
   outOfStock: number;
 }
 
-async function getInventoryStatus(): Promise<InventoryStatusData> {
-  const res = await fetch('/api/inventory?format=json');
-  if (!res.ok) return { healthy: 0, lowStock: 0, outOfStock: 0 };
-  const data = await res.json();
-  const products = data.products || [];
-  
-  let healthy = 0, lowStock = 0, outOfStock = 0;
-  products.forEach((p: any) => {
-    if (p.quantityOnHand <= 0) outOfStock++;
-    else if (p.quantityOnHand <= (p.lowStockThreshold || 5)) lowStock++;
-    else healthy++;
-  });
-  
-  return { healthy, lowStock, outOfStock };
-}
-
-export async function InventoryStatusChart() {
-  const data = await getInventoryStatus();
+export function InventoryStatusChart({
+  data = { healthy: 0, lowStock: 0, outOfStock: 0 },
+}: {
+  data?: InventoryStatusData;
+}) {
   const total = data.healthy + data.lowStock + data.outOfStock;
 
   if (total === 0) {
@@ -70,7 +57,12 @@ export async function InventoryStatusChart() {
                 ))}
               </Pie>
               <Tooltip
-                contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                contentStyle={{
+                  backgroundColor: '#fff',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                }}
                 formatter={(value: any) => [(value ?? 0).toString(), 'Products']}
               />
               <Legend

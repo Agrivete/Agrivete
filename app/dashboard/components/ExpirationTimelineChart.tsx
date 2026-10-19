@@ -3,7 +3,7 @@
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell } from 'recharts';
 import { Card, CardHeader, CardContent } from '@/components/ui';
 
-interface ExpirationData {
+export interface ExpirationData {
   productName: string;
   lotNo: string;
   expirationDate: string;
@@ -11,16 +11,7 @@ interface ExpirationData {
   quantity: number;
 }
 
-async function getExpiringProducts(): Promise<ExpirationData[]> {
-  const res = await fetch('/api/alerts?type=expiring&days=30');
-  if (!res.ok) return [];
-  const data = await res.json();
-  return data.expiring || [];
-}
-
-export async function ExpirationTimelineChart() {
-  const data = await getExpiringProducts();
-
+export function ExpirationTimelineChart({ data = [] }: { data?: ExpirationData[] }) {
   if (data.length === 0) {
     return (
       <Card className="h-full">
@@ -74,7 +65,12 @@ export async function ExpirationTimelineChart() {
                 tickFormatter={(value) => value.toLocaleString()}
               />
               <Tooltip
-                contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                contentStyle={{
+                  backgroundColor: '#fff',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                }}
                 labelStyle={{ color: '#18231a', fontWeight: 600 }}
                 formatter={(value: any) => [(value ?? 0).toLocaleString(), 'Units Expiring']}
               />

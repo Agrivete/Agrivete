@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { LogOut, Bell, Shield, Menu } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { Badge } from '../ui';
@@ -9,16 +9,27 @@ import { SyncIndicator } from './Sidebar';
 import { toast } from 'sonner';
 import { NavbarLogo } from '@/components/brand';
 
-const NAV_LINKS = [
-  { label: 'Home', href: '/dashboard' },
-  { label: 'System', href: '/dashboard#works' },
-  { label: 'What it does', href: '/dashboard#services' },
-  { label: 'About', href: '/dashboard#about' },
-] as const;
+const PAGE_TITLES: Record<string, string> = {
+  '/dashboard': 'Dashboard',
+  '/admin': 'Platform Admin',
+  '/sales': 'Sales & Checkout',
+  '/inventory': 'Inventory',
+  '/receiving': 'Stock Receiving',
+  '/expiration': 'Expiration Tracking',
+  '/suppliers': 'Suppliers',
+  '/suppliers/directory': 'Supplier Directory',
+  '/replenishments': 'Purchase Orders',
+  '/reports': 'Reports',
+  '/users': 'User Management',
+  '/settings': 'Settings',
+};
 
 export function Header({ onMenuClick }: { onMenuClick: () => void }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, logout } = useAuth();
+
+  const pageTitle = PAGE_TITLES[pathname] || 'Dashboard';
 
   const handleLogout = async () => {
     await logout();
@@ -28,22 +39,21 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
 
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b border-white/10 bg-brand-800 px-4 sm:px-6 lg:px-8">
-      {/* Left: Logo */}
-      <NavbarLogo href="/dashboard" size="sm" showWordmark={true} />
-      <NavbarLogo href="/dashboard" size="md" showWordmark={true} className="hidden lg:block" />
-
-      {/* Center: Nav links (desktop only) */}
-      <nav className="hidden lg:flex lg:items-center lg:gap-6 lg:flex-1 lg:justify-center" aria-label="Main navigation">
-        {NAV_LINKS.map((link) => (
-          <Link
-            key={link.href}
-            href={link.href}
-            className="text-sm font-medium text-white/80 transition-colors hover:text-white"
-          >
-            {link.label}
-          </Link>
-        ))}
-      </nav>
+      {/* Left: Mobile Logo or Desktop Page Title */}
+      <div className="flex items-center gap-3">
+        <div className="lg:hidden">
+          <NavbarLogo href={user?.role === 'admin' ? '/admin' : '/dashboard'} size="sm" showWordmark={true} />
+        </div>
+        <div className="hidden lg:flex lg:items-center lg:gap-2.5">
+          <span className="text-sm font-semibold text-white">{pageTitle}</span>
+          {user?.businessName && (
+            <>
+              <span className="text-white/30">·</span>
+              <span className="text-xs font-medium text-white/75">{user.businessName}</span>
+            </>
+          )}
+        </div>
+      </div>
 
       {/* Right: Actions */}
       <div className="flex items-center gap-2 sm:gap-3">

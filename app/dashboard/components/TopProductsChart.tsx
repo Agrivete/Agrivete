@@ -3,22 +3,13 @@
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell } from 'recharts';
 import { Card, CardHeader, CardContent } from '@/components/ui';
 
-interface TopProductData {
+export interface TopProductData {
   productName: string;
   totalQuantity: number;
   totalRevenue: number;
 }
 
-async function getTopProducts(): Promise<TopProductData[]> {
-  const res = await fetch('/api/reports?type=sales&format=json&days=30');
-  if (!res.ok) return [];
-  const data = await res.json();
-  return data.topProducts || [];
-}
-
-export async function TopProductsChart() {
-  const data = await getTopProducts();
-
+export function TopProductsChart({ data = [] }: { data?: TopProductData[] }) {
   if (data.length === 0) {
     return (
       <Card className="h-full">
@@ -56,9 +47,17 @@ export async function TopProductsChart() {
                 width={120}
               />
               <Tooltip
-                contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                contentStyle={{
+                  backgroundColor: '#fff',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                }}
                 labelStyle={{ color: '#18231a', fontWeight: 600 }}
-                formatter={(value: any, name: any) => [(value ?? 0).toLocaleString(), name === 'quantity' ? 'Units Sold' : 'Revenue']}
+                formatter={(value: any, name: any) => [
+                  (value ?? 0).toLocaleString(),
+                  name === 'quantity' ? 'Units Sold' : 'Revenue',
+                ]}
               />
               <Bar dataKey="quantity" radius={[0, 4, 4, 0]} maxBarSize={40}>
                 {chartData.map((_, index) => (
