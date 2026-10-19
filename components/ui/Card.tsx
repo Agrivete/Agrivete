@@ -70,9 +70,11 @@ export function CardFooter({
 
 export function CardSkeleton() {
   return (
-    <Card className="animate-pulse">
-      <div className="h-8 w-1/3 bg-slate-200 dark:bg-slate-800 rounded mb-4 px-5 pt-5" />
-      <div className="h-[200px] w-full bg-slate-100 dark:bg-slate-800/60 rounded px-5 pb-5" />
+    <Card className="overflow-hidden">
+      <CardContent className="p-5">
+        <div className="h-6 w-1/3 bg-muted dark:bg-slate-800 rounded animate-pulse mb-4" />
+        <div className="h-[200px] w-full bg-muted/60 dark:bg-slate-800/60 rounded animate-pulse" />
+      </CardContent>
     </Card>
   );
 }

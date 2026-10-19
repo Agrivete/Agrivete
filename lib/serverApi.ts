@@ -51,21 +51,31 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     ...(options.headers as Record<string, string> | undefined),
   };
 
-  const response = await fetch(url, {
-    ...options,
-    headers,
-    cache: 'no-store',
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: 'Request failed' }));
-    throw new Error(errorData.error || `Request failed (${response.status})`);
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers,
+      cache: 'no-store',
+      signal: options.signal || controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Request failed' }));
+      throw new Error(errorData.error || `Request failed (${response.status})`);
+    }
+
+    if (response.status === 204) return {} as T;
+    const text = await response.text();
+    if (!text) return {} as T;
+    return JSON.parse(text) as T;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    throw error;
   }
-
-  if (response.status === 204) return {} as T;
-  const text = await response.text();
-  if (!text) return {} as T;
-  return JSON.parse(text) as T;
 }
 
 export const serverApi = {

@@ -7,6 +7,7 @@ export { Table, Pagination, type Column } from './Table';
 export { Badge, StatusBadge } from './Badge';
 export { EmptyState, PageLoader } from './EmptyState';
 export { TableSkeleton } from './TableSkeleton';
+export { Skeleton } from './Skeleton';
 export {
   Sheet,
   SheetPortal,

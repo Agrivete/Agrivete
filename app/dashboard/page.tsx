@@ -14,7 +14,7 @@ import { InventoryStatusChart, type InventoryStatusData } from './components/Inv
 import { ExpirationTimelineChart, type ExpirationData } from './components/ExpirationTimelineChart';
 import { StockMovementChart, type MovementData } from './components/StockMovementChart';
 import { KpiCardsSkeleton } from './components/KpiCardsSkeleton';
-import { TableSkeleton } from '@/components/ui';
+import { TableSkeleton, Card, CardContent, Skeleton } from '@/components/ui';
 
 async function getSessionInfo(): Promise<{
   role: 'owner' | 'manager' | 'staff' | 'admin' | null;
@@ -31,7 +31,7 @@ async function getSessionInfo(): Promise<{
 }
 
 async function getChartMetrics() {
-  const [salesRes, inventoryRes, alertsRes, movementsRes] = await Promise.all([
+  const fetchPromise = Promise.all([
     serverApi
       .get<{ sales?: Array<{ date: string; total: number; items?: Array<{ productName: string; quantity: number; subtotal: number }> }> }>(
         '/api/sales?limit=200&status=completed'
@@ -50,6 +50,29 @@ async function getChartMetrics() {
         '/api/inventory/movements?limit=100'
       )
       .catch(() => ({ movements: [] })),
+  ]);
+
+  const timeoutPromise = new Promise<[
+    { sales: [] },
+    { balances: []; products: [] },
+    { expiring: [] },
+    { movements: [] }
+  ]>((resolve) =>
+    setTimeout(
+      () =>
+        resolve([
+          { sales: [] },
+          { balances: [], products: [] },
+          { expiring: [] },
+          { movements: [] },
+        ]),
+      4500
+    )
+  );
+
+  const [salesRes, inventoryRes, alertsRes, movementsRes] = await Promise.race([
+    fetchPromise,
+    timeoutPromise,
   ]);
 
   // 1. Sales Trend (last 30 days) & 2. Top Products
@@ -155,10 +178,15 @@ export const dynamic = 'force-dynamic';
 
 function ChartSkeleton() {
   return (
-    <div className="h-[240px] w-full animate-pulse">
-      <div className="h-8 w-1/3 bg-slate-200 rounded mb-4" />
-      <div className="h-[200px] w-full bg-slate-100 rounded" />
-    </div>
+    <Card className="overflow-hidden">
+      <CardContent className="p-5">
+        <div className="flex items-center justify-between mb-4">
+          <Skeleton className="h-5 w-40" />
+          <Skeleton className="h-4 w-24" />
+        </div>
+        <Skeleton className="h-[200px] w-full rounded-xl" />
+      </CardContent>
+    </Card>
   );
 }
 
