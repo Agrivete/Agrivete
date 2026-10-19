@@ -33,6 +33,27 @@ export function InventoryStatusChart({
     { name: 'Out of Stock', value: data.outOfStock, color: '#ef4444' },
   ].filter((d) => d.value > 0);
 
+  const renderCenterLabel = ({ cx, cy, index }: { cx: number; cy: number; index: number }) => {
+    if (index !== 0) return null;
+    const primarySlice = chartData[0];
+    const displayText =
+      chartData.length === 1
+        ? `${primarySlice.name} 100%`
+        : `${Math.round((data.healthy / total) * 100)}% Healthy`;
+
+    return (
+      <text
+        x={cx}
+        y={cy}
+        textAnchor="middle"
+        dominantBaseline="central"
+        className="fill-slate-800 dark:fill-slate-100 font-semibold text-xs select-none"
+      >
+        {displayText}
+      </text>
+    );
+  };
+
   return (
     <Card className="h-full">
       <CardHeader title="Inventory Status" description="Stock health overview" />
@@ -44,12 +65,12 @@ export function InventoryStatusChart({
                 data={chartData}
                 cx="50%"
                 cy="50%"
-                innerRadius={60}
-                outerRadius={80}
-                paddingAngle={2}
+                innerRadius={55}
+                outerRadius={75}
+                paddingAngle={chartData.length > 1 ? 2 : 0}
                 dataKey="value"
                 nameKey="name"
-                label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
+                label={renderCenterLabel}
                 labelLine={false}
               >
                 {chartData.map((_, index) => (

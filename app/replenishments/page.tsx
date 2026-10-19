@@ -210,7 +210,7 @@ export default function ReplenishmentsPage() {
                   { key: 'purchaseId', header: 'PO #', accessor: (r) => <code className="text-xs text-slate-500">{r.purchaseId}</code> },
                   { key: 'supplierName', header: 'Supplier', accessor: (r) => <span className="font-medium">{r.supplierName}</span> },
                   { key: 'items', header: 'Items', accessor: (r) => r.items.reduce((s, i) => s + i.orderedQuantity, 0) },
-                  { key: 'total', header: 'Total', accessor: (r) => <span className="font-semibold">₱{r.total.toFixed(2)}</span> },
+                  { key: 'total', header: 'Total', accessor: (r) => <span className="font-semibold">₱{r.total.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> },
                   { key: 'orderDate', header: 'Ordered', accessor: (r) => new Date(r.orderDate).toLocaleDateString('en-PH') },
                   { key: 'expectedDate', header: 'Expected', accessor: (r) => r.expectedDate ? new Date(r.expectedDate).toLocaleDateString('en-PH') : '—' },
                   { key: 'status', header: 'Status', accessor: (r) => <StatusBadge status={r.status} /> },
@@ -247,7 +247,7 @@ export default function ReplenishmentsPage() {
           <>
             <Button variant="ghost" onClick={() => setModal(false)}>Cancel</Button>
             <Button onClick={submit} loading={submitting} leftIcon={<ClipboardList className="h-4 w-4" />}>
-              Create PO — ₱{totalAmount.toFixed(2)}
+              Create PO — ₱{totalAmount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </Button>
           </>
         }
@@ -265,9 +265,9 @@ export default function ReplenishmentsPage() {
           </div>
           <Input label="Reference # (optional)" value={referenceNo} onChange={(e) => setReferenceNo(e.target.value)} />
 
-          <div className="rounded-xl border border-slate-200">
-            <div className="flex items-center justify-between border-b border-slate-100 px-4 py-2.5">
-              <span className="text-xs font-semibold text-slate-700">Items</span>
+          <div className="rounded-xl border border-slate-200 dark:border-slate-800">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-4 py-2.5">
+              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Items</span>
               <Button size="sm" variant="outline" type="button" onClick={addItem} leftIcon={<Plus className="h-3 w-3" />}>
                 Add item
               </Button>
@@ -276,7 +276,7 @@ export default function ReplenishmentsPage() {
               {items.length === 0 && <p className="py-6 text-center text-xs text-slate-400">No items yet</p>}
               {items.map((item, index) => (
                 <div key={index} className="grid grid-cols-12 items-end gap-2">
-                  <div className="col-span-6">
+                  <div className="col-span-5">
                     <Select
                       label="Product"
                       value={item.productId}
@@ -285,12 +285,35 @@ export default function ReplenishmentsPage() {
                     />
                   </div>
                   <div className="col-span-3">
-                    <Input label="Quantity" type="number" min="1" value={item.orderedQuantity} onChange={(e) => updateItem(index, { orderedQuantity: parseInt(e.target.value) || 0 })} />
+                    <Input
+                      label="Quantity"
+                      type="number"
+                      min="1"
+                      max="100000"
+                      value={item.orderedQuantity}
+                      onChange={(e) => {
+                        const parsed = parseInt(e.target.value);
+                        const val = isNaN(parsed) ? 1 : Math.min(100000, Math.max(1, parsed));
+                        updateItem(index, { orderedQuantity: val });
+                      }}
+                    />
                   </div>
-                  <div className="col-span-2">
-                    <Input label="Unit cost" type="number" min="0" value={item.unitCost} onChange={(e) => updateItem(index, { unitCost: parseFloat(e.target.value) || 0 })} />
+                  <div className="col-span-3 min-w-[120px]">
+                    <Input
+                      label="Unit cost (₱)"
+                      type="number"
+                      min="0"
+                      max="1000000"
+                      step="0.01"
+                      value={item.unitCost}
+                      onChange={(e) => {
+                        const parsed = parseFloat(e.target.value);
+                        const val = isNaN(parsed) ? 0 : Math.min(1000000, Math.max(0, parsed));
+                        updateItem(index, { unitCost: val });
+                      }}
+                    />
                   </div>
-                  <div className="col-span-1 pb-1 text-right">
+                  <div className="col-span-1 pb-2 text-right">
                     <button type="button" onClick={() => setItems(items.filter((_, i) => i !== index))} className="text-xs text-red-500 hover:text-red-700">
                       Remove
                     </button>
@@ -298,9 +321,9 @@ export default function ReplenishmentsPage() {
                 </div>
               ))}
             </div>
-            <div className="flex items-center justify-between border-t border-slate-100 px-4 py-2.5 text-sm">
-              <span className="text-xs text-slate-500">Order total</span>
-              <span className="font-semibold">₱{totalAmount.toFixed(2)}</span>
+            <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 px-4 py-2.5 text-sm">
+              <span className="text-xs text-slate-500 dark:text-slate-400">Order total</span>
+              <span className="font-semibold text-base text-slate-900 dark:text-slate-100">₱{totalAmount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
           </div>
         </form>

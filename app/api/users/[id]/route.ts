@@ -25,8 +25,21 @@ export async function GET(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const found = await User.findOne({ userId: id }).select('-passwordHash').lean();
+    const found: any = await User.findOne({ userId: id }).select('-passwordHash').lean();
     if (!found) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+
+    // Business Owner can only view their own staff/managers or their own profile
+    if (user.role === 'owner' && id !== user.userId) {
+      let businessName = user.businessName;
+      if (!businessName) {
+        const ownerDb = await User.findOne({ userId: user.userId }).select('businessName').lean<{ businessName?: string }>();
+        businessName = ownerDb?.businessName;
+      }
+      if (found.role === 'admin' || found.role === 'owner' || (businessName && found.businessName !== businessName)) {
+        return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      }
+    }
+
     return NextResponse.json(found);
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch user' }, { status: 500 });
@@ -91,6 +104,21 @@ export async function PATCH(
     const before: any = await User.findOne({ userId: id }).lean();
     if (!before) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
+    // Business Owner cannot update Platform Admins or other Owners, and can only update staff/managers in their business
+    if (currentUser.role === 'owner') {
+      let businessName = currentUser.businessName;
+      if (!businessName) {
+        const ownerDb = await User.findOne({ userId: currentUser.userId }).select('businessName').lean<{ businessName?: string }>();
+        businessName = ownerDb?.businessName;
+      }
+      if (before.role === 'admin' || before.role === 'owner' || (businessName && before.businessName !== businessName)) {
+        return NextResponse.json({ error: 'Forbidden: Insufficient scope' }, { status: 403 });
+      }
+      if (parsed.data.role && !['staff', 'manager'].includes(parsed.data.role)) {
+        return NextResponse.json({ error: 'Forbidden: Invalid role assignment' }, { status: 403 });
+      }
+    }
+
     const updated = await User.findOneAndUpdate(
       { userId: id },
       { ...parsed.data, updatedAt: new Date() },
@@ -134,8 +162,20 @@ export async function DELETE(
       return NextResponse.json({ error: 'Cannot deactivate your own account' }, { status: 400 });
     }
 
-    const before = await User.findOne({ userId: id }).lean<{ status: string }>();
+    const before = await User.findOne({ userId: id }).lean<{ status: string; role?: string; businessName?: string }>();
     if (!before) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+
+    // Business Owner cannot deactivate Platform Admins or other Owners
+    if (currentUser.role === 'owner') {
+      let businessName = currentUser.businessName;
+      if (!businessName) {
+        const ownerDb = await User.findOne({ userId: currentUser.userId }).select('businessName').lean<{ businessName?: string }>();
+        businessName = ownerDb?.businessName;
+      }
+      if (before.role === 'admin' || before.role === 'owner' || (businessName && before.businessName !== businessName)) {
+        return NextResponse.json({ error: 'Forbidden: Insufficient scope' }, { status: 403 });
+      }
+    }
 
     const updated = await User.findOneAndUpdate(
       { userId: id },

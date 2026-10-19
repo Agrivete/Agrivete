@@ -194,7 +194,7 @@ export default function ReceivingPage() {
                   { key: 'referenceNo', header: 'Reference #', accessor: (r) => <span className="font-medium">{r.referenceNo}</span> },
                   { key: 'supplierName', header: 'Supplier', accessor: (r) => r.supplierName },
                   { key: 'items', header: 'Items', accessor: (r) => r.items.reduce((s, i) => s + i.receivedQuantity, 0) },
-                  { key: 'totalCost', header: 'Total Cost', accessor: (r) => <span className="font-semibold">₱{r.totalCost.toFixed(2)}</span> },
+                  { key: 'totalCost', header: 'Total Cost', accessor: (r) => <span className="font-semibold">₱{r.totalCost.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> },
                   { key: 'receivedDate', header: 'Received', accessor: (r) => new Date(r.receivedDate).toLocaleDateString('en-PH') },
                   { key: 'status', header: 'Status', accessor: (r) => <StatusBadge status={r.status} /> },
                   {
@@ -227,7 +227,7 @@ export default function ReceivingPage() {
           <>
             <Button variant="ghost" onClick={() => setModal(false)}>Cancel</Button>
             <Button onClick={submit} loading={submitting} leftIcon={<PackageCheck className="h-4 w-4" />}>
-              Confirm & Receive — ₱{totalCost.toFixed(2)}
+              Confirm & Receive — ₱{totalCost.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </Button>
           </>
         }
@@ -245,9 +245,9 @@ export default function ReceivingPage() {
           </div>
           <Input label="Linked purchase order ID (optional)" value={purchaseId} onChange={(e) => setPurchaseId(e.target.value)} placeholder="PUR-..." />
 
-          <div className="rounded-xl border border-slate-200">
-            <div className="flex items-center justify-between border-b border-slate-100 px-4 py-2.5">
-              <span className="text-xs font-semibold text-slate-700">Items</span>
+          <div className="rounded-xl border border-slate-200 dark:border-slate-800">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-4 py-2.5">
+              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Items</span>
               <Button size="sm" variant="outline" type="button" onClick={addItem} leftIcon={<Plus className="h-3 w-3" />}>
                 Add item
               </Button>
@@ -256,7 +256,7 @@ export default function ReceivingPage() {
               {items.length === 0 && <p className="py-6 text-center text-xs text-slate-400">No items yet</p>}
               {items.map((item, index) => (
                 <div key={index} className="grid grid-cols-12 items-end gap-2">
-                  <div className="col-span-4">
+                  <div className="col-span-3">
                     <Select
                       label="Product"
                       value={item.productId}
@@ -265,13 +265,35 @@ export default function ReceivingPage() {
                     />
                   </div>
                   <div className="col-span-1">
-                    <Input label="Ord." type="number" min="1" value={item.orderedQuantity} onChange={(e) => updateItem(index, { orderedQuantity: parseInt(e.target.value) || 0 })} />
+                    <Input
+                      label="Ord."
+                      type="number"
+                      min="1"
+                      max="100000"
+                      value={item.orderedQuantity}
+                      onChange={(e) => updateItem(index, { orderedQuantity: Math.min(100000, Math.max(1, parseInt(e.target.value) || 0)) })}
+                    />
                   </div>
                   <div className="col-span-1">
-                    <Input label="Recv." type="number" min="0" value={item.receivedQuantity} onChange={(e) => updateItem(index, { receivedQuantity: parseInt(e.target.value) || 0 })} />
+                    <Input
+                      label="Recv."
+                      type="number"
+                      min="0"
+                      max="100000"
+                      value={item.receivedQuantity}
+                      onChange={(e) => updateItem(index, { receivedQuantity: Math.min(100000, Math.max(0, parseInt(e.target.value) || 0)) })}
+                    />
                   </div>
-                  <div className="col-span-1">
-                    <Input label="Cost" type="number" min="0" value={item.unitCost} onChange={(e) => updateItem(index, { unitCost: parseFloat(e.target.value) || 0 })} />
+                  <div className="col-span-2 min-w-[90px]">
+                    <Input
+                      label="Cost (₱)"
+                      type="number"
+                      min="0"
+                      max="1000000"
+                      step="0.01"
+                      value={item.unitCost}
+                      onChange={(e) => updateItem(index, { unitCost: Math.min(1000000, Math.max(0, parseFloat(e.target.value) || 0)) })}
+                    />
                   </div>
                   <div className="col-span-2">
                     <Input label="Lot #" required value={item.lotNo} onChange={(e) => updateItem(index, { lotNo: e.target.value })} placeholder="LOT-..." />
@@ -287,9 +309,9 @@ export default function ReceivingPage() {
                 </div>
               ))}
             </div>
-            <div className="flex items-center justify-between border-t border-slate-100 px-4 py-2.5 text-sm">
-              <span className="text-xs text-slate-500">Total cost</span>
-              <span className="font-semibold">₱{totalCost.toFixed(2)}</span>
+            <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 px-4 py-2.5 text-sm">
+              <span className="text-xs text-slate-500 dark:text-slate-400">Total cost</span>
+              <span className="font-semibold text-base text-slate-900 dark:text-slate-100">₱{totalCost.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
           </div>
         </form>

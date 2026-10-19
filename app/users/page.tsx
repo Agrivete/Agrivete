@@ -139,21 +139,23 @@ export default function UsersPage() {
     }
   };
 
+  const visibleUsers = users.filter((u) => u.role === 'staff' || u.role === 'manager');
+
   return (
     <AppLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">User Management</h2>
-            <p className="text-xs text-slate-500">Owner-only · role-based access control</p>
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-50">Staff Management</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Manage store managers and staff accounts</p>
           </div>
           <Button leftIcon={<Plus className="h-4 w-4" />} onClick={() => setCreateModal(true)}>
-            Add User
+            Add Staff Member
           </Button>
         </div>
 
         <Card>
-          <CardHeader title="Accounts" description={`${users.length} users`} />
+          <CardHeader title="Staff & Managers" description={`${visibleUsers.length} members`} />
           <CardContent className="p-0">
             {loading ? (
               <PageLoader />
@@ -162,12 +164,12 @@ export default function UsersPage() {
                 columns={[
                   { key: 'name', header: 'User', accessor: (r) => (
                     <div>
-                      <span className="font-medium text-slate-900">{r.name}</span>
+                      <span className="font-medium text-slate-900 dark:text-slate-100">{r.name}</span>
                       <span className="block text-[11px] text-slate-400">{r.email}</span>
                     </div>
                   ) },
                   { key: 'userId', header: 'User ID', accessor: (r) => <code className="text-xs text-slate-500">{r.userId}</code> },
-                  { key: 'role', header: 'Role', accessor: (r) => <Badge variant={r.role === 'owner' ? 'default' : r.role === 'manager' ? 'info' : 'neutral'}>{r.role}</Badge> },
+                  { key: 'role', header: 'Role', accessor: (r) => <Badge variant={r.role === 'manager' ? 'info' : 'neutral'}>{r.role}</Badge> },
                   { key: 'status', header: 'Status', accessor: (r) => <StatusBadge status={r.status} /> },
                   { key: 'lastLoginAt', header: 'Last Login', accessor: (r) => r.lastLoginAt ? new Date(r.lastLoginAt).toLocaleString('en-PH') : 'Never' },
                   {
@@ -191,7 +193,7 @@ export default function UsersPage() {
                     ),
                   },
                 ]}
-                data={users}
+                data={visibleUsers}
                 keyExtractor={(r) => r.userId}
               />
             )}
@@ -202,7 +204,7 @@ export default function UsersPage() {
       <Modal
         open={createModal}
         onClose={() => setCreateModal(false)}
-        title="Add User"
+        title="Add Staff Member"
         size="sm"
         footer={
           <>
@@ -224,14 +226,14 @@ export default function UsersPage() {
               { value: 'manager', label: 'Manager — operational access' },
             ]}
           />
-          <p className="text-[11px] text-slate-400">New owners can only be created by existing owners via self-registration controls.</p>
+          <p className="text-[11px] text-slate-400">Staff members will have access to store terminal operations.</p>
         </form>
       </Modal>
 
       <Modal
         open={!!editTarget}
         onClose={() => setEditTarget(null)}
-        title="Edit User"
+        title="Edit Staff Member"
         description={editTarget?.name}
         size="sm"
         footer={
@@ -247,7 +249,6 @@ export default function UsersPage() {
             value={editRole}
             onChange={(e) => setEditRole(e.target.value)}
             options={[
-              { value: 'owner', label: 'Owner' },
               { value: 'manager', label: 'Manager' },
               { value: 'staff', label: 'Staff / Cashier' },
             ]}

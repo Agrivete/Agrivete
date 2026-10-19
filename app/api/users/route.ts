@@ -16,7 +16,31 @@ export async function GET(req: NextRequest) {
     if (!checkPermission(user.role, 'view_users'))
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-    const users = await User.find().select('-passwordHash').sort({ createdAt: -1 }).lean();
+    const filter: Record<string, unknown> = {};
+
+    if (user.role === 'owner') {
+      let businessName = user.businessName;
+      if (!businessName) {
+        const ownerDb = await User.findOne({ userId: user.userId }).select('businessName').lean<{ businessName?: string }>();
+        businessName = ownerDb?.businessName;
+      }
+
+      filter.role = { $in: ['staff', 'manager'] };
+      if (businessName) {
+        filter.businessName = businessName;
+      }
+    } else if (user.role === 'admin') {
+      const { searchParams } = new URL(req.url);
+      const roleParam = searchParams.get('role');
+      const statusParam = searchParams.get('status');
+      if (roleParam) filter.role = roleParam;
+      if (statusParam) filter.status = statusParam;
+    } else {
+      filter.role = { $in: ['staff', 'manager'] };
+      if (user.businessName) filter.businessName = user.businessName;
+    }
+
+    const users = await User.find(filter).select('-passwordHash').sort({ createdAt: -1 }).lean();
     return NextResponse.json(users);
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });

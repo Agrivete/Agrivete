@@ -33,7 +33,7 @@ const businessLinks: (NavItem & { roles: UserRole[] })[] = [
   { label: 'Supplier Directory', href: '/suppliers/directory', icon: Truck, roles: ['owner', 'manager', 'staff'] },
   { label: 'Replenishments', href: '/replenishments', icon: ClipboardList, roles: ['owner', 'manager'] },
   { label: 'Reports', href: '/reports', icon: BarChart3, roles: ['owner', 'manager'] },
-  { label: 'Users', href: '/users', icon: Users, roles: ['owner'] },
+  { label: 'Staff Management', href: '/users', icon: Users, roles: ['owner'] },
   { label: 'Settings', href: '/settings', icon: Settings, roles: ['owner', 'manager'] },
 ];
 
