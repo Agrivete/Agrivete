@@ -55,20 +55,36 @@ export async function POST(req: NextRequest) {
         }
 
         if (tx.type === 'sale') {
+          if (!checkPermission(user.role, 'record_sale')) {
+            await dbSession.abortTransaction();
+            failed.push({ localId: tx.localId, error: 'Forbidden for role' });
+            continue;
+          }
           const serverId = await processSale(tx.data, user.userId, dbSession, req);
           await dbSession.commitTransaction();
           processed.push({ localId: tx.localId, serverId, type: tx.type });
         } else if (tx.type === 'receiving') {
+          if (!checkPermission(user.role, 'record_receiving')) {
+            await dbSession.abortTransaction();
+            failed.push({ localId: tx.localId, error: 'Forbidden for role' });
+            continue;
+          }
           const serverId = await processReceiving(tx.data, user.userId, dbSession, req);
           await dbSession.commitTransaction();
           processed.push({ localId: tx.localId, serverId, type: tx.type });
         } else if (tx.type === 'adjustment') {
+          if (!checkPermission(user.role, 'adjust_inventory')) {
+            await dbSession.abortTransaction();
+            failed.push({ localId: tx.localId, error: 'Forbidden for role' });
+            continue;
+          }
           const serverId = await processAdjustment(tx.data, user.userId, dbSession, req);
           await dbSession.commitTransaction();
           processed.push({ localId: tx.localId, serverId, type: tx.type });
         } else {
           await dbSession.abortTransaction();
-          failed.push({ localId: tx.localId, error: `Unknown type: ${tx.type}` });
+          const unknownTx = tx as { localId: string; type: string };
+          failed.push({ localId: unknownTx.localId, error: `Unknown type: ${unknownTx.type}` });
         }
       } catch (err) {
         await dbSession.abortTransaction();
