@@ -61,6 +61,7 @@ export default function ReceivingPage() {
   const [purchaseId, setPurchaseId] = useState('');
   const [items, setItems] = useState<ReceivingItemForm[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [confirmReceiveOpen, setConfirmReceiveOpen] = useState(false);
 
   const [cancelTarget, setCancelTarget] = useState<ReceivingRow | null>(null);
   const [cancelling, setCancelling] = useState(false);
@@ -116,8 +117,8 @@ export default function ReceivingPage() {
 
   const totalCost = items.reduce((s, it) => s + it.receivedQuantity * it.unitCost, 0);
 
-  const submit = async (e: FormEvent) => {
-    e.preventDefault();
+  const handleInitiateSubmit = (e?: FormEvent) => {
+    if (e) e.preventDefault();
     if (!supplierId || !referenceNo.trim()) {
       toast.error('Supplier and reference number are required');
       return;
@@ -126,6 +127,10 @@ export default function ReceivingPage() {
       toast.error('Add at least one item with product and lot number');
       return;
     }
+    setConfirmReceiveOpen(true);
+  };
+
+  const handleFinalSubmit = async () => {
     setSubmitting(true);
     try {
       await api.post('/api/receiving', {
@@ -143,6 +148,7 @@ export default function ReceivingPage() {
         })),
       });
       toast.success('Receiving recorded — stock increased (BR02)');
+      setConfirmReceiveOpen(false);
       setModal(false);
       load();
     } catch (err) {
@@ -226,13 +232,13 @@ export default function ReceivingPage() {
         footer={
           <>
             <Button variant="ghost" onClick={() => setModal(false)}>Cancel</Button>
-            <Button onClick={submit} loading={submitting} leftIcon={<PackageCheck className="h-4 w-4" />}>
-              Confirm & Receive — ₱{totalCost.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            <Button onClick={() => handleInitiateSubmit()} loading={submitting} leftIcon={<PackageCheck className="h-4 w-4" />}>
+              Confirm & Receive
             </Button>
           </>
         }
       >
-        <form onSubmit={submit} className="space-y-4">
+        <form onSubmit={handleInitiateSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <Select
               label="Supplier"
@@ -252,29 +258,26 @@ export default function ReceivingPage() {
                 Add item
               </Button>
             </div>
-            <div className="max-h-80 space-y-3 overflow-y-auto px-4 py-3">
+            <div className="max-h-80 space-y-3 overflow-y-auto overflow-x-auto px-4 py-3">
               {items.length === 0 && <p className="py-6 text-center text-xs text-slate-400">No items yet</p>}
               {items.map((item, index) => (
-                <div key={index} className="grid grid-cols-12 items-end gap-2">
-                  <div className="col-span-3">
+                <div key={index} className="flex items-end gap-3 min-w-[720px]">
+                  <div className="flex-1 min-w-[160px]">
                     <Select
                       label="Product"
                       value={item.productId}
                       onChange={(e) => onProductChange(index, e.target.value)}
                       options={products.map((p) => ({ value: p.productId, label: `${p.name} (${p.unit})` }))}
+                      className="!h-10 text-sm"
                     />
                   </div>
-                  <div className="col-span-1">
-                    <Input
-                      label="Ord."
-                      type="number"
-                      min="1"
-                      max="100000"
-                      value={item.orderedQuantity}
-                      onChange={(e) => updateItem(index, { orderedQuantity: Math.min(100000, Math.max(1, parseInt(e.target.value) || 0)) })}
-                    />
+                  <div className="w-14 flex-shrink-0 flex flex-col items-center">
+                    <span className="mb-1.5 block text-xs font-semibold text-slate-700 dark:text-slate-300">Ord.</span>
+                    <div className="h-10 w-full flex items-center justify-center text-xs font-medium text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/60 rounded-lg border border-slate-200 dark:border-slate-700">
+                      {item.orderedQuantity || 0}
+                    </div>
                   </div>
-                  <div className="col-span-1">
+                  <div className="w-20 flex-shrink-0">
                     <Input
                       label="Recv."
                       type="number"
@@ -284,7 +287,7 @@ export default function ReceivingPage() {
                       onChange={(e) => updateItem(index, { receivedQuantity: Math.min(100000, Math.max(0, parseInt(e.target.value) || 0)) })}
                     />
                   </div>
-                  <div className="col-span-2 min-w-[90px]">
+                  <div className="w-28 flex-shrink-0">
                     <Input
                       label="Cost (₱)"
                       type="number"
@@ -295,21 +298,33 @@ export default function ReceivingPage() {
                       onChange={(e) => updateItem(index, { unitCost: Math.min(1000000, Math.max(0, parseFloat(e.target.value) || 0)) })}
                     />
                   </div>
-                  <div className="col-span-2">
-                    <Input label="Lot #" required value={item.lotNo} onChange={(e) => updateItem(index, { lotNo: e.target.value })} placeholder="LOT-..." />
+                  <div className="w-24 flex-shrink-0">
+                    <Input
+                      label="Lot #"
+                      required
+                      value={item.lotNo}
+                      onChange={(e) => updateItem(index, { lotNo: e.target.value })}
+                      placeholder="Lot #"
+                    />
                   </div>
-                  <div className="col-span-2">
+                  <div className="w-36 flex-shrink-0">
                     <Input
                       label="Expires"
                       type="date"
                       min={new Date().toISOString().split('T')[0]}
                       value={item.expirationDate}
                       onChange={(e) => updateItem(index, { expirationDate: e.target.value })}
+                      className="px-2"
                     />
                   </div>
-                  <div className="col-span-1 pb-1 text-right">
-                    <button type="button" onClick={() => setItems(items.filter((_, i) => i !== index))} className="text-xs text-red-500 hover:text-red-700">
-                      <Trash2 className="h-3.5 w-3.5" />
+                  <div className="pb-0.5 flex items-center justify-end flex-shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setItems(items.filter((_, i) => i !== index))}
+                      className="h-10 w-10 flex items-center justify-center rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition"
+                      title="Remove item"
+                    >
+                      <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
@@ -322,6 +337,18 @@ export default function ReceivingPage() {
           </div>
         </form>
       </Modal>
+
+      <ConfirmModal
+        open={confirmReceiveOpen}
+        onClose={() => setConfirmReceiveOpen(false)}
+        onConfirm={handleFinalSubmit}
+        title="Confirm Stock Receiving?"
+        message={`Are you sure you want to receive these items for reference #${referenceNo || 'N/A'}? This will add items to inventory and cannot be undone without a cancellation log.`}
+        confirmLabel="Confirm"
+        cancelLabel="Cancel"
+        confirmVariant="agri-primary"
+        loading={submitting}
+      />
 
       <ConfirmModal
         open={!!cancelTarget}
