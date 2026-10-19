@@ -38,6 +38,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Receiving', href: '/receiving', icon: PackageCheck, roles: ['owner', 'manager'] },
   { label: 'Expiration', href: '/expiration', icon: CalendarClock, roles: ['owner', 'manager', 'staff'] },
   { label: 'Suppliers', href: '/suppliers', icon: Truck, roles: ['owner', 'manager'] },
+  { label: 'Supplier Directory', href: '/suppliers/directory', icon: Truck, roles: ['owner', 'manager', 'staff'] },
   { label: 'Replenishments', href: '/replenishments', icon: ClipboardList, roles: ['owner', 'manager'] },
   { label: 'Reports', href: '/reports', icon: BarChart3, roles: ['owner', 'manager'] },
   { label: 'Users', href: '/users', icon: Users, roles: ['owner'] },
@@ -69,7 +70,9 @@ export function Sidebar() {
           const isActive =
             item.href === '/dashboard'
               ? pathname === '/dashboard' || pathname === '/'
-              : pathname.startsWith(item.href);
+              : item.href === '/suppliers'
+                ? pathname === '/suppliers'
+                : pathname.startsWith(item.href);
           return (
             <Link
               key={item.href}

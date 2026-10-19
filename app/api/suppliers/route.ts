@@ -6,19 +6,74 @@ import { supplierSchema } from '@/lib/validators';
 import { parseJsonBody } from '@/lib/parseJson';
 import { logActivity } from '@/lib/logActivity';
 import { Supplier } from '@/models/Supplier';
+import { Receiving } from '@/models/Receiving';
+import { Replenishment } from '@/models/Replenishment';
 
 export async function GET(req: NextRequest) {
   try {
     await connectDB();
     const user = await getUserFromRequest(req);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    if (!checkPermission(user.role, 'view_suppliers'))
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
     const { searchParams } = new URL(req.url);
-    const status = searchParams.get('status') || 'active';
+    const isDirectory = searchParams.get('directory') === 'true';
+    const requiredPerm = isDirectory ? 'view_supplier_directory' : 'view_suppliers';
 
-    const suppliers = await Supplier.find({ status }).sort({ name: 1 }).lean();
+    if (!checkPermission(user.role, requiredPerm))
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
+    const status = searchParams.get('status') || (isDirectory ? 'all' : 'active');
+    const query: Record<string, unknown> = status === 'all' ? {} : { status };
+
+    const suppliers = await Supplier.find(query).sort({ name: 1 }).lean();
+
+    if (isDirectory) {
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+      const [latestReceivings, monthlyPurchases] = await Promise.all([
+        Receiving.aggregate([
+          { $match: { status: 'confirmed' } },
+          { $group: { _id: '$supplierId', lastDeliveryDate: { $max: '$receivedDate' } } },
+        ]),
+        Replenishment.aggregate([
+          { $match: { orderDate: { $gte: monthStart }, status: { $ne: 'cancelled' } } },
+          {
+            $group: {
+              _id: '$supplierId',
+              count: { $sum: 1 },
+              totalAmount: { $sum: '$total' },
+            },
+          },
+        ]),
+      ]);
+
+      const deliveryMap = Object.fromEntries(
+        latestReceivings.map((r: { _id: string; lastDeliveryDate: Date }) => [r._id, r.lastDeliveryDate])
+      );
+      const purchaseMap = Object.fromEntries(
+        monthlyPurchases.map((p: { _id: string; count: number; totalAmount: number }) => [
+          p._id,
+          { count: p.count, totalAmount: p.totalAmount },
+        ])
+      );
+
+      const directoryRows = suppliers.map((s: any) => {
+        const stats = purchaseMap[s.supplierId] || { count: 0, totalAmount: 0 };
+        const row: Record<string, unknown> = {
+          ...s,
+          lastDeliveryDate: deliveryMap[s.supplierId] || null,
+          monthlyPurchaseCount: stats.count,
+        };
+        if (user.role === 'owner') {
+          row.monthlyPurchaseAmount = stats.totalAmount;
+        }
+        return row;
+      });
+
+      return NextResponse.json(directoryRows);
+    }
+
     return NextResponse.json(suppliers);
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch suppliers' }, { status: 500 });
