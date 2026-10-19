@@ -1,11 +1,12 @@
 'use client';
 
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
-import { Plus, Truck, Eye, Trash2, Package } from 'lucide-react';
+import { Plus, Truck, Eye, Trash2, Package, CalendarOff } from 'lucide-react';
 import { AppLayout } from '@/components/layout';
 import {
   Card, CardHeader, CardContent, Table, Badge, StatusBadge, Button, Input, Select, Modal, PageLoader, EmptyState, ConfirmModal,
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, type Column,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+  Tooltip, TooltipTrigger, TooltipContent, TooltipProvider, type Column,
 } from '@/components/ui';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
@@ -23,6 +24,19 @@ interface Supplier {
   lastDeliveryDate?: string | null;
   status: string;
   notes?: string;
+}
+
+interface AlternativeSupplier {
+  supplierId: string;
+  name: string;
+  contactPerson: string;
+  phone: string;
+}
+
+interface SupplierFallbackData {
+  category: string;
+  alternatives: AlternativeSupplier[];
+  loading: boolean;
 }
 
 interface SupplierInventoryProduct {
@@ -86,6 +100,9 @@ export default function SuppliersPage() {
   const [loading, setLoading] = useState(true);
   const [viewFilter, setViewFilter] = useState<'all' | 'availableToday'>('all');
 
+  const [unavailableToday, setUnavailableToday] = useState<Set<string>>(() => new Set());
+  const [fallbackMap, setFallbackMap] = useState<Record<string, SupplierFallbackData>>({});
+
   const [modal, setModal] = useState(false);
   const [editTarget, setEditTarget] = useState<Supplier | null>(null);
   const [name, setName] = useState('');
@@ -106,7 +123,7 @@ export default function SuppliersPage() {
   const [receivings, setReceivings] = useState<ReceivingTx[]>([]);
   const [txLoading, setTxLoading] = useState(false);
 
-  const [invTarget, setInvTarget] = useState<Supplier | null>(null);
+  const [invTarget, setInvTarget] = useState<{ supplierId: string; name: string } | null>(null);
   const [invProducts, setInvProducts] = useState<SupplierInventoryProduct[]>([]);
   const [invLoading, setInvLoading] = useState(false);
 
@@ -200,7 +217,7 @@ export default function SuppliersPage() {
     }
   };
 
-  const openInventory = async (s: Supplier) => {
+  const openInventory = async (s: { supplierId: string; name: string }) => {
     setInvTarget(s);
     setInvProducts([]);
     setInvLoading(true);
@@ -211,6 +228,45 @@ export default function SuppliersPage() {
       toast.error(err instanceof Error ? err.message : 'Failed to load supplier inventory');
     } finally {
       setInvLoading(false);
+    }
+  };
+
+  const toggleUnavailableToday = async (s: Supplier) => {
+    const isCurrentlyUnavailable = unavailableToday.has(s.supplierId);
+    const next = new Set(unavailableToday);
+    if (isCurrentlyUnavailable) {
+      next.delete(s.supplierId);
+      setUnavailableToday(next);
+      return;
+    }
+
+    next.add(s.supplierId);
+    setUnavailableToday(next);
+
+    setFallbackMap((prev) => ({
+      ...prev,
+      [s.supplierId]: { category: 'feeds', alternatives: [], loading: true },
+    }));
+
+    try {
+      const inv = await api.get<SupplierInventoryResponse>(`/api/suppliers/${s.supplierId}/inventory`);
+      const primaryCategory = inv.products?.[0]?.category || 'feeds';
+      const alts = await api.get<AlternativeSupplier[]>(
+        `/api/suppliers/alternatives?category=${encodeURIComponent(primaryCategory)}`
+      );
+      setFallbackMap((prev) => ({
+        ...prev,
+        [s.supplierId]: {
+          category: primaryCategory,
+          alternatives: alts.filter((a) => a.supplierId !== s.supplierId),
+          loading: false,
+        },
+      }));
+    } catch {
+      setFallbackMap((prev) => ({
+        ...prev,
+        [s.supplierId]: { category: 'feeds', alternatives: [], loading: false },
+      }));
     }
   };
 
@@ -264,101 +320,217 @@ export default function SuppliersPage() {
 
   return (
     <AppLayout>
-      <div className="space-y-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-lg font-semibold text-slate-900">Supplier Management</h2>
-            <p className="text-xs text-slate-500">Centralized contacts, purchase & delivery history</p>
+      <TooltipProvider>
+        <div className="space-y-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900">Supplier Management</h2>
+              <p className="text-xs text-slate-500">Centralized contacts, purchase & delivery history</p>
+            </div>
+            <Button leftIcon={<Plus className="h-4 w-4" />} onClick={openCreate}>
+              Add Supplier
+            </Button>
           </div>
-          <Button leftIcon={<Plus className="h-4 w-4" />} onClick={openCreate}>
-            Add Supplier
-          </Button>
-        </div>
 
-        <Card>
-          <CardHeader
-            title="Suppliers"
-            description={`${displayedSuppliers.length} shown of ${suppliers.length} registered`}
-            action={
-              <div className="inline-flex rounded-xl bg-slate-100 p-1">
-                <button
-                  type="button"
-                  onClick={() => setViewFilter('all')}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-                    viewFilter === 'all' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
-                  }`}
-                >
-                  All suppliers
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewFilter('availableToday')}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-                    viewFilter === 'availableToday' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
-                  }`}
-                >
-                  Available today
-                </button>
-              </div>
-            }
-          />
-          <CardContent className="p-0">
-            {loading ? (
-              <PageLoader />
-            ) : displayedSuppliers.length === 0 ? (
-              <EmptyState
-                icon={<Truck className="h-7 w-7" />}
-                title={viewFilter === 'availableToday' ? 'No suppliers available today' : 'No suppliers'}
-                message={viewFilter === 'availableToday' ? 'No suppliers match today’s schedule or 24h delivery window' : 'Add your first supplier'}
-              />
-            ) : (
-              <Table
-                columns={[
-                  { key: 'name', header: 'Supplier', accessor: (r) => (
-                    <div>
-                      <span className="font-medium text-slate-900">{r.name}</span>
-                      <span className="block text-[11px] text-slate-400">{r.contactPerson || '—'}</span>
-                    </div>
-                  ) },
-                  { key: 'phone', header: 'Phone', accessor: (r) => r.phone || '—' },
-                  { key: 'email', header: 'Email', accessor: (r) => r.email || '—' },
-                  { key: 'paymentTerms', header: 'Terms', accessor: (r) => <Badge variant="neutral">{r.paymentTerms.replace(/_/g, ' ')}</Badge> },
-                  { key: 'status', header: 'Status', accessor: (r) => <StatusBadge status={r.status} /> },
-                  {
-                    key: 'actions', header: 'Actions',
-                    accessor: (r) => (
-                      <div className="flex items-center gap-1">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          leftIcon={<Package className="h-3.5 w-3.5" />}
-                          onClick={() => openInventory(r)}
-                          title="View inventory"
+          <Card>
+            <CardHeader
+              title="Suppliers"
+              description={`${displayedSuppliers.length} shown of ${suppliers.length} registered`}
+              action={
+                <div className="inline-flex rounded-xl bg-slate-100 p-1">
+                  <button
+                    type="button"
+                    onClick={() => setViewFilter('all')}
+                    className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                      viewFilter === 'all' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    All suppliers
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewFilter('availableToday')}
+                    className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                      viewFilter === 'availableToday' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    Available today
+                  </button>
+                </div>
+              }
+            />
+            <CardContent className="p-0">
+              {loading ? (
+                <PageLoader />
+              ) : displayedSuppliers.length === 0 ? (
+                <EmptyState
+                  icon={<Truck className="h-7 w-7" />}
+                  title={viewFilter === 'availableToday' ? 'No suppliers available today' : 'No suppliers'}
+                  message={viewFilter === 'availableToday' ? 'No suppliers match today’s schedule or 24h delivery window' : 'Add your first supplier'}
+                />
+              ) : (
+                <>
+                  <Table
+                    columns={[
+                      {
+                        key: 'name',
+                        header: 'Supplier',
+                        accessor: (r) => {
+                          const isUnavail = unavailableToday.has(r.supplierId);
+                          return (
+                            <div className={isUnavail ? 'opacity-50' : ''}>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="font-medium text-slate-900">{r.name}</span>
+                                {isUnavail && <Badge variant="warning">Unavailable today</Badge>}
+                              </div>
+                              <span className="block text-[11px] text-slate-400">{r.contactPerson || '—'}</span>
+                            </div>
+                          );
+                        },
+                      },
+                      {
+                        key: 'phone',
+                        header: 'Phone',
+                        accessor: (r) => (
+                          <span className={unavailableToday.has(r.supplierId) ? 'opacity-50' : ''}>
+                            {r.phone || '—'}
+                          </span>
+                        ),
+                      },
+                      {
+                        key: 'email',
+                        header: 'Email',
+                        accessor: (r) => (
+                          <span className={unavailableToday.has(r.supplierId) ? 'opacity-50' : ''}>
+                            {r.email || '—'}
+                          </span>
+                        ),
+                      },
+                      {
+                        key: 'paymentTerms',
+                        header: 'Terms',
+                        accessor: (r) => (
+                          <div className={unavailableToday.has(r.supplierId) ? 'opacity-50' : ''}>
+                            <Badge variant="neutral">{r.paymentTerms.replace(/_/g, ' ')}</Badge>
+                          </div>
+                        ),
+                      },
+                      {
+                        key: 'status',
+                        header: 'Status',
+                        accessor: (r) => (
+                          <div className={unavailableToday.has(r.supplierId) ? 'opacity-50' : ''}>
+                            <StatusBadge status={r.status} />
+                          </div>
+                        ),
+                      },
+                      {
+                        key: 'actions',
+                        header: 'Actions',
+                        accessor: (r) => {
+                          const isUnavail = unavailableToday.has(r.supplierId);
+                          return (
+                            <div className="flex flex-wrap items-center gap-1">
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    size="sm"
+                                    variant={isUnavail ? 'secondary' : 'ghost'}
+                                    onClick={() => toggleUnavailableToday(r)}
+                                    aria-label="Mark unavailable today"
+                                  >
+                                    <CalendarOff className="h-3.5 w-3.5" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Mark unavailable today</TooltipContent>
+                              </Tooltip>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                leftIcon={<Package className="h-3.5 w-3.5" />}
+                                onClick={() => openInventory(r)}
+                                title="View inventory"
+                              >
+                                View inventory
+                              </Button>
+                              <Button size="sm" variant="ghost" onClick={() => openTransactions(r)} title="View transactions">
+                                <Eye className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button size="sm" variant="ghost" onClick={() => openEdit(r)} title="Edit">
+                                <span className="text-xs font-semibold text-slate-500">Edit</span>
+                              </Button>
+                              {r.status === 'active' && (
+                                <Button size="sm" variant="ghost" onClick={() => setDeactivateTarget(r)} title="Deactivate">
+                                  <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                                </Button>
+                              )}
+                            </div>
+                          );
+                        },
+                      },
+                    ]}
+                    data={displayedSuppliers}
+                    keyExtractor={(r) => r.supplierId}
+                  />
+
+                  {/* Fallback panels for suppliers marked unavailable today */}
+                  {displayedSuppliers
+                    .filter((s) => unavailableToday.has(s.supplierId))
+                    .map((s) => {
+                      const fb = fallbackMap[s.supplierId];
+                      const visibleAlternatives = (fb?.alternatives || []).filter(
+                        (alt) => !unavailableToday.has(alt.supplierId)
+                      );
+                      return (
+                        <div
+                          key={`fallback-${s.supplierId}`}
+                          className="border-t border-amber-200 bg-amber-50/70 px-4 py-3 sm:px-6"
                         >
-                          View inventory
-                        </Button>
-                        <Button size="sm" variant="ghost" onClick={() => openTransactions(r)} title="View transactions">
-                          <Eye className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button size="sm" variant="ghost" onClick={() => openEdit(r)} title="Edit">
-                          <span className="text-xs font-semibold text-slate-500">Edit</span>
-                        </Button>
-                        {r.status === 'active' && (
-                          <Button size="sm" variant="ghost" onClick={() => setDeactivateTarget(r)} title="Deactivate">
-                            <Trash2 className="h-3.5 w-3.5 text-red-500" />
-                          </Button>
-                        )}
-                      </div>
-                    ),
-                  },
-                ]}
-                data={displayedSuppliers}
-                keyExtractor={(r) => r.supplierId}
-              />
-            )}
-          </CardContent>
-        </Card>
-      </div>
+                          <div className="mb-2 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                            <h4 className="text-xs font-semibold text-amber-900">
+                              Alternative suppliers for {fb?.category || 'feeds'} (backup for {s.name})
+                            </h4>
+                          </div>
+                          {fb?.loading ? (
+                            <p className="text-xs text-slate-500">Loading alternative suppliers...</p>
+                          ) : visibleAlternatives.length === 0 ? (
+                            <p className="text-xs text-slate-600">
+                              No other suppliers available for this category today
+                            </p>
+                          ) : (
+                            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                              {visibleAlternatives.map((alt) => (
+                                <div
+                                  key={alt.supplierId}
+                                  className="flex flex-col justify-between gap-2 rounded-lg border border-amber-200 bg-white p-3 sm:flex-row sm:items-center sm:gap-4"
+                                >
+                                  <div>
+                                    <p className="text-xs font-semibold text-slate-900">{alt.name}</p>
+                                    <p className="text-[11px] text-slate-500">
+                                      {alt.contactPerson || 'No contact'} • {alt.phone || 'No phone'}
+                                    </p>
+                                  </div>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    leftIcon={<Package className="h-3.5 w-3.5" />}
+                                    onClick={() => openInventory({ supplierId: alt.supplierId, name: alt.name })}
+                                  >
+                                    View inventory
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </TooltipProvider>
 
       <Modal
         open={modal}
