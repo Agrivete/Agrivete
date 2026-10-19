@@ -118,9 +118,9 @@ function RegisterForm() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-brand-50/25 dark:bg-slate-950 flex flex-col lg:grid lg:grid-cols-2">
+    <div className="h-screen max-h-[100dvh] w-full bg-brand-50/25 dark:bg-slate-950 flex flex-col lg:grid lg:grid-cols-2 overflow-hidden">
       {/* Left Column: Brand & Value Prop Showcase (Desktop / Widescreen) */}
-      <div className="relative hidden lg:flex flex-col justify-between overflow-hidden bg-gradient-to-br from-brand-950 via-brand-900 to-brand-800 p-12 text-white">
+      <div className="relative hidden lg:flex flex-col justify-between overflow-hidden bg-gradient-to-br from-brand-950 via-brand-900 to-brand-800 p-6 lg:p-8 xl:p-10 text-white">
         {/* Background Landscape Photo with Deep Overlay */}
         <div className="absolute inset-0 z-0">
           <img
@@ -141,25 +141,25 @@ function RegisterForm() {
         </div>
 
         {/* Center Content / Value Props */}
-        <div className="relative z-10 my-auto max-w-lg py-10">
-          <div className="inline-flex items-center gap-2 rounded-lg bg-brand-800/80 px-3 py-1.5 text-xs font-semibold text-brand-200 mb-6 border border-brand-700/60 shadow-inner">
+        <div className="relative z-10 my-auto max-w-lg py-4 xl:py-6">
+          <div className="inline-flex items-center gap-2 rounded-lg bg-brand-800/80 px-3 py-1.5 text-xs font-semibold text-brand-200 mb-3 xl:mb-4 border border-brand-700/60 shadow-inner">
             <ShieldCheck className="h-4 w-4 text-brand-300" />
             Business Onboarding
           </div>
 
-          <h1 className="text-3xl sm:text-4xl xl:text-5xl font-bold tracking-tight text-white leading-tight">
+          <h1 className="text-2xl sm:text-3xl xl:text-4xl font-bold tracking-tight text-white leading-tight">
             Equip your store team with modern inventory tools.
           </h1>
 
-          <p className="mt-4 text-base text-brand-100/85 leading-relaxed">
+          <p className="mt-2.5 text-xs sm:text-sm text-brand-100/85 leading-relaxed">
             Register your agricultural supply store on Agrivet. Once approved by our platform team,
             manage checkout transactions, receive shipments, and invite your store staff.
           </p>
 
           {/* Feature Highlights */}
-          <div className="mt-8 space-y-3.5">
-            <div className="flex items-start gap-3.5 rounded-xl bg-white/5 p-3.5 border border-white/10 backdrop-blur-sm transition-colors hover:bg-white/10">
-              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-brand-700 text-white font-bold">
+          <div className="mt-5 space-y-2.5">
+            <div className="flex items-start gap-3.5 rounded-xl bg-white/5 p-2.5 xl:p-3 border border-white/10 backdrop-blur-sm transition-colors hover:bg-white/10">
+              <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand-700 text-white font-bold">
                 <ShieldAlert className="h-4 w-4" />
               </div>
               <div>
@@ -170,8 +170,8 @@ function RegisterForm() {
               </div>
             </div>
 
-            <div className="flex items-start gap-3.5 rounded-xl bg-white/5 p-3.5 border border-white/10 backdrop-blur-sm transition-colors hover:bg-white/10">
-              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-brand-700 text-white font-bold">
+            <div className="flex items-start gap-3.5 rounded-xl bg-white/5 p-2.5 xl:p-3 border border-white/10 backdrop-blur-sm transition-colors hover:bg-white/10">
+              <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand-700 text-white font-bold">
                 <TrendingUp className="h-4 w-4" />
               </div>
               <div>
@@ -182,8 +182,8 @@ function RegisterForm() {
               </div>
             </div>
 
-            <div className="flex items-start gap-3.5 rounded-xl bg-white/5 p-3.5 border border-white/10 backdrop-blur-sm transition-colors hover:bg-white/10">
-              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-brand-700 text-white font-bold">
+            <div className="hidden xl:flex items-start gap-3.5 rounded-xl bg-white/5 p-2.5 xl:p-3 border border-white/10 backdrop-blur-sm transition-colors hover:bg-white/10">
+              <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand-700 text-white font-bold">
                 <Truck className="h-4 w-4" />
               </div>
               <div>
@@ -197,7 +197,7 @@ function RegisterForm() {
         </div>
 
         {/* Bottom Trust Note */}
-        <div className="relative z-10 flex items-center justify-between border-t border-white/10 pt-6 text-xs text-brand-200/70">
+        <div className="relative z-10 flex items-center justify-between border-t border-white/10 pt-4 text-xs text-brand-200/70">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="h-4 w-4 text-emerald-400" />
             <span>Secure 256-bit encrypted credential storage</span>
@@ -207,7 +207,7 @@ function RegisterForm() {
       </div>
 
       {/* Right Column: Clean, Polished Registration Form */}
-      <div className="flex h-full min-h-screen lg:h-screen lg:overflow-hidden flex-1 flex-col justify-between p-3.5 sm:p-5 lg:px-8 lg:py-4 bg-brand-50/25 dark:bg-slate-950">
+      <div className="flex h-full max-h-[100dvh] flex-1 flex-col justify-between p-3.5 sm:p-5 lg:px-8 lg:py-3 bg-brand-50/25 dark:bg-slate-950 overflow-hidden">
         {/* Top bar with back to home link */}
         <div className="flex items-center justify-between w-full shrink-0">
           <div className="lg:hidden">
@@ -223,8 +223,8 @@ function RegisterForm() {
         </div>
 
         {/* Center Register Card */}
-        <div className="my-auto mx-auto w-full max-w-md py-1">
-          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 sm:p-6 shadow-sm">
+        <div className="my-auto mx-auto w-full max-w-md max-h-[90dvh] overflow-y-auto no-scrollbar py-1">
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-5 shadow-sm">
             {submitted ? (
               <div className="text-center py-4 space-y-3">
                 <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-emerald-100 text-emerald-700">
@@ -250,8 +250,8 @@ function RegisterForm() {
               </div>
             ) : (
               <>
-                <div className="text-center mb-3">
-                  <div className="inline-flex justify-center mb-2 lg:hidden">
+                <div className="text-center mb-2.5">
+                  <div className="inline-flex justify-center mb-1.5 lg:hidden">
                     <AgrivetLogo size="md" variant="dark" href="/" />
                   </div>
                   <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-50 tracking-tight">
@@ -264,7 +264,7 @@ function RegisterForm() {
 
                 {error && (
                   <div
-                    className="mb-3 flex items-start gap-2 rounded-lg bg-red-50 dark:bg-red-950/50 p-2.5 text-xs text-red-700 dark:text-red-300 border border-red-200 dark:border-red-900"
+                    className="mb-2.5 flex items-start gap-2 rounded-lg bg-red-50 dark:bg-red-950/50 p-2 text-xs text-red-700 dark:text-red-300 border border-red-200 dark:border-red-900"
                     role="alert"
                   >
                     <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-red-600 dark:text-red-400" />
@@ -272,9 +272,9 @@ function RegisterForm() {
                   </div>
                 )}
 
-                <form className="space-y-2.5" onSubmit={handleSubmit}>
+                <form className="space-y-2 sm:space-y-2.5" onSubmit={handleSubmit}>
                   <div>
-                    <label htmlFor="businessName" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    <label htmlFor="businessName" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-0.5">
                       Business Name
                     </label>
                     <div className="relative">
@@ -295,7 +295,7 @@ function RegisterForm() {
                   </div>
 
                   <div>
-                    <label htmlFor="name" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    <label htmlFor="name" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-0.5">
                       Owner Full Name
                     </label>
                     <div className="relative">
@@ -317,7 +317,7 @@ function RegisterForm() {
                   </div>
 
                   <div>
-                    <label htmlFor="email" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    <label htmlFor="email" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-0.5">
                       Email address
                     </label>
                     <div className="relative">
@@ -339,7 +339,7 @@ function RegisterForm() {
                   </div>
 
                   <div>
-                    <label htmlFor="password" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    <label htmlFor="password" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-0.5">
                       Password (min. 8 characters)
                     </label>
                     <div className="relative">
@@ -369,7 +369,7 @@ function RegisterForm() {
                   </div>
 
                   <div>
-                    <label htmlFor="confirmPassword" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    <label htmlFor="confirmPassword" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-0.5">
                       Confirm password
                     </label>
                     <div className="relative">
@@ -401,7 +401,7 @@ function RegisterForm() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="mt-2.5 flex h-9 sm:h-10 w-full items-center justify-center gap-2 rounded-lg bg-brand-800 px-4 text-sm font-semibold text-white shadow-sm transition-all hover:bg-brand-900 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="mt-2 flex h-9 sm:h-10 w-full items-center justify-center gap-2 rounded-lg bg-brand-800 px-4 text-sm font-semibold text-white shadow-sm transition-all hover:bg-brand-900 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {loading ? (
                       <span>Submitting registration...</span>
@@ -414,12 +414,12 @@ function RegisterForm() {
                   </button>
                 </form>
 
-                <div className="mt-3 flex items-center justify-center gap-2 rounded-lg bg-slate-50 dark:bg-slate-800/60 p-2 text-[11px] text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-slate-800">
+                <div className="mt-2.5 flex items-center justify-center gap-2 rounded-lg bg-slate-50 dark:bg-slate-800/60 p-2 text-[11px] text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-slate-800">
                   <ShieldCheck className="h-3.5 w-3.5 text-brand-700 dark:text-brand-400" />
                   <span>Owner accounts require Platform Admin approval</span>
                 </div>
 
-                <div className="mt-2.5 text-center text-xs text-slate-500 dark:text-slate-400">
+                <div className="mt-2 text-center text-xs text-slate-500 dark:text-slate-400">
                   Already have an approved account?{' '}
                   <Link href="/login" className="font-semibold text-brand-800 dark:text-brand-400 hover:text-brand-900 hover:underline">
                     Sign in

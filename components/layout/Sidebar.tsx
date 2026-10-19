@@ -72,12 +72,12 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="hidden lg:flex lg:static z-50 flex h-full w-64 shrink-0 flex-col bg-brand-800 dark:bg-slate-900 dark:border-r dark:border-slate-800" aria-label="Main navigation">
-      <div className="flex items-center justify-between border-b border-white/10 dark:border-slate-800 px-5 py-5">
+    <aside className="hidden lg:flex sticky top-0 z-50 flex h-screen max-h-[100dvh] w-64 shrink-0 flex-col overflow-hidden bg-brand-800 dark:bg-slate-900 dark:border-r dark:border-slate-800" aria-label="Main navigation">
+      <div className="shrink-0 flex items-center justify-between border-b border-white/10 dark:border-slate-800 px-5 py-5">
         <NavbarLogo href={user?.role === 'admin' ? '/admin' : '/dashboard'} />
       </div>
 
-      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
+      <nav className="flex-1 space-y-1 overflow-y-auto no-scrollbar px-3 py-4">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive =
@@ -103,7 +103,7 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="border-t border-white/10 p-4">
+      <div className="shrink-0 border-t border-white/10 p-4">
         {user && (
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-700 text-xs font-bold text-white">
