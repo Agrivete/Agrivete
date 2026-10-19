@@ -5,18 +5,46 @@ import mongoose from 'mongoose';
 
 async function restore(backupPath) {
   if (!fs.existsSync(backupPath)) {
-    console.error('Backup file not found:', backupPath);
+    console.error('Backup path not found:', backupPath);
     process.exit(1);
   }
 
-  const raw = fs.readFileSync(backupPath, 'utf-8');
-  const data = JSON.parse(raw);
+  const stat = fs.statSync(backupPath);
+  const collectionsToRestore = {};
+
+  if (stat.isDirectory()) {
+    const manifestPath = path.join(backupPath, 'manifest.json');
+    if (!fs.existsSync(manifestPath)) {
+      console.error('manifest.json not found in backup directory:', backupPath);
+      process.exit(1);
+    }
+
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+    const collectionNames = Object.keys(manifest.collections || {});
+
+    for (const collectionName of collectionNames) {
+      const colFile = path.join(backupPath, `${collectionName}.json`);
+      if (fs.existsSync(colFile)) {
+        const docs = JSON.parse(fs.readFileSync(colFile, 'utf-8'));
+        if (Array.isArray(docs)) {
+          collectionsToRestore[collectionName] = docs;
+        }
+      }
+    }
+  } else {
+    const raw = fs.readFileSync(backupPath, 'utf-8');
+    const data = JSON.parse(raw);
+    for (const [collectionName, docs] of Object.entries(data)) {
+      if (Array.isArray(docs)) {
+        collectionsToRestore[collectionName] = docs;
+      }
+    }
+  }
 
   await connectDB();
   const db = mongoose.connection.db;
 
-  for (const [collectionName, docs] of Object.entries(data)) {
-    if (!Array.isArray(docs)) continue;
+  for (const [collectionName, docs] of Object.entries(collectionsToRestore)) {
     const col = db.collection(collectionName);
     const existing = await col.countDocuments();
     console.log(`${collectionName}: existing=${existing}, backup=${docs.length}`);
@@ -33,7 +61,7 @@ async function restore(backupPath) {
 
 const backupPath = process.argv[2];
 if (!backupPath) {
-  console.error('Usage: node scripts/restore.js <backup-file.json>');
+  console.error('Usage: node scripts/restore.js <backup-directory-or-file>');
   process.exit(1);
 }
 
