@@ -20,6 +20,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
 import { AgrivetLogo } from '@/components/brand';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
 
 export default function RegisterPage() {
@@ -44,6 +45,7 @@ function RegisterForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [role, setRole] = useState<'owner' | 'staff'>('owner');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
@@ -108,7 +110,7 @@ function RegisterForm() {
 
     setLoading(true);
     try {
-      await register({ name: name.trim(), email: email.trim().toLowerCase(), password });
+      await register({ name: name.trim(), email: email.trim().toLowerCase(), password, role });
       toast.success('Account created successfully');
       router.push('/dashboard');
     } catch (err) {
@@ -351,6 +353,40 @@ function RegisterForm() {
                     {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
+              </div>
+
+              <div>
+                <span className="block text-xs font-semibold text-slate-700 mb-2">
+                  Account role
+                </span>
+                <RadioGroup
+                  value={role}
+                  onValueChange={(val) => setRole(val as 'owner' | 'staff')}
+                  className="grid grid-cols-2 gap-3"
+                >
+                  <label
+                    htmlFor="role-owner"
+                    className={`flex cursor-pointer items-center gap-2.5 rounded-lg border p-3 text-xs font-semibold transition ${
+                      role === 'owner'
+                        ? 'border-brand-700 bg-brand-50/60 text-brand-900 ring-1 ring-brand-700/30'
+                        : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    <RadioGroupItem value="owner" id="role-owner" />
+                    <span>Business Owner</span>
+                  </label>
+                  <label
+                    htmlFor="role-staff"
+                    className={`flex cursor-pointer items-center gap-2.5 rounded-lg border p-3 text-xs font-semibold transition ${
+                      role === 'staff'
+                        ? 'border-brand-700 bg-brand-50/60 text-brand-900 ring-1 ring-brand-700/30'
+                        : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    <RadioGroupItem value="staff" id="role-staff" />
+                    <span>Staff</span>
+                  </label>
+                </RadioGroup>
               </div>
 
               <button

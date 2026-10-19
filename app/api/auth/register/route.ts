@@ -31,14 +31,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const userCount = await User.countDocuments();
-    if (userCount > 0) {
-      return NextResponse.json(
-        { error: 'Account creation is Owner-only. Contact your administrator.' },
-        { status: 403 }
-      );
-    }
-
     const parsedBody = await parseJsonBody(req);
     if ('error' in parsedBody) return parsedBody.error;
     const body = parsedBody.data as Record<string, unknown>;
@@ -51,7 +43,28 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { name, email, password } = parsed.data;
+    const { name, email, password, role: requestedRole } = parsed.data;
+
+    const userCount = await User.countDocuments();
+    let assignedRole: 'owner' | 'staff' = 'owner';
+
+    if (userCount === 0) {
+      assignedRole = 'owner';
+    } else if (requestedRole === 'owner') {
+      return NextResponse.json(
+        { error: 'Owner account already exists. Contact your administrator.' },
+        { status: 403 }
+      );
+    } else {
+      // Existing database + role === 'staff': allow only if SEC-01 bootstrap rule permits
+      if (process.env.ALLOW_PUBLIC_STAFF_REGISTRATION !== 'true') {
+        return NextResponse.json(
+          { error: 'Account creation is Owner-only. Contact your administrator.' },
+          { status: 403 }
+        );
+      }
+      assignedRole = 'staff';
+    }
 
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
@@ -67,9 +80,9 @@ export async function POST(req: NextRequest) {
     const user = new User({
       userId,
       name,
-      email,
+      email: email.toLowerCase(),
       passwordHash,
-      role: 'owner',
+      role: assignedRole,
       status: 'active',
     });
 
@@ -80,7 +93,7 @@ export async function POST(req: NextRequest) {
       action: 'user_registered',
       entity: 'User',
       entityId: userId,
-      afterState: { userId, name, email, role: user.role },
+      afterState: { userId, name, email: email.toLowerCase(), role: assignedRole },
       req,
     });
 
