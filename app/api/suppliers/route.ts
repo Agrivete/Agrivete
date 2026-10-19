@@ -23,34 +23,36 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
     const status = searchParams.get('status') || (isDirectory ? 'all' : 'active');
+    const availableToday = searchParams.get('availableToday') === 'true';
     const query: Record<string, unknown> = status === 'all' ? {} : { status };
 
-    const suppliers = await Supplier.find(query).sort({ name: 1 }).lean();
+    const [suppliers, latestReceivings] = await Promise.all([
+      Supplier.find(query).sort({ name: 1 }).lean(),
+      Receiving.aggregate([
+        { $match: { status: 'confirmed' } },
+        { $group: { _id: '$supplierId', lastDeliveryDate: { $max: '$receivedDate' } } },
+      ]),
+    ]);
+
+    const deliveryMap = Object.fromEntries(
+      latestReceivings.map((r: { _id: string; lastDeliveryDate: Date }) => [r._id, r.lastDeliveryDate])
+    );
 
     if (isDirectory) {
       const now = new Date();
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-      const [latestReceivings, monthlyPurchases] = await Promise.all([
-        Receiving.aggregate([
-          { $match: { status: 'confirmed' } },
-          { $group: { _id: '$supplierId', lastDeliveryDate: { $max: '$receivedDate' } } },
-        ]),
-        Replenishment.aggregate([
-          { $match: { orderDate: { $gte: monthStart }, status: { $ne: 'cancelled' } } },
-          {
-            $group: {
-              _id: '$supplierId',
-              count: { $sum: 1 },
-              totalAmount: { $sum: '$total' },
-            },
+      const monthlyPurchases = await Replenishment.aggregate([
+        { $match: { orderDate: { $gte: monthStart }, status: { $ne: 'cancelled' } } },
+        {
+          $group: {
+            _id: '$supplierId',
+            count: { $sum: 1 },
+            totalAmount: { $sum: '$total' },
           },
-        ]),
+        },
       ]);
 
-      const deliveryMap = Object.fromEntries(
-        latestReceivings.map((r: { _id: string; lastDeliveryDate: Date }) => [r._id, r.lastDeliveryDate])
-      );
       const purchaseMap = Object.fromEntries(
         monthlyPurchases.map((p: { _id: string; count: number; totalAmount: number }) => [
           p._id,
@@ -74,7 +76,22 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(directoryRows);
     }
 
-    return NextResponse.json(suppliers);
+    const enrichedSuppliers = suppliers.map((s: any) => ({
+      ...s,
+      availableDays: Array.isArray(s.availableDays) && s.availableDays.length > 0
+        ? s.availableDays
+        : ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'],
+      lastDeliveryDate: deliveryMap[s.supplierId] || null,
+    }));
+
+    if (availableToday) {
+      const todayKey = new Date().toLocaleDateString('en-US', { weekday: 'short' }).toLowerCase();
+      return NextResponse.json(
+        enrichedSuppliers.filter((s: any) => s.availableDays.includes(todayKey))
+      );
+    }
+
+    return NextResponse.json(enrichedSuppliers);
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch suppliers' }, { status: 500 });
   }

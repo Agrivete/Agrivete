@@ -17,9 +17,23 @@ interface Supplier {
   email?: string;
   address?: string;
   paymentTerms: string;
+  availableDays?: string[];
+  lastDeliveryDate?: string | null;
   status: string;
   notes?: string;
 }
+
+const ALL_DAYS = [
+  { key: 'mon', label: 'Mon' },
+  { key: 'tue', label: 'Tue' },
+  { key: 'wed', label: 'Wed' },
+  { key: 'thu', label: 'Thu' },
+  { key: 'fri', label: 'Fri' },
+  { key: 'sat', label: 'Sat' },
+  { key: 'sun', label: 'Sun' },
+] as const;
+
+const DEFAULT_DAYS = ALL_DAYS.map((d) => d.key);
 
 interface Replenishment {
   purchaseId: string;
@@ -45,6 +59,7 @@ interface ReceivingTx {
 export default function SuppliersPage() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewFilter, setViewFilter] = useState<'all' | 'availableToday'>('all');
 
   const [modal, setModal] = useState(false);
   const [editTarget, setEditTarget] = useState<Supplier | null>(null);
@@ -54,6 +69,7 @@ export default function SuppliersPage() {
   const [email, setEmail] = useState('');
   const [address, setAddress] = useState('');
   const [paymentTerms, setPaymentTerms] = useState('cash_on_delivery');
+  const [availableDays, setAvailableDays] = useState<string[]>([...DEFAULT_DAYS]);
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -84,7 +100,7 @@ export default function SuppliersPage() {
   const openCreate = () => {
     setEditTarget(null);
     setName(''); setContactPerson(''); setPhone(''); setEmail(''); setAddress('');
-    setPaymentTerms('cash_on_delivery'); setNotes('');
+    setPaymentTerms('cash_on_delivery'); setAvailableDays([...DEFAULT_DAYS]); setNotes('');
     setModal(true);
   };
 
@@ -92,15 +108,23 @@ export default function SuppliersPage() {
     setEditTarget(s);
     setName(s.name); setContactPerson(s.contactPerson || ''); setPhone(s.phone || '');
     setEmail(s.email || ''); setAddress(s.address || '');
-    setPaymentTerms(s.paymentTerms); setNotes(s.notes || '');
+    setPaymentTerms(s.paymentTerms);
+    setAvailableDays(s.availableDays && s.availableDays.length > 0 ? s.availableDays : [...DEFAULT_DAYS]);
+    setNotes(s.notes || '');
     setModal(true);
+  };
+
+  const toggleDay = (dayKey: string) => {
+    setAvailableDays((prev) =>
+      prev.includes(dayKey) ? prev.filter((d) => d !== dayKey) : [...prev, dayKey]
+    );
   };
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const payload = { name, contactPerson, phone, email, address, paymentTerms, notes };
+      const payload = { name, contactPerson, phone, email, address, paymentTerms, availableDays, notes };
       if (editTarget) {
         await api.put(`/api/suppliers/${editTarget.supplierId}`, payload);
         toast.success('Supplier updated');
@@ -147,10 +171,21 @@ export default function SuppliersPage() {
     }
   };
 
+  const todayKey = new Date().toLocaleDateString('en-US', { weekday: 'short' }).toLowerCase();
+  const displayedSuppliers = suppliers.filter((s) => {
+    if (viewFilter === 'all') return true;
+    const days = s.availableDays && s.availableDays.length > 0 ? s.availableDays : DEFAULT_DAYS;
+    const availableByDay = days.includes(todayKey as (typeof DEFAULT_DAYS)[number]);
+    const deliveredLast24h = s.lastDeliveryDate
+      ? Date.now() - new Date(s.lastDeliveryDate).getTime() <= 24 * 60 * 60 * 1000
+      : false;
+    return availableByDay || deliveredLast24h;
+  });
+
   return (
     <AppLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-lg font-semibold text-slate-900">Supplier Management</h2>
             <p className="text-xs text-slate-500">Centralized contacts, purchase & delivery history</p>
@@ -161,12 +196,41 @@ export default function SuppliersPage() {
         </div>
 
         <Card>
-          <CardHeader title="Suppliers" description={`${suppliers.length} registered`} />
+          <CardHeader
+            title="Suppliers"
+            description={`${displayedSuppliers.length} shown of ${suppliers.length} registered`}
+            action={
+              <div className="inline-flex rounded-xl bg-slate-100 p-1">
+                <button
+                  type="button"
+                  onClick={() => setViewFilter('all')}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                    viewFilter === 'all' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  All suppliers
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewFilter('availableToday')}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                    viewFilter === 'availableToday' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  Available today
+                </button>
+              </div>
+            }
+          />
           <CardContent className="p-0">
             {loading ? (
               <PageLoader />
-            ) : suppliers.length === 0 ? (
-              <EmptyState icon={<Truck className="h-7 w-7" />} title="No suppliers" message="Add your first supplier" />
+            ) : displayedSuppliers.length === 0 ? (
+              <EmptyState
+                icon={<Truck className="h-7 w-7" />}
+                title={viewFilter === 'availableToday' ? 'No suppliers available today' : 'No suppliers'}
+                message={viewFilter === 'availableToday' ? 'No suppliers match today’s schedule or 24h delivery window' : 'Add your first supplier'}
+              />
             ) : (
               <Table
                 columns={[
@@ -199,7 +263,7 @@ export default function SuppliersPage() {
                     ),
                   },
                 ]}
-                data={suppliers}
+                data={displayedSuppliers}
                 keyExtractor={(r) => r.supplierId}
               />
             )}
@@ -238,6 +302,28 @@ export default function SuppliersPage() {
                 { value: 'net_60', label: 'Net 60' },
               ]}
             />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold text-slate-700">Available delivery days</label>
+            <div className="flex flex-wrap gap-2">
+              {ALL_DAYS.map((day) => {
+                const active = availableDays.includes(day.key);
+                return (
+                  <button
+                    key={day.key}
+                    type="button"
+                    onClick={() => toggleDay(day.key)}
+                    className={`rounded-lg border px-2.5 py-1 text-xs font-medium transition ${
+                      active
+                        ? 'border-brand-600 bg-brand-50 text-brand-700'
+                        : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300'
+                    }`}
+                  >
+                    {day.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
           <Input label="Address" value={address} onChange={(e) => setAddress(e.target.value)} />
           <Input label="Notes" value={notes} onChange={(e) => setNotes(e.target.value)} />

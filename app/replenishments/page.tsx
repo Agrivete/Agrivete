@@ -25,7 +25,12 @@ interface Replenishment {
   notes?: string;
 }
 
-interface SupplierOption { supplierId: string; name: string }
+interface SupplierOption {
+  supplierId: string;
+  name: string;
+  availableDays?: string[];
+  lastDeliveryDate?: string | null;
+}
 interface ProductOption { productId: string; name: string; unit: string }
 
 interface ItemForm { productId: string; productName: string; orderedQuantity: number; unitCost: number }
@@ -99,6 +104,29 @@ export default function ReplenishmentsPage() {
   };
 
   const totalAmount = items.reduce((s, it) => s + it.orderedQuantity * it.unitCost, 0);
+
+  const todayKey = new Date().toLocaleDateString('en-US', { weekday: 'short' }).toLowerCase();
+  const isAvailableToday = (s: SupplierOption) => {
+    const days = s.availableDays && s.availableDays.length > 0
+      ? s.availableDays
+      : ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+    const availableByDay = days.includes(todayKey);
+    const deliveredLast24h = s.lastDeliveryDate
+      ? Date.now() - new Date(s.lastDeliveryDate).getTime() <= 24 * 60 * 60 * 1000
+      : false;
+    return availableByDay || deliveredLast24h;
+  };
+  const availableSuppliers = suppliers.filter(isAvailableToday);
+  const unavailableSuppliers = suppliers.filter((s) => !isAvailableToday(s));
+  const supplierOptions = [
+    ...availableSuppliers.map((s) => ({ value: s.supplierId, label: s.name })),
+    ...(unavailableSuppliers.length > 0
+      ? [
+          { value: '__divider_unavailable__', label: '── Unavailable today ──', disabled: true },
+          ...unavailableSuppliers.map((s) => ({ value: s.supplierId, label: s.name })),
+        ]
+      : []),
+  ];
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -230,7 +258,7 @@ export default function ReplenishmentsPage() {
               label="Supplier"
               value={supplierId}
               onChange={(e) => setSupplierId(e.target.value)}
-              options={suppliers.map((s) => ({ value: s.supplierId, label: s.name }))}
+              options={supplierOptions}
               required
             />
             <Input label="Expected delivery" type="date" value={expectedDate} onChange={(e) => setExpectedDate(e.target.value)} />

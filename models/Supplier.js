@@ -13,6 +13,11 @@ const supplierSchema = new mongoose.Schema({
     enum: ['cash_on_delivery', 'net_15', 'net_30', 'net_60'],
     default: 'cash_on_delivery',
   },
+  availableDays: {
+    type: [String],
+    enum: ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'],
+    default: ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'],
+  },
   status: { type: String, enum: ['active', 'inactive'], default: 'active', index: true },
   createdBy: { type: String, ref: 'User' },
   createdAt: { type: Date, default: Date.now },
