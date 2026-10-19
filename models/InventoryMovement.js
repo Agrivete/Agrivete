@@ -29,6 +29,7 @@ const inventoryMovementSchema = new mongoose.Schema({
 
 inventoryMovementSchema.index({ productId: 1, timestamp: -1 });
 inventoryMovementSchema.index({ type: 1, timestamp: -1 });
+inventoryMovementSchema.index({ supplierId: 1, type: 1 });
 
 export const InventoryMovement =
   mongoose.models.InventoryMovement ||
