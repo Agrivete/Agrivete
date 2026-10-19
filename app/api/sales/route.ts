@@ -10,6 +10,7 @@ import { Product } from '@/models/Product';
 import { InventoryBalance } from '@/models/InventoryBalance';
 import { parseJsonBody } from '@/lib/parseJson';
 import { rateLimit, getUserRateLimitKey } from '@/lib/rateLimit';
+import { sanitizeSaleForRole } from '@/lib/sanitize';
 import mongoose from 'mongoose';
 
 export async function GET(req: NextRequest) {
@@ -45,15 +46,7 @@ export async function GET(req: NextRequest) {
     ]);
 
     // Strip cost data for non-owners (BR06)
-    const sanitized = sales.map((sale: any) => {
-      if (user.role !== 'owner') {
-        return {
-          ...sale,
-          items: (sale.items || []).map(({ unitCost: _c, ...item }: any) => item),
-        };
-      }
-      return sale;
-    });
+    const sanitized = sales.map((sale: any) => sanitizeSaleForRole(sale, user.role));
 
     return NextResponse.json({
       sales: sanitized,
@@ -198,7 +191,7 @@ export async function POST(req: NextRequest) {
 
     await dbSession.commitTransaction();
 
-    return NextResponse.json(sale, { status: 201 });
+    return NextResponse.json(sanitizeSaleForRole(sale, user.role), { status: 201 });
   } catch (error) {
     await dbSession.abortTransaction();
     console.error('POST /api/sales error:', error);

@@ -6,6 +6,7 @@ import { Product } from '@/models/Product';
 import { Sale } from '@/models/Sale';
 import { InventoryBalance } from '@/models/InventoryBalance';
 import { InventoryMovement } from '@/models/InventoryMovement';
+import { sanitizeSaleForRole } from '@/lib/sanitize';
 
 async function getDashboardDataInternal(userRole: string) {
   await connectDB();
@@ -41,9 +42,7 @@ async function getDashboardDataInternal(userRole: string) {
   const recentSales = await Sale.find().sort({ date: -1 }).limit(10).lean();
 
   // Strip cost data for non-owners (BR06)
-  const sanitizedRecentSales = userRole !== 'owner'
-    ? recentSales.map((sale: any) => ({ ...sale, items: (sale.items || []).map(({ unitCost: _c, ...item }: any) => item) }))
-    : recentSales;
+  const sanitizedRecentSales = recentSales.map((sale: any) => sanitizeSaleForRole(sale, userRole));
 
   // Low stock count (BR04)
   const products = await Product.find({ status: 'active' }).lean();
