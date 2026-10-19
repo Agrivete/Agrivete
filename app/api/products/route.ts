@@ -7,6 +7,7 @@ import { logActivity } from '@/lib/logActivity';
 import { parseJsonBody } from '@/lib/parseJson';
 import { Product } from '@/models/Product';
 import { InventoryBalance } from '@/models/InventoryBalance';
+import { sanitizeProductForRole } from '@/lib/sanitize';
 
 export async function GET(req: NextRequest) {
   try {
@@ -34,15 +35,20 @@ export async function GET(req: NextRequest) {
       const balanceMap = Object.fromEntries(balances.map((b) => [b.productId, b.quantityOnHand]));
 
       return NextResponse.json(
-        products.map((p) => ({
-          ...p,
-          quantityOnHand: balanceMap[p.productId] ?? 0,
-          isLowStock: (balanceMap[p.productId] ?? 0) <= p.lowStockThreshold,
-        }))
+        products.map((p) =>
+          sanitizeProductForRole(
+            {
+              ...p,
+              quantityOnHand: balanceMap[p.productId] ?? 0,
+              isLowStock: (balanceMap[p.productId] ?? 0) <= p.lowStockThreshold,
+            },
+            user.role
+          )
+        )
       );
     }
 
-    return NextResponse.json(products);
+    return NextResponse.json(products.map((p) => sanitizeProductForRole(p as Record<string, unknown>, user.role)));
   } catch (error) {
     console.error('GET /api/products error:', error);
     return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 });

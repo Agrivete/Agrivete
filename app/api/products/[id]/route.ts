@@ -7,6 +7,7 @@ import { logActivity } from '@/lib/logActivity';
 import { parseJsonBody } from '@/lib/parseJson';
 import { Product } from '@/models/Product';
 import { InventoryBalance } from '@/models/InventoryBalance';
+import { sanitizeProductForRole } from '@/lib/sanitize';
 
 export async function GET(
   req: NextRequest,
@@ -25,11 +26,16 @@ export async function GET(
 
     const balance: any = await InventoryBalance.findOne({ productId: id }).lean();
 
-    return NextResponse.json({
-      ...product,
-      quantityOnHand: balance?.quantityOnHand ?? 0,
-      isLowStock: (balance?.quantityOnHand ?? 0) <= product.lowStockThreshold,
-    });
+    return NextResponse.json(
+      sanitizeProductForRole(
+        {
+          ...product,
+          quantityOnHand: balance?.quantityOnHand ?? 0,
+          isLowStock: (balance?.quantityOnHand ?? 0) <= product.lowStockThreshold,
+        },
+        user.role
+      )
+    );
   } catch (error) {
     console.error('GET /api/products/[id] error:', error);
     return NextResponse.json({ error: 'Failed to fetch product' }, { status: 500 });
