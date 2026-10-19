@@ -11,6 +11,7 @@ const inventoryMovementSchema = new mongoose.Schema({
   },
   quantity: { type: Number, required: true },
   referenceId: { type: String, index: true },
+  supplierId: { type: String, ref: 'Supplier', index: true, default: null },
   reason: {
     type: String,
     enum: ['damage', 'loss', 'correction', 'reconciliation', 'sale', 'receiving', 'return'],

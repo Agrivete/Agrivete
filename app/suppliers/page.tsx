@@ -1,12 +1,14 @@
 'use client';
 
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
-import { Plus, Truck, Eye, Trash2 } from 'lucide-react';
+import { Plus, Truck, Eye, Trash2, Package } from 'lucide-react';
 import { AppLayout } from '@/components/layout';
 import {
   Card, CardHeader, CardContent, Table, Badge, StatusBadge, Button, Input, Select, Modal, PageLoader, EmptyState, ConfirmModal,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, type Column,
 } from '@/components/ui';
 import { api } from '@/lib/api';
+import { useAuth } from '@/lib/AuthContext';
 import { toast } from 'sonner';
 
 interface Supplier {
@@ -21,6 +23,26 @@ interface Supplier {
   lastDeliveryDate?: string | null;
   status: string;
   notes?: string;
+}
+
+interface SupplierInventoryProduct {
+  productId: string;
+  productName: string;
+  category: string;
+  totalReceived: number;
+  currentOnHand: number;
+  lastDeliveryDate: string;
+  lastUnitCost?: number;
+}
+
+interface SupplierInventoryResponse {
+  supplier: {
+    supplierId: string;
+    name: string;
+    contactPerson: string;
+    phone: string;
+  };
+  products: SupplierInventoryProduct[];
 }
 
 const ALL_DAYS = [
@@ -57,6 +79,9 @@ interface ReceivingTx {
 }
 
 export default function SuppliersPage() {
+  const { hasRole } = useAuth();
+  const isOwner = hasRole('owner');
+
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewFilter, setViewFilter] = useState<'all' | 'availableToday'>('all');
@@ -80,6 +105,10 @@ export default function SuppliersPage() {
   const [purchases, setPurchases] = useState<Replenishment[]>([]);
   const [receivings, setReceivings] = useState<ReceivingTx[]>([]);
   const [txLoading, setTxLoading] = useState(false);
+
+  const [invTarget, setInvTarget] = useState<Supplier | null>(null);
+  const [invProducts, setInvProducts] = useState<SupplierInventoryProduct[]>([]);
+  const [invLoading, setInvLoading] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -171,6 +200,57 @@ export default function SuppliersPage() {
     }
   };
 
+  const openInventory = async (s: Supplier) => {
+    setInvTarget(s);
+    setInvProducts([]);
+    setInvLoading(true);
+    try {
+      const res = await api.get<SupplierInventoryResponse>(`/api/suppliers/${s.supplierId}/inventory`);
+      setInvProducts(res.products || []);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to load supplier inventory');
+    } finally {
+      setInvLoading(false);
+    }
+  };
+
+  const invColumns: Column<SupplierInventoryProduct>[] = [
+    {
+      key: 'productName',
+      header: 'Product',
+      accessor: (r) => <span className="font-medium text-slate-900">{r.productName}</span>,
+    },
+    {
+      key: 'category',
+      header: 'Category',
+      accessor: (r) => <Badge variant="neutral">{r.category}</Badge>,
+    },
+    {
+      key: 'totalReceived',
+      header: 'Total Received',
+      accessor: (r) => r.totalReceived,
+    },
+    {
+      key: 'currentOnHand',
+      header: 'Current On Hand',
+      accessor: (r) => <span className="font-semibold text-slate-900">{r.currentOnHand}</span>,
+    },
+    {
+      key: 'lastDeliveryDate',
+      header: 'Last Delivery',
+      accessor: (r) =>
+        r.lastDeliveryDate ? new Date(r.lastDeliveryDate).toLocaleDateString('en-PH') : '—',
+    },
+  ];
+
+  if (isOwner) {
+    invColumns.push({
+      key: 'lastUnitCost',
+      header: 'Last Unit Cost',
+      accessor: (r) => `₱${(r.lastUnitCost ?? 0).toFixed(2)}`,
+    });
+  }
+
   const todayKey = new Date().toLocaleDateString('en-US', { weekday: 'short' }).toLowerCase();
   const displayedSuppliers = suppliers.filter((s) => {
     if (viewFilter === 'all') return true;
@@ -248,6 +328,15 @@ export default function SuppliersPage() {
                     key: 'actions', header: 'Actions',
                     accessor: (r) => (
                       <div className="flex items-center gap-1">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          leftIcon={<Package className="h-3.5 w-3.5" />}
+                          onClick={() => openInventory(r)}
+                          title="View inventory"
+                        >
+                          View inventory
+                        </Button>
                         <Button size="sm" variant="ghost" onClick={() => openTransactions(r)} title="View transactions">
                           <Eye className="h-3.5 w-3.5" />
                         </Button>
@@ -329,6 +418,31 @@ export default function SuppliersPage() {
           <Input label="Notes" value={notes} onChange={(e) => setNotes(e.target.value)} />
         </form>
       </Modal>
+
+      {/* Supplier Inventory Dialog */}
+      <Dialog open={!!invTarget} onOpenChange={(open) => !open && setInvTarget(null)}>
+        <DialogContent className="h-dvh max-w-full overflow-y-auto sm:h-auto sm:max-h-[85vh] sm:max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Supplier Inventory — {invTarget?.name}</DialogTitle>
+            <DialogDescription>
+              Products delivered by {invTarget?.name}
+            </DialogDescription>
+          </DialogHeader>
+          {invLoading ? (
+            <PageLoader />
+          ) : invProducts.length === 0 ? (
+            <p className="py-8 text-center text-sm text-slate-500">
+              No deliveries recorded from this supplier yet
+            </p>
+          ) : (
+            <Table
+              columns={invColumns}
+              data={invProducts}
+              keyExtractor={(r) => r.productId}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Transaction history */}
       <Modal

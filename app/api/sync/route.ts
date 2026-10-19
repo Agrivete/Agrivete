@@ -242,6 +242,7 @@ async function processReceiving(
           quantityChange: item.receivedQuantity,
           type: 'receiving',
           referenceId: data.localId,
+          supplierId: data.supplierId,
           reason: 'receiving',
           userId,
           lotNo: item.lotNo,

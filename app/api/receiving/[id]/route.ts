@@ -70,6 +70,7 @@ export async function PATCH(
               quantityChange: item.receivedQuantity,
               type: 'receiving',
               referenceId: receiving.receivingId,
+              supplierId: receiving.supplierId,
               reason: 'receiving',
               userId: user.userId,
               lotNo: item.lotNo,

@@ -1,7 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
-import { Plus, Package, History, SlidersHorizontal } from 'lucide-react';
+import { Suspense, useCallback, useEffect, useState, type FormEvent } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Plus, Package, History, SlidersHorizontal, X } from 'lucide-react';
 import { AppLayout } from '@/components/layout';
 import {
   Card, CardHeader, CardContent, Table, Badge, Button, Input, Select, Modal, PageLoader, EmptyState,
@@ -34,6 +35,12 @@ interface MovementRow {
   notes?: string;
 }
 
+interface SupplierFilterOption {
+  supplierId: string;
+  name: string;
+  status: string;
+}
+
 interface ProductForm {
   name: string;
   category: string;
@@ -45,13 +52,18 @@ interface ProductForm {
   description: string;
 }
 
-export default function InventoryPage() {
+function InventoryContent() {
   const { hasRole } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialSupplierId = searchParams.get('supplierId') || '';
 
   const [balances, setBalances] = useState<BalanceRow[]>([]);
+  const [suppliers, setSuppliers] = useState<SupplierFilterOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
+  const [supplierFilter, setSupplierFilter] = useState(initialSupplierId);
   const [lowOnly, setLowOnly] = useState(false);
 
   const [adjustTarget, setAdjustTarget] = useState<BalanceRow | null>(null);
@@ -71,11 +83,35 @@ export default function InventoryPage() {
   });
   const [submitting, setSubmitting] = useState(false);
 
+  useEffect(() => {
+    setSupplierFilter(searchParams.get('supplierId') || '');
+  }, [searchParams]);
+
+  useEffect(() => {
+    api
+      .get<SupplierFilterOption[]>('/api/suppliers?directory=true&status=active')
+      .then((data) => setSuppliers(data))
+      .catch(() => {});
+  }, []);
+
+  const updateSupplierUrl = (nextSupplierId: string) => {
+    setSupplierFilter(nextSupplierId);
+    const params = new URLSearchParams(searchParams.toString());
+    if (nextSupplierId) {
+      params.set('supplierId', nextSupplierId);
+    } else {
+      params.delete('supplierId');
+    }
+    const qs = params.toString();
+    router.replace(qs ? `/inventory?${qs}` : '/inventory');
+  };
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
       if (lowOnly) params.set('lowStock', 'true');
+      if (supplierFilter) params.set('supplierId', supplierFilter);
       const res = await api.get<{ balances: BalanceRow[] }>(`/api/inventory?${params}`);
       setBalances(res.balances);
     } catch (err) {
@@ -83,7 +119,7 @@ export default function InventoryPage() {
     } finally {
       setLoading(false);
     }
-  }, [lowOnly, toast]);
+  }, [lowOnly, supplierFilter]);
 
   useEffect(() => {
     load();
@@ -209,7 +245,7 @@ export default function InventoryPage() {
             className="sm:[&>div:last-child]:shrink-0"
             action={
               <div className="flex min-h-[44px] w-full flex-col gap-2 sm:w-max sm:flex-row sm:items-center sm:gap-3">
-                <div className="w-full sm:w-64">
+                <div className="w-full sm:w-56">
                   <Input
                     placeholder="Search products..."
                     value={search}
@@ -217,6 +253,26 @@ export default function InventoryPage() {
                     className="h-11 w-full text-sm"
                   />
                 </div>
+                <div className="w-full sm:w-48">
+                  <Select
+                    value={supplierFilter}
+                    onChange={(e) => updateSupplierUrl(e.target.value)}
+                    options={suppliers.map((s) => ({ value: s.supplierId, label: s.name }))}
+                    placeholder="All suppliers"
+                    className="h-11 w-full text-sm"
+                  />
+                </div>
+                {supplierFilter && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    leftIcon={<X className="h-3.5 w-3.5" />}
+                    onClick={() => updateSupplierUrl('')}
+                    className="min-h-11 whitespace-nowrap text-xs"
+                  >
+                    Clear filter
+                  </Button>
+                )}
                 <div className="w-full sm:w-44">
                   <Select
                     value={category}
@@ -405,5 +461,13 @@ export default function InventoryPage() {
         </form>
       </Modal>
     </AppLayout>
+  );
+}
+
+export default function InventoryPage() {
+  return (
+    <Suspense fallback={<PageLoader />}>
+      <InventoryContent />
+    </Suspense>
   );
 }

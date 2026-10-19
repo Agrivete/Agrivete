@@ -4,6 +4,7 @@ import { getUserFromRequest } from '@/lib/auth';
 import { checkPermission } from '@/lib/permissions';
 import { Product } from '@/models/Product';
 import { InventoryBalance } from '@/models/InventoryBalance';
+import { InventoryMovement } from '@/models/InventoryMovement';
 
 // Real-time stock balances joined with product info
 export async function GET(req: NextRequest) {
@@ -16,10 +17,19 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const productId = searchParams.get('productId');
+    const supplierId = searchParams.get('supplierId');
     const lowStock = searchParams.get('lowStock') === 'true';
 
     const productQuery: Record<string, unknown> = { status: 'active' };
-    if (productId) productQuery.productId = productId;
+    if (productId) {
+      productQuery.productId = productId;
+    } else if (supplierId) {
+      const supplierProductIds = await InventoryMovement.distinct('productId', {
+        supplierId,
+        type: 'receiving',
+      });
+      productQuery.productId = { $in: supplierProductIds };
+    }
 
     const products = await Product.find(productQuery).lean();
     const productIds = products.map((p) => p.productId);

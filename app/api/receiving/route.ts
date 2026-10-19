@@ -117,6 +117,7 @@ export async function POST(req: NextRequest) {
             quantityChange: item.receivedQuantity,
             type: 'receiving',
             referenceId: receivingId,
+            supplierId,
             reason: 'receiving',
             userId: user.userId,
             lotNo: item.lotNo,
