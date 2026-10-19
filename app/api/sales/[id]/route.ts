@@ -15,6 +15,8 @@ export async function GET(
     await connectDB();
     const user = await getUserFromRequest(req);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!checkPermission(user.role, 'view_sales'))
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
     const { id } = await params;
     const sale = await Sale.findOne({ saleId: id }).lean();

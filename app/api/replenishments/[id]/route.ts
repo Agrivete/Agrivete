@@ -14,10 +14,21 @@ export async function GET(
     await connectDB();
     const user = await getUserFromRequest(req);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!checkPermission(user.role, 'view_replenishments'))
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
     const { id } = await params;
-    const replenishment = await Replenishment.findOne({ purchaseId: id }).lean();
+    const replenishment: any = await Replenishment.findOne({ purchaseId: id }).lean();
     if (!replenishment) return NextResponse.json({ error: 'Replenishment not found' }, { status: 404 });
+
+    if (user.role !== 'owner') {
+      const { subtotal: _s, total: _t, items, ...rest } = replenishment;
+      return NextResponse.json({
+        ...rest,
+        items: (items || []).map(({ unitCost: _c, ...item }: any) => item),
+      });
+    }
+
     return NextResponse.json(replenishment);
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch replenishment' }, { status: 500 });
