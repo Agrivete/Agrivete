@@ -51,6 +51,7 @@ export function StockMovementChart({ data = [] }: { data?: MovementData[] }) {
                 tickFormatter={(value) => value.toLocaleString()}
               />
               <Tooltip
+                cursor={{ fill: 'transparent' }}
                 contentStyle={{
                   backgroundColor: 'var(--card)',
                   color: 'var(--card-foreground)',

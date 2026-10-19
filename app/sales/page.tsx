@@ -108,7 +108,12 @@ export default function SalesPage() {
     });
   };
 
-  const subtotal = items.reduce((s, it) => s + it.quantity * it.unitPrice, 0);
+  const formatCurrency = (val: number) => {
+    if (isNaN(val) || !isFinite(val)) return '₱0.00';
+    return val.toLocaleString('en-PH', { style: 'currency', currency: 'PHP' });
+  };
+
+  const subtotal = items.reduce((s, it) => s + (it.quantity || 0) * (it.unitPrice || 0), 0);
   const totalAmount = Math.max(0, subtotal - (parseFloat(discount) || 0));
 
   const submitSale = async (e: FormEvent) => {
@@ -120,10 +125,14 @@ export default function SalesPage() {
     setSubmitting(true);
     try {
       await api.post('/api/sales', {
-        items: items.map((it) => ({ productId: it.productId, quantity: it.quantity, unitPrice: it.unitPrice })),
+        items: items.map((it) => ({
+          productId: it.productId,
+          quantity: Math.min(1000, Math.max(1, it.quantity)),
+          unitPrice: Math.min(100000, Math.max(0, it.unitPrice)),
+        })),
         paymentMethod,
-        customerName,
-        discount: parseFloat(discount) || 0,
+        customerName: customerName.trim().slice(0, 50),
+        discount: Math.min(1000000, Math.max(0, parseFloat(discount) || 0)),
       });
       toast.success('Sale recorded — inventory deducted (BR01)');
       setSaleModal(false);
@@ -204,9 +213,9 @@ export default function SalesPage() {
                   { key: 'items', header: 'Items', accessor: (r) => r.items.reduce((s, i) => s + i.quantity, 0) },
                   { key: 'date', header: 'Date', accessor: (r) => new Date(r.date).toLocaleString('en-PH') },
                   ...(hasRole('owner')
-                    ? [{ key: 'subtotal', header: 'Subtotal', accessor: (r: SaleRow) => `₱${r.subtotal.toFixed(2)}` }]
+                    ? [{ key: 'subtotal', header: 'Subtotal', accessor: (r: SaleRow) => formatCurrency(r.subtotal) }]
                     : []),
-                  { key: 'total', header: 'Total', accessor: (r) => <span className="font-semibold">₱{r.total.toFixed(2)}</span> },
+                  { key: 'total', header: 'Total', accessor: (r) => <span className="font-semibold">{formatCurrency(r.total)}</span> },
                   { key: 'paymentMethod', header: 'Payment', accessor: (r) => <StatusBadge status={r.paymentMethod} /> },
                   { key: 'status', header: 'Status', accessor: (r) => <StatusBadge status={r.status} /> },
                   {
@@ -239,14 +248,20 @@ export default function SalesPage() {
           <>
             <Button variant="ghost" onClick={() => setSaleModal(false)}>Cancel</Button>
             <Button onClick={submitSale} loading={submitting} leftIcon={<ShoppingCart className="h-4 w-4" />}>
-              Complete Sale — ₱{totalAmount.toFixed(2)}
+              Complete Sale — {formatCurrency(totalAmount)}
             </Button>
           </>
         }
       >
         <form onSubmit={submitSale} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <Input label="Customer name" placeholder="Walk-in" value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
+            <Input
+              label="Customer name"
+              placeholder="Walk-in"
+              maxLength={50}
+              value={customerName}
+              onChange={(e) => setCustomerName(e.target.value.slice(0, 50))}
+            />
             <div className="grid grid-cols-2 gap-4">
               <Select
                 label="Payment"
@@ -259,7 +274,19 @@ export default function SalesPage() {
                   { value: 'credit', label: 'Credit' },
                 ]}
               />
-              <Input label="Discount (₱)" type="number" min="0" value={discount} onChange={(e) => setDiscount(e.target.value)} />
+              <Input
+                label="Discount (₱)"
+                type="number"
+                min="0"
+                max="1000000"
+                step="0.01"
+                value={discount}
+                onChange={(e) => {
+                  const val = parseFloat(e.target.value);
+                  if (isNaN(val)) setDiscount('');
+                  else setDiscount(String(Math.min(1000000, Math.max(0, val))));
+                }}
+              />
             </div>
           </div>
 
@@ -292,8 +319,13 @@ export default function SalesPage() {
                       label="Qty"
                       type="number"
                       min="1"
+                      max="1000"
                       value={item.quantity}
-                      onChange={(e) => updateItem(index, { quantity: parseInt(e.target.value) || 0 })}
+                      onChange={(e) => {
+                        const parsed = parseInt(e.target.value);
+                        const val = isNaN(parsed) ? 1 : Math.min(1000, Math.max(1, parsed));
+                        updateItem(index, { quantity: val });
+                      }}
                     />
                   </div>
                   <div className="col-span-2">
@@ -301,12 +333,18 @@ export default function SalesPage() {
                       label="Price"
                       type="number"
                       min="0"
+                      max="100000"
+                      step="0.01"
                       value={item.unitPrice}
-                      onChange={(e) => updateItem(index, { unitPrice: parseFloat(e.target.value) || 0 })}
+                      onChange={(e) => {
+                        const parsed = parseFloat(e.target.value);
+                        const val = isNaN(parsed) ? 0 : Math.min(100000, Math.max(0, parsed));
+                        updateItem(index, { unitPrice: val });
+                      }}
                     />
                   </div>
                   <div className="col-span-2 pb-1 text-xs text-slate-500">
-                    ₱{((item.quantity || 0) * (item.unitPrice || 0)).toFixed(2)}
+                    {formatCurrency((item.quantity || 0) * (item.unitPrice || 0))}
                   </div>
                   <div className="col-span-1 pb-1 text-right">
                     <button
@@ -322,7 +360,7 @@ export default function SalesPage() {
             </div>
             <div className="flex items-center justify-between border-t border-slate-100 px-4 py-2.5 text-sm">
               <span className="text-xs text-slate-500">Subtotal</span>
-              <span className="font-semibold">₱{subtotal.toFixed(2)}</span>
+              <span className="font-semibold">{formatCurrency(subtotal)}</span>
             </div>
           </div>
         </form>

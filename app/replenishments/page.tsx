@@ -53,6 +53,7 @@ export default function ReplenishmentsPage() {
   const [referenceNo, setReferenceNo] = useState('');
   const [items, setItems] = useState<ItemForm[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [confirmCreateOpen, setConfirmCreateOpen] = useState(false);
 
   const [statusTarget, setStatusTarget] = useState<Replenishment | null>(null);
   const [newStatus, setNewStatus] = useState('');
@@ -128,12 +129,16 @@ export default function ReplenishmentsPage() {
       : []),
   ];
 
-  const submit = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!supplierId || !items.length || items.some((it) => !it.productId)) {
-      toast.error('Supplier and at least one item are required');
+  const handleInitiateSubmit = (e?: FormEvent) => {
+    if (e) e.preventDefault();
+    if (!supplierId || !items.length || items.some((it) => !it.productId || it.orderedQuantity < 1)) {
+      toast.error('Supplier and at least one item with quantity are required');
       return;
     }
+    setConfirmCreateOpen(true);
+  };
+
+  const handleFinalSubmit = async () => {
     setSubmitting(true);
     try {
       await api.post('/api/replenishments', {
@@ -141,9 +146,14 @@ export default function ReplenishmentsPage() {
         orderDate: new Date().toISOString(),
         expectedDate: expectedDate || undefined,
         referenceNo: referenceNo || undefined,
-        items: items.map((it) => ({ productId: it.productId, orderedQuantity: it.orderedQuantity, unitCost: it.unitCost })),
+        items: items.map((it) => ({
+          productId: it.productId,
+          orderedQuantity: Math.min(1000, Math.max(1, it.orderedQuantity)),
+          unitCost: Math.min(1000000, Math.max(0, it.unitCost)),
+        })),
       });
       toast.success('Purchase order created');
+      setConfirmCreateOpen(false);
       setModal(false);
       load();
     } catch (err) {
@@ -246,13 +256,13 @@ export default function ReplenishmentsPage() {
         footer={
           <>
             <Button variant="ghost" onClick={() => setModal(false)}>Cancel</Button>
-            <Button onClick={submit} loading={submitting} leftIcon={<ClipboardList className="h-4 w-4" />}>
-              Create PO — ₱{totalAmount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            <Button onClick={() => handleInitiateSubmit()} leftIcon={<ClipboardList className="h-4 w-4" />}>
+              Confirm Order
             </Button>
           </>
         }
       >
-        <form onSubmit={submit} className="space-y-4">
+        <form onSubmit={handleInitiateSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <Select
               label="Supplier"
@@ -261,7 +271,13 @@ export default function ReplenishmentsPage() {
               options={supplierOptions}
               required
             />
-            <Input label="Expected delivery" type="date" value={expectedDate} onChange={(e) => setExpectedDate(e.target.value)} />
+            <Input
+              label="Expected delivery"
+              type="date"
+              min={new Date().toISOString().split('T')[0]}
+              value={expectedDate}
+              onChange={(e) => setExpectedDate(e.target.value)}
+            />
           </div>
           <Input label="Reference # (optional)" value={referenceNo} onChange={(e) => setReferenceNo(e.target.value)} />
 
@@ -289,11 +305,11 @@ export default function ReplenishmentsPage() {
                       label="Quantity"
                       type="number"
                       min="1"
-                      max="100000"
+                      max="1000"
                       value={item.orderedQuantity}
                       onChange={(e) => {
                         const parsed = parseInt(e.target.value);
-                        const val = isNaN(parsed) ? 1 : Math.min(100000, Math.max(1, parsed));
+                        const val = isNaN(parsed) ? 1 : Math.min(1000, Math.max(1, parsed));
                         updateItem(index, { orderedQuantity: val });
                       }}
                     />
@@ -354,6 +370,16 @@ export default function ReplenishmentsPage() {
           ]}
         />
       </Modal>
+
+      <ConfirmModal
+        open={confirmCreateOpen}
+        onClose={() => setConfirmCreateOpen(false)}
+        onConfirm={handleFinalSubmit}
+        title="Confirm Purchase Order?"
+        message={`Are you sure you want to create this purchase order with a total of ₱${totalAmount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}?`}
+        confirmLabel="Confirm"
+        loading={submitting}
+      />
     </AppLayout>
   );
 }

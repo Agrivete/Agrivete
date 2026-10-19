@@ -299,7 +299,13 @@ export default function ReceivingPage() {
                     <Input label="Lot #" required value={item.lotNo} onChange={(e) => updateItem(index, { lotNo: e.target.value })} placeholder="LOT-..." />
                   </div>
                   <div className="col-span-2">
-                    <Input label="Expires" type="date" value={item.expirationDate} onChange={(e) => updateItem(index, { expirationDate: e.target.value })} />
+                    <Input
+                      label="Expires"
+                      type="date"
+                      min={new Date().toISOString().split('T')[0]}
+                      value={item.expirationDate}
+                      onChange={(e) => updateItem(index, { expirationDate: e.target.value })}
+                    />
                   </div>
                   <div className="col-span-1 pb-1 text-right">
                     <button type="button" onClick={() => setItems(items.filter((_, i) => i !== index))} className="text-xs text-red-500 hover:text-red-700">

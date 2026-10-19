@@ -77,6 +77,7 @@ export function SalesTrendChart({ data = [] }: { data?: SalesTrendData[] }) {
                 />
                 <YAxis yAxisId="right" orientation="right" hide />
                 <Tooltip
+                  cursor={{ fill: 'transparent' }}
                   contentStyle={tooltipContentStyle}
                   labelStyle={{ color: 'var(--card-foreground)', fontWeight: 600, marginBottom: '4px' }}
                   formatter={tooltipFormatter}

@@ -52,6 +52,7 @@ export function TopProductsChart({ data = [] }: { data?: TopProductData[] }) {
                 width={120}
               />
               <Tooltip
+                cursor={{ fill: 'transparent' }}
                 contentStyle={{
                   backgroundColor: 'var(--card)',
                   color: 'var(--card-foreground)',
