@@ -46,8 +46,16 @@ async function seedAdmin() {
 async function seedOwner() {
   const existing = await User.findOne({ userId: OWNER_ID });
   if (existing) {
+    let updated = false;
     if (!existing.businessName) {
       existing.businessName = 'Agrivet Demo Store';
+      updated = true;
+    }
+    if (existing.name === 'System Owner') {
+      existing.name = 'Business Owner';
+      updated = true;
+    }
+    if (updated) {
       await existing.save();
     }
     console.log('✓ Owner already exists');
@@ -56,7 +64,7 @@ async function seedOwner() {
   const passwordHash = await bcrypt.hash(OWNER_PASSWORD, 12);
   const owner = new User({
     userId: OWNER_ID,
-    name: 'System Owner',
+    name: 'Business Owner',
     businessName: 'Agrivet Demo Store',
     email: OWNER_EMAIL,
     passwordHash,
