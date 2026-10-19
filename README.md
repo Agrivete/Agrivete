@@ -16,3 +16,12 @@ Built with Next.js 15 App Router, React 19, TypeScript, Tailwind CSS 4, and Mong
   # Restore from a backup directory (reads manifest.json + <collection>.json)
   node scripts/restore.js ./backups/backup-<timestamp>
   ```
+
+## Supplier Tracking Migration (Part B)
+
+After deploying Part B (Supplier Inventory Tracking), run the one-time idempotent migration script to backfill `supplierId` on historical `receiving` inventory movements:
+
+```bash
+node scripts/migrate-supplier-tracking.js
+```
+
