@@ -37,22 +37,17 @@ interface AuthContextType {
   hasRole: (...roles: UserRole[]) => boolean;
 }
 
-const TOKEN_KEY = 'agrivet_token';
 const USER_KEY = 'agrivet_user';
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const applySession = useCallback((newUser: AuthUser | null, newToken: string | null) => {
+  const applySession = useCallback((newUser: AuthUser | null) => {
     setUser(newUser);
-    setToken(newToken);
     if (typeof localStorage !== 'undefined') {
-      if (newToken) localStorage.setItem(TOKEN_KEY, newToken);
-      else localStorage.removeItem(TOKEN_KEY);
       if (newUser) localStorage.setItem(USER_KEY, JSON.stringify(newUser));
       else localStorage.removeItem(USER_KEY);
     }
@@ -61,19 +56,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshUser = useCallback(async () => {
     try {
       const current = await api.get<AuthUser>('/api/auth/me');
-      applySession(current, localStorage.getItem(TOKEN_KEY));
+      applySession(current);
     } catch {
-      applySession(null, null);
+      applySession(null);
     }
   }, [applySession]);
 
   useEffect(() => {
     (async () => {
-      const storedToken = typeof localStorage !== 'undefined' ? localStorage.getItem(TOKEN_KEY) : null;
       const storedUser = typeof localStorage !== 'undefined' ? localStorage.getItem(USER_KEY) : null;
 
-      if (storedToken && storedUser) {
-        setToken(storedToken);
+      if (storedUser) {
         try {
           setUser(JSON.parse(storedUser));
         } catch {
@@ -88,20 +81,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(
     async (email: string, password: string) => {
-      const response = await api.post<{ user: AuthUser; token: string }>('/api/auth/login', {
+      const response = await api.post<{ user: AuthUser }>('/api/auth/login', {
         email,
         password,
       });
-      applySession(response.user, response.token);
+      applySession(response.user);
     },
     [applySession]
   );
 
   const register = useCallback(
     async (data: RegisterData) => {
-      const response = await api.post<{ user: AuthUser; token: string }>('/api/auth/register', data);
-      if (response.token && response.user) {
-        applySession(response.user, response.token);
+      const response = await api.post<{ user: AuthUser }>('/api/auth/register', data);
+      if (response.user) {
+        applySession(response.user);
       }
     },
     [applySession]
@@ -113,7 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       /* logout should always clear locally */
     } finally {
-      applySession(null, null);
+      applySession(null);
     }
   }, [applySession]);
 
@@ -124,7 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, token, loading, login, register, logout, refreshUser, hasRole }}
+      value={{ user, token: null, loading, login, register, logout, refreshUser, hasRole }}
     >
       {children}
     </AuthContext.Provider>

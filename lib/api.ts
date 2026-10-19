@@ -16,11 +16,6 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     ...(options.headers as Record<string, string> | undefined),
   };
 
-  if (typeof localStorage !== 'undefined') {
-    const token = localStorage.getItem('agrivet_token');
-    if (token) headers.Authorization = `Bearer ${token}`;
-  }
-
   const response = await fetch(endpoint, {
     ...options,
     headers,

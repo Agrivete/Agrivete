@@ -84,7 +84,6 @@ export async function POST(req: NextRequest) {
         email: user.email,
         role: user.role,
       },
-      token,
     };
 
     const response = NextResponse.json(responseData, { status: 201 });
