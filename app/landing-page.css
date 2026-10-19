@@ -745,6 +745,7 @@
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: clamp(1rem, 2vw, 1.5rem);
+        align-items: stretch;
         overflow: visible;
       }
 
@@ -753,9 +754,11 @@
         isolation: isolate;
         display: flex;
         flex-direction: column;
+        justify-content: space-between;
         overflow: hidden;
-        min-height: 32rem;
-        padding: clamp(1.25rem, 3vw, 2.5rem);
+        height: 100%;
+        min-height: 0;
+        padding: clamp(1.25rem, 3vw, 2.25rem);
         background: #164f1b;
         color: var(--paper);
         border-radius: 1.5rem;
@@ -811,10 +814,13 @@
         inset: auto;
         overflow: hidden;
         flex-shrink: 0;
-        margin-top: auto;
+        margin-top: 1.5rem;
         background: var(--paper);
         color: var(--ink);
         border-radius: 1.1rem;
+        height: fit-content;
+        min-height: 0;
+        box-shadow: 0 4px 12px -2px rgb(0 0 0 / 0.12);
         transition: transform 550ms var(--ease-out);
       }
 
@@ -823,20 +829,12 @@
         transform: translateY(-0.35rem);
       }
 
-      .marketing-page .ui-window--sales {
-        min-height: 15rem;
-      }
-
-      .marketing-page .ui-window--stock {
-        min-height: 15rem;
-      }
-
-      .marketing-page .ui-window--expiry {
-        min-height: 15rem;
-      }
-
+      .marketing-page .ui-window--sales,
+      .marketing-page .ui-window--stock,
+      .marketing-page .ui-window--expiry,
       .marketing-page .ui-window--sync {
-        min-height: 15rem;
+        min-height: auto;
+        height: auto;
       }
 
       .marketing-page .ui-titlebar {
@@ -857,7 +855,10 @@
       }
 
       .marketing-page .ui-body {
-        padding: 0.65rem 1rem 1rem;
+        padding: 0.65rem 0.85rem 0.85rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
       }
 
       .marketing-page .ui-line {
@@ -865,9 +866,11 @@
         grid-template-columns: minmax(0, 1fr) 5.5rem 5.5rem;
         gap: 0.5rem;
         align-items: center;
-        min-height: 2.35rem;
+        min-height: 2.2rem;
+        padding: 0.25rem 0.5rem;
         background: #f7f9f4;
         font-size: 0.67rem;
+        border-radius: 0.35rem;
       }
 
       .marketing-page .ui-line:first-child {
@@ -903,10 +906,10 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-top: 0.75rem;
-        padding-top: 0.75rem;
+        margin-top: 0.5rem;
         background: var(--green-50);
-        padding: 0.75rem;
+        padding: 0.65rem 0.75rem;
+        border-radius: 0.35rem;
         font-size: 0.75rem;
       }
 
@@ -1576,7 +1579,8 @@
         .marketing-page .work-item:nth-child(1),
         .marketing-page .work-item:nth-child(3),
         .marketing-page .work-item:nth-child(4) {
-          min-height: 28rem;
+          min-height: 0;
+          height: auto;
           margin-top: 0;
         }
 

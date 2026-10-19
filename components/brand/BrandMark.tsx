@@ -51,8 +51,8 @@ export function BrandLockup({
   filled: boolean;
   navbar?: boolean;
 }) {
-  const color = variant === 'light' ? 'text-brand-300' : 'text-brand-800';
-  const wordmarkColor = variant === 'light' ? 'text-white' : 'text-slate-950';
+  const color = variant === 'light' ? 'text-brand-300' : 'text-brand-700 dark:text-brand-400';
+  const wordmarkColor = variant === 'light' ? 'text-white' : 'text-slate-950 dark:text-slate-100';
   const iconSize = navbar && size === 'md' ? 'h-6 w-6' : iconSizes[size];
   const wordmarkSize = navbar && size === 'md' ? 'text-lg' : wordmarkSizes[size];
   const label = (

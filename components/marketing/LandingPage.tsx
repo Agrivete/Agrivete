@@ -86,7 +86,7 @@ function ProductScreen({
   className: string;
 }) {
   return (
-    <div className={`ui-window ${className}`} data-ui aria-label={`Illustrative ${title.toLowerCase()} screen`}>
+    <div className={`ui-window w-full h-auto min-h-0 ${className}`} data-ui aria-label={`Illustrative ${title.toLowerCase()} screen`}>
       <div className="ui-titlebar">
         <span>{title}</span>
         <span>{note}</span>
@@ -122,12 +122,14 @@ function FeaturePanel({
   screen: React.ReactNode;
 }) {
   return (
-    <article className={`work-item ${className}`}>
-      <div className="work-item-head">
-        <h3>{title}</h3>
-        <span className="work-index">{group}</span>
+    <article className={`work-item h-full flex flex-col justify-between ${className}`}>
+      <div className="flex flex-col gap-2">
+        <div className="work-item-head">
+          <h3>{title}</h3>
+          <span className="work-index">{group}</span>
+        </div>
+        <p>{description}</p>
       </div>
-      <p>{description}</p>
       {screen}
     </article>
   );
@@ -437,7 +439,7 @@ export default function LandingPage() {
               </p>
             </div>
 
-            <div className="work-grid">
+            <div className="work-grid items-stretch">
               <FeaturePanel
                 className="reveal"
                 title="Sales that update stock."
