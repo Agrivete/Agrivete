@@ -22,6 +22,121 @@
         --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
       }
 
+      html.dark .marketing-page,
+      .dark .marketing-page {
+        color-scheme: dark;
+        --green-50: #0d2312;
+        --green-100: #14351a;
+        --green-200: #1c4924;
+        --green-300: #2d6b38;
+        --green-500: #4ade80;
+        --green-700: #22c55e;
+        --green-800: #16a34a;
+        --green-900: #15803d;
+        --green-950: #07150a;
+        --paper: #090e0a;
+        --paper-deep: #111a13;
+        --ink: #f0fdf4;
+        --muted: #94a3b8;
+        --white: #132218;
+      }
+
+      html.dark .marketing-page .hero,
+      html.dark .marketing-page .site-footer,
+      html.dark .marketing-page .site-header,
+      html.dark .marketing-page .page-loader,
+      html.dark .marketing-page .nav-overlay,
+      html.dark .marketing-page .system-board,
+      .dark .marketing-page .hero,
+      .dark .marketing-page .site-footer,
+      .dark .marketing-page .site-header,
+      .dark .marketing-page .page-loader,
+      .dark .marketing-page .nav-overlay,
+      .dark .marketing-page .system-board {
+        color: #fbfcf8;
+      }
+
+      html.dark .marketing-page .system-step,
+      .dark .marketing-page .system-step {
+        color: var(--ink);
+      }
+
+      html.dark .marketing-page .hero-product,
+      .dark .marketing-page .hero-product {
+        background: #0d1810;
+        color: #f0fdf4;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      html.dark .marketing-page .hero-product .product-row,
+      .dark .marketing-page .hero-product .product-row {
+        background: #132218;
+      }
+
+      html.dark .marketing-page .ui-window,
+      .dark .marketing-page .ui-window {
+        background: #0d1810;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      html.dark .marketing-page .ui-titlebar,
+      .dark .marketing-page .ui-titlebar {
+        background: #142519;
+      }
+
+      html.dark .marketing-page .ui-line,
+      .dark .marketing-page .ui-line {
+        background: #111e14;
+      }
+
+      html.dark .marketing-page .ui-total,
+      .dark .marketing-page .ui-total {
+        background: #142519;
+      }
+
+      html.dark .marketing-page .button--line,
+      .dark .marketing-page .button--line {
+        background: rgba(255, 255, 255, 0.14);
+        color: #ffffff;
+      }
+
+      html.dark .marketing-page .button--line:hover,
+      .dark .marketing-page .button--line:hover {
+        background: rgba(255, 255, 255, 0.24);
+        color: #ffffff;
+      }
+
+      html.dark .marketing-page .button--light,
+      .dark .marketing-page .button--light {
+        background: var(--paper-deep);
+        color: var(--ink);
+      }
+
+      html.dark .marketing-page .faq-item summary::after,
+      .dark .marketing-page .faq-item summary::after {
+        background: #1a3821;
+        color: #86efac;
+      }
+
+      html.dark .marketing-page .request-panel,
+      .dark .marketing-page .request-panel {
+        background: #0d1810;
+        color: #f0fdf4;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      html.dark .marketing-page .field input,
+      html.dark .marketing-page .field select,
+      html.dark .marketing-page .field textarea,
+      .dark .marketing-page .field input,
+      .dark .marketing-page .field select,
+      .dark .marketing-page .field textarea {
+        background: #132218;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: #f0fdf4;
+      }
+
+
       .marketing-page * {
         box-sizing: border-box;
         margin: 0;

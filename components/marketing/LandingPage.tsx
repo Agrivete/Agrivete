@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { AgrivetLogo, NavbarLogo } from '@/components/brand';
+import { ThemeToggle } from '@/components/ui';
 
 type Overlay = 'menu' | 'request' | null;
 
@@ -312,6 +313,7 @@ export default function LandingPage() {
               <span aria-hidden="true">·</span>
               <span>{clock.date || '14 October, 2026'}</span>
             </div>
+            <ThemeToggle className="h-9 w-9 text-white/80 hover:bg-white/10 hover:text-white rounded-lg" />
             <button
               className="menu-button lg:hidden"
               type="button"
@@ -692,7 +694,14 @@ export default function LandingPage() {
           if (event.target === event.currentTarget) closeOverlay();
         }}
       >
-        <div className="overlay-top">
+        <div className="overlay-top" style={{ justifyContent: 'space-between' }}>
+          <div className="flex items-center gap-2">
+            <ThemeToggle
+              className="h-9 w-9 text-white/80 hover:bg-white/10 hover:text-white rounded-lg"
+              showLabel={true}
+              labelClassName="text-xs font-medium text-white/80"
+            />
+          </div>
           <button
             className="overlay-close"
             type="button"

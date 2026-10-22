@@ -19,6 +19,7 @@ import {
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
 import { AgrivetLogo } from '@/components/brand';
+import { ThemeToggle } from '@/components/ui';
 
 export default function LoginPage() {
   return (
@@ -155,18 +156,21 @@ function LoginForm() {
 
       {/* Right Column: Clean, Polished Authentication Form */}
       <div className="flex h-full max-h-[100dvh] flex-1 flex-col justify-between p-3.5 sm:p-5 lg:p-6 bg-brand-50/25 dark:bg-slate-950 overflow-hidden">
-        {/* Top bar with back to home link */}
+        {/* Top bar with back to home link and theme toggle */}
         <div className="flex items-center justify-between w-full shrink-0">
           <div className="lg:hidden">
             <AgrivetLogo size="sm" variant="dark" href="/" />
           </div>
-          <Link
-            href="/"
-            className="ml-auto inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-brand-900 transition-colors py-1.5 px-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Back to Agrivet
-          </Link>
+          <div className="ml-auto flex items-center gap-2">
+            <ThemeToggle className="h-8 w-8 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800" />
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-brand-900 dark:text-slate-400 dark:hover:text-slate-100 transition-colors py-1.5 px-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Back to Agrivet
+            </Link>
+          </div>
         </div>
 
         {/* Center Login Card */}
