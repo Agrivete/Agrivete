@@ -2,6 +2,8 @@
 
 MongoDB Atlas document store with Mongoose 8.9 Object Data Modeling (ODM). Open this file when a task touches database models, Mongoose schemas, indexes, collections, or field-level RBAC/redaction.
 
+Aligned with database engineering standards in [`docs/ENGINEERING_SKILLS.md`](ENGINEERING_SKILLS.md#2-database-engineering).
+
 ## Database Conventions
 
 - **Primary Identifiers:** Custom alphanumeric string IDs with semantic business prefixes (`USR-`, `PRD-`, `SLE-`, `RCV-`, `PUR-`, `SUP-`, `MOV-`, `EVT-`, `LOCAL-`) combined with timestamp and random alphanumeric suffixes.

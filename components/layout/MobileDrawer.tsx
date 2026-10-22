@@ -50,7 +50,8 @@ export function MobileDrawer({ open, onOpenChange }: { open: boolean; onOpenChan
 
   const handleLogout = async () => {
     await logout();
-    toast('Signed out', { description: 'You have been signed out successfully.' });
+    toast.dismiss();
+    toast.success('Signed out', { id: 'auth-toast', description: 'You have been signed out successfully.' });
     onOpenChange(false);
   };
 

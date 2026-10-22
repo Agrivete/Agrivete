@@ -2,6 +2,8 @@
 
 Mathematical formulas, business algorithms, and ISO/IEC 25010 evaluation specifications. Open this file when a task touches inventory math, expiration lot sorting, offline synchronization, rate limiting algorithms, or ISO verification testing.
 
+Aligned with engineering skills and quality standards in [`docs/ENGINEERING_SKILLS.md`](ENGINEERING_SKILLS.md#7-testing-verification--code-quality).
+
 ---
 
 ## 1. Inventory Mutation Mechanics & Atomic Decrements (BR01, BR03)

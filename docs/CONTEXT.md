@@ -21,6 +21,17 @@ Agrivet resolves these challenges by unifying sales, atomic stock decrements, lo
 - **Proactive Shelf-Life Traceability:** Incoming biologicals and medicated feeds capture manufacturer lot numbers and expiration dates, automatically feeding a 30-day FEFO advance alert schedule.
 - **Operational Continuity:** Cashiers can process counter sales offline via browser IndexedDB; reconnecting triggers idempotent batch synchronization using unique `localId` keys.
 
+## Engineering Standards & Skills Reference
+
+Detailed technical practices and implementation rules are codified in [`docs/ENGINEERING_SKILLS.md`](ENGINEERING_SKILLS.md):
+- **Software Architecture:** React Server Components (RSC) by default, modular route handlers, domain service layer, and two-tier multi-tenant isolation.
+- **Database Engineering:** Normalized Mongoose collections, multi-document ACID transactions (`mongoose.startSession()`), `$gte` atomic guards, and native MongoDB TTL retention.
+- **DevOps & Cloud:** Vercel automated CI/CD, Edge vs Node.js serverless specialization, environment variable segregation, and automated backup scripts.
+- **Backend Engineering:** Stateless Jose JWT auth at Edge, 4-tier RBAC (`lib/permissions.js`), Zod payload parsing, token-bucket rate limits, and IndexedDB offline batch sync.
+- **Security & Vulnerability Defense:** Tenant IDOR defense (`businessName: user.businessName`), OWASP input validation, BR06 cost redaction, and Bcrypt (12 rounds) hashing.
+- **Performance & UX:** Bundle optimization, private caching (`Cache-Control: private`), and single-toast UI management (`visibleToasts={1}`).
+- **Testing & Quality:** Strict TypeScript, ISO/IEC 25010 metrics verification, responsive mobile-first layouts, and zero-error production build gate.
+
 ## Roles & Multi-Tenant Separation
 
 Agrivet enforces a strict two-tier role architecture:

@@ -7,6 +7,9 @@ export function Toaster() {
     <Sonner
       theme="system"
       className="toaster group"
+      visibleToasts={1}
+      expand={false}
+      duration={3500}
       toastOptions={{
         classNames: {
           toast: "group flex items-start gap-3 rounded-xl border px-4 py-3 shadow-lg backdrop-blur animate-in fade-in slide-in-from-bottom-2 w-full sm:w-auto max-w-sm",

@@ -6,9 +6,10 @@ Stack: Next.js 15.5 App Router, React 19, TypeScript (strict), Tailwind CSS 4, M
 
 ## Read first
 
-1. `docs/CONTEXT.md` before every task (purpose, roles, scope, business rules, security rules, repo layout).
-2. `docs/DATA_MODEL.md` when a task touches MongoDB models, Mongoose schemas, indexes, collections, or field-level RBAC.
-3. `docs/METHODOLOGY.md` when a task touches inventory math (atomic decrements, FEFO lot sorting), offline sync, ISO 25010 metrics, or verification testing.
+1. `agrivet-next/docs/CONTEXT.md` before every task (purpose, roles, scope, business rules, security rules, repo layout).
+2. `agrivet-next/docs/DATA_MODEL.md` when a task touches MongoDB models, Mongoose schemas, indexes, collections, or field-level RBAC.
+3. `agrivet-next/docs/METHODOLOGY.md` when a task touches inventory math (atomic decrements, FEFO lot sorting), offline sync, ISO 25010 metrics, or verification testing.
+4. `agrivet-next/docs/ENGINEERING_SKILLS.md` when implementing software architecture, API route handlers, Mongoose queries, security controls, or performance optimizations.
 
 ## Hard rules
 
@@ -19,6 +20,6 @@ Stack: Next.js 15.5 App Router, React 19, TypeScript (strict), Tailwind CSS 4, M
 - **Server is the authority:** UI visibility is not authorization. Enforce Zod schemas, role permissions (`lib/permissions.js`), and cryptographic JWT validation at the Edge (`middleware.ts`).
 - **Secure session cookies:** Session tokens reside strictly in `httpOnly`, `Secure`, `SameSite=Lax` cookies; never store JWTs in `localStorage`.
 - **Offline transaction resilience:** Queued transactions in IndexedDB use unique `localId` keys; `/api/sync` processes batches idempotently with per-transaction RBAC verification.
+- **Toast presentation limit:** Configure `<Toaster />` with `visibleToasts={1}` and `expand={false}` to prevent stacked toast overlap.
 - **Academic Manuscript Integrity:** Never modify `docs/BAM-285-COMPLETE-MANUSCRIPT.md` without explicit user instruction.
 - **Done means:** `npm run build` passes with 0 errors across all 38 routes, type-checked, responsive at 375px mobile and 1080p desktop, Dark Mode contrast verified, and loading/empty/error states exist.
-

@@ -42,7 +42,8 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
 
   const handleLogout = async () => {
     await logout();
-    toast('Signed out', { description: 'You have been signed out successfully.' });
+    toast.dismiss();
+    toast.success('Signed out', { id: 'auth-toast', description: 'You have been signed out successfully.' });
     router.push('/login');
   };
 
@@ -93,7 +94,10 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
           type="button"
           className="relative grid h-9 w-9 shrink-0 place-items-center rounded-lg text-white/70 transition-colors hover:bg-white/10 hover:text-white"
           aria-label="Notifications"
-          onClick={() => toast('No new notifications', { description: "You're all caught up!" })}
+          onClick={() => {
+            toast.dismiss();
+            toast.info('No new notifications', { id: 'notifications-toast', description: "You're all caught up!" });
+          }}
         >
           <Bell className="h-[18px] w-[18px]" />
           <span className="absolute right-0.5 top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-brand-700 px-1 text-[9px] font-bold leading-none text-white" aria-hidden="true">0</span>
