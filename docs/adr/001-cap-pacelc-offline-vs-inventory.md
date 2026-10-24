@@ -75,3 +75,4 @@ We explicitly split the application workflows along PACELC / CAP boundaries:
   - Zero inventory drift is mathematically verified via `npm run reconcile` (`DB-02`).
 - **Review Trigger:**
   - If multi-store inventory transfers across different physical branches are introduced in Phase 3 enterprise expansion.
+

@@ -42,3 +42,4 @@ npm test
 - [`tests/security/append-only.test.js`](../tests/security/append-only.test.js) — Repudiation & Ledger Tampering (`DB-01`, `BR07`).
 - [`tests/security/nosql-injection.test.js`](../tests/security/nosql-injection.test.js) — NoSQL Operator Injection & Tampering (`SEC-09`).
 - [`tests/security/offline-sync-trust.test.js`](../tests/security/offline-sync-trust.test.js) — Offline Tampering & Intake Limits (`SEC-04`).
+

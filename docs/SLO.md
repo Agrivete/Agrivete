@@ -39,3 +39,4 @@ Measured end-to-end under representative rural Philippine 3G/4G cellular latency
 - **Storage Projections:** 
   - Each `Sale` document averages ~1.2 KB.
   - 1,000 sales/day = ~1.2 MB/day = ~438 MB/year per store, easily fitting within standard Atlas tiers without sharding.
+
