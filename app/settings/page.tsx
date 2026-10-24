@@ -7,6 +7,21 @@ import { Card, CardHeader, CardContent, Input, Button, Badge, PageLoader } from 
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
 import { toast } from 'sonner';
+import {
+  getAttention,
+  syncPending,
+  retryEntry,
+  discardEntry,
+  QUEUE_CHANGE_EVENT,
+} from '@/lib/offlineQueue';
+
+interface AttentionEntry {
+  localId: string;
+  type: string;
+  timestamp: string;
+  status: 'rejected' | 'flagged';
+  reason?: string | null;
+}
 
 interface SyncStatus {
   pendingCount: number;
@@ -21,6 +36,7 @@ export default function SettingsPage() {
   const [changing, setChanging] = useState(false);
 
   const [sync, setSync] = useState<SyncStatus | null>(null);
+  const [attention, setAttention] = useState<AttentionEntry[]>([]);
   const [syncLoading, setSyncLoading] = useState(true);
 
   const loadSync = useCallback(async () => {
@@ -59,25 +75,39 @@ export default function SettingsPage() {
     }
   };
 
+  const loadAttention = useCallback(async () => {
+    try {
+      setAttention((await getAttention()) as AttentionEntry[]);
+    } catch {
+      setAttention([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadAttention();
+    window.addEventListener(QUEUE_CHANGE_EVENT, loadAttention);
+    return () => window.removeEventListener(QUEUE_CHANGE_EVENT, loadAttention);
+  }, [loadAttention]);
+
   const runSync = async () => {
     try {
-      const pending = await (await import('@/lib/offlineQueue')).getPending();
-      if (pending.length === 0) {
-        toast.info('No pending offline transactions');
-        await loadSync();
-        return;
-      }
-      const result = await (await import('@/lib/offlineQueue')).syncPending(
-        localStorage.getItem('agrivet_token') || ''
-      );
-      if (result.failed) {
-        toast.error(`Sync complete: ${result.synced} synced, ${result.failed} failed`);
+      const result = await syncPending({ force: true });
+      if ('offline' in result && result.offline) {
+        toast.info('You are offline. Items stay queued and sync automatically when you reconnect.', { id: 'sync-toast' });
+      } else if (result.rejected || result.flagged) {
+        toast.error(
+          `Sync: ${result.synced} synced, ${result.flagged} flagged, ${result.rejected} rejected. Review them below.`,
+          { id: 'sync-toast' }
+        );
+      } else if (result.synced === 0) {
+        toast.info('No pending offline transactions', { id: 'sync-toast' });
       } else {
-        toast.success(`Sync complete: ${result.synced} synced, ${result.failed} failed`);
+        toast.success(`Sync complete: ${result.synced} synced`, { id: 'sync-toast' });
       }
       await loadSync();
+      await loadAttention();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Sync failed');
+      toast.error(err instanceof Error ? err.message : 'Sync failed', { id: 'sync-toast' });
     }
   };
 
@@ -166,6 +196,38 @@ export default function SettingsPage() {
                   <Button variant="outline" onClick={runSync} leftIcon={<RefreshCw className="h-4 w-4" />}>
                     Sync now
                   </Button>
+                  {attention.length > 0 && (
+                    <div className="space-y-2" aria-label="Offline items needing review">
+                      <p className="text-xs font-semibold text-slate-700 dark:text-slate-200">Needs your attention</p>
+                      {attention.map((entry) => (
+                        <div
+                          key={entry.localId}
+                          className="rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2 text-xs"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-semibold text-slate-800 dark:text-slate-100">
+                              {entry.type} · {new Date(entry.timestamp).toLocaleString('en-PH', { timeZone: 'Asia/Manila' })}
+                            </span>
+                            <Badge variant={entry.status === 'flagged' ? 'warning' : 'danger'}>{entry.status}</Badge>
+                          </div>
+                          <p className="mt-1 text-slate-600 dark:text-slate-300">
+                            {entry.reason || 'Needs review'}.{' '}
+                            {entry.status === 'flagged'
+                              ? 'Check stock, then retry or discard.'
+                              : 'Fix the cause or discard this entry.'}
+                          </p>
+                          <div className="mt-2 flex gap-2">
+                            <Button size="sm" variant="outline" onClick={() => retryEntry(entry.localId)}>
+                              Retry
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => discardEntry(entry.localId)}>
+                              Discard entry
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </>
               )}
             </CardContent>

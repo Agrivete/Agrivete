@@ -6,6 +6,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { LogOut, Bell, Shield, Menu, Sun, Moon } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
+import { useOfflineSync } from '@/lib/useOfflineSync';
+import { getPendingCount } from '@/lib/offlineQueue';
 import { Badge } from '../ui';
 import { SyncIndicator } from './Sidebar';
 import { toast } from 'sonner';
@@ -31,6 +33,7 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const sync = useOfflineSync();
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -41,6 +44,18 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
   const pageTitle = PAGE_TITLES[pathname] || 'Dashboard';
 
   const handleLogout = async () => {
+    // SEC-04 / UX-07: Confirm before signing out if there are unsynced offline transactions
+    try {
+      const pending = await getPendingCount();
+      if (pending > 0) {
+        const confirmed = window.confirm(
+          `You have ${pending} unsynced offline transaction(s). Sign out anyway? (They will remain safely tied to your account until you sign back in.)`
+        );
+        if (!confirmed) return;
+      }
+    } catch {
+      /* proceed with logout if IndexedDB is unavailable */
+    }
     await logout();
     toast.dismiss();
     toast.success('Signed out', { id: 'auth-toast', description: 'You have been signed out successfully.' });
@@ -72,7 +87,7 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
       {/* Right: Actions */}
       <div className="flex items-center gap-2 sm:gap-3">
         {/* Sync indicator */}
-        <SyncIndicator pending={0} />
+        <SyncIndicator pending={sync.pending} rejected={sync.rejected} flagged={sync.flagged} offline={sync.offline} />
 
         {/* Theme Toggle Button */}
         <button

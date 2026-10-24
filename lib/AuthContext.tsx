@@ -10,6 +10,7 @@ import {
 } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { api } from './api';
+import { setQueueOwner } from './offlineQueue';
 
 export type UserRole = 'owner' | 'manager' | 'staff' | 'admin';
 
@@ -52,6 +53,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const applySession = useCallback((newUser: AuthUser | null) => {
     setUser(newUser);
+    // SEC-04: Scope IndexedDB offline queue to the active user so entries are never exposed across accounts
+    setQueueOwner(newUser?.userId ?? null);
     if (typeof localStorage !== 'undefined') {
       if (newUser) localStorage.setItem(USER_KEY, JSON.stringify(newUser));
       else localStorage.removeItem(USER_KEY);
@@ -74,6 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (isPublicAuthPage) {
         // On /register or /login, do NOT redirect or force logout on 401; just set user = null
         setUser(null);
+        setQueueOwner(null);
         return;
       }
       applySession(null);
@@ -96,6 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (isPublicAuthPage) {
         setUser(null);
+        setQueueOwner(null);
         setLoading(false);
         return;
       }
@@ -104,7 +109,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (storedUser) {
         try {
-          setUser(JSON.parse(storedUser));
+          const parsedUser = JSON.parse(storedUser) as AuthUser;
+          setUser(parsedUser);
+          setQueueOwner(parsedUser?.userId ?? null);
         } catch {
           /* ignore malformed stored user */
         }

@@ -4,8 +4,8 @@ import { getUserFromRequest } from '@/lib/auth';
 import { checkPermission } from '@/lib/permissions';
 import { logActivity } from '@/lib/logActivity';
 import { adjustInventory } from '@/lib/inventory';
+import { sanitizeReceivingForRole } from '@/lib/sanitize';
 import { Receiving } from '@/models/Receiving';
-import { Replenishment } from '@/models/Replenishment';
 import mongoose from 'mongoose';
 
 export async function GET(
@@ -23,7 +23,7 @@ export async function GET(
     const receiving = await Receiving.findOne({ receivingId: id }).lean();
     if (!receiving) return NextResponse.json({ error: 'Receiving not found' }, { status: 404 });
 
-    return NextResponse.json(receiving);
+    return NextResponse.json(sanitizeReceivingForRole(receiving as Record<string, unknown>, user.role));
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch receiving' }, { status: 500 });
   }
@@ -102,7 +102,10 @@ export async function PATCH(
       );
 
       await dbSession.commitTransaction();
-      return NextResponse.json({ message: 'Receiving confirmed, stock increased', receiving });
+      return NextResponse.json({
+        message: 'Receiving confirmed, stock increased',
+        receiving: sanitizeReceivingForRole(receiving, user.role),
+      });
     }
 
     // Cancel a receiving: reverse stock if it was confirmed (owner only)
@@ -153,7 +156,10 @@ export async function PATCH(
       );
 
       await dbSession.commitTransaction();
-      return NextResponse.json({ message: 'Receiving cancelled', receiving });
+      return NextResponse.json({
+        message: 'Receiving cancelled',
+        receiving: sanitizeReceivingForRole(receiving, user.role),
+      });
     }
 
     await dbSession.abortTransaction();

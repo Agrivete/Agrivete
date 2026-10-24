@@ -16,10 +16,12 @@ import {
   Settings,
   AlertTriangle,
   RefreshCw,
+  WifiOff,
   LogOut,
   Building,
 } from 'lucide-react';
 import { useAuth, type UserRole } from '@/lib/AuthContext';
+import { getPendingCount } from '@/lib/offlineQueue';
 import { Badge } from '../ui';
 import { NavbarLogo } from '@/components/brand';
 import { toast } from 'sonner';
@@ -66,6 +68,18 @@ export function Sidebar() {
       : [];
 
   const handleLogout = async () => {
+    // SEC-04 / UX-07: Confirm before signing out if there are unsynced offline transactions
+    try {
+      const pending = await getPendingCount();
+      if (pending > 0) {
+        const confirmed = window.confirm(
+          `You have ${pending} unsynced offline transaction(s). Sign out anyway? (They will remain safely tied to your account until you sign back in.)`
+        );
+        if (!confirmed) return;
+      }
+    } catch {
+      /* proceed with logout if IndexedDB is unavailable */
+    }
     await logout();
     toast.dismiss();
     toast.success('Signed out', { id: 'auth-toast', description: 'You have been signed out successfully.' });
@@ -139,12 +153,43 @@ export function Sidebar() {
   );
 }
 
-export function SyncIndicator({ pending }: { pending: number }) {
-  if (pending <= 0) return null;
+export function SyncIndicator({
+  pending,
+  rejected = 0,
+  flagged = 0,
+  offline = false,
+}: {
+  pending: number;
+  rejected?: number;
+  flagged?: number;
+  offline?: boolean;
+}) {
+  if (!offline && pending <= 0 && rejected <= 0 && flagged <= 0) return null;
+  const base = 'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold';
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-semibold text-amber-800">
-      <RefreshCw className="h-3 w-3" />
-      {pending} pending sync
+    <span className="flex items-center gap-1.5" role="status" aria-live="polite">
+      {offline && (
+        <span className={`${base} bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-100`}>
+          <WifiOff className="h-3 w-3" aria-hidden="true" />
+          Offline
+        </span>
+      )}
+      {pending > 0 && (
+        <span className={`${base} bg-amber-100 text-amber-800`}>
+          <RefreshCw className="h-3 w-3" aria-hidden="true" />
+          {pending} pending sync
+        </span>
+      )}
+      {flagged > 0 && (
+        <Link href="/settings" className={`${base} bg-orange-100 text-orange-800`}>
+          {flagged} flagged
+        </Link>
+      )}
+      {rejected > 0 && (
+        <Link href="/settings" className={`${base} bg-red-100 text-red-800`}>
+          {rejected} rejected
+        </Link>
+      )}
     </span>
   );
 }

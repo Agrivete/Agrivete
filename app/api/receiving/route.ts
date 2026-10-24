@@ -5,11 +5,11 @@ import { checkPermission } from '@/lib/permissions';
 import { receivingSchema } from '@/lib/validators';
 import { logActivity } from '@/lib/logActivity';
 import { adjustInventory } from '@/lib/inventory';
+import { sanitizeReceivingForRole } from '@/lib/sanitize';
 import { Receiving } from '@/models/Receiving';
 import { Product } from '@/models/Product';
 import { Replenishment } from '@/models/Replenishment';
 import { Supplier } from '@/models/Supplier';
-import { InventoryBalance } from '@/models/InventoryBalance';
 import { parseJsonBody } from '@/lib/parseJson';
 import { rateLimit, getUserRateLimitKey } from '@/lib/rateLimit';
 import mongoose from 'mongoose';
@@ -31,7 +31,9 @@ export async function GET(req: NextRequest) {
       Receiving.countDocuments(),
     ]);
 
-    return NextResponse.json({ receivings, total, page, pages: Math.ceil(total / limit) });
+    const safeReceivings = receivings.map((r) => sanitizeReceivingForRole(r as Record<string, unknown>, user.role));
+
+    return NextResponse.json({ receivings: safeReceivings, total, page, pages: Math.ceil(total / limit) });
   } catch (error) {
     console.error('GET /api/receiving error:', error);
     return NextResponse.json({ error: 'Failed to fetch receivings' }, { status: 500 });
@@ -73,7 +75,7 @@ export async function POST(req: NextRequest) {
       const existing = await Receiving.findOne({ localId }).session(dbSession);
       if (existing) {
         await dbSession.abortTransaction();
-        return NextResponse.json({ receiving: existing, duplicate: true });
+        return NextResponse.json({ receiving: sanitizeReceivingForRole(existing, user.role), duplicate: true });
       }
     }
 
@@ -93,6 +95,25 @@ export async function POST(req: NextRequest) {
       if (!product) {
         await dbSession.abortTransaction();
         return NextResponse.json({ error: `Product not found: ${item.productId}` }, { status: 400 });
+      }
+
+      // BR02 / DB-04: Perishable items (medicines, feeds, or hasExpiration=true) require lotNo and expirationDate
+      const isPerishable = product.hasExpiration || product.category === 'medicines' || product.category === 'feeds';
+      if (isPerishable && item.receivedQuantity > 0) {
+        if (!item.lotNo || !String(item.lotNo).trim()) {
+          await dbSession.abortTransaction();
+          return NextResponse.json(
+            { error: `Lot number is required for perishable item: ${product.name} (BR02)` },
+            { status: 400 }
+          );
+        }
+        if (!item.expirationDate) {
+          await dbSession.abortTransaction();
+          return NextResponse.json(
+            { error: `Expiration date is required for perishable item: ${product.name} (BR02)` },
+            { status: 400 }
+          );
+        }
       }
 
       const itemCost = item.receivedQuantity * item.unitCost;
@@ -183,7 +204,7 @@ export async function POST(req: NextRequest) {
     );
 
     await dbSession.commitTransaction();
-    return NextResponse.json(receiving, { status: 201 });
+    return NextResponse.json(sanitizeReceivingForRole(receiving, user.role), { status: 201 });
   } catch (error) {
     await dbSession.abortTransaction();
     console.error('POST /api/receiving error:', error);

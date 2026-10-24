@@ -5,6 +5,7 @@ import { checkPermission } from '@/lib/permissions';
 import { replenishmentSchema } from '@/lib/validators';
 import { parseJsonBody } from '@/lib/parseJson';
 import { logActivity } from '@/lib/logActivity';
+import { sanitizeReplenishmentForRole } from '@/lib/sanitize';
 import { Replenishment } from '@/models/Replenishment';
 import { Product } from '@/models/Product';
 import { Supplier } from '@/models/Supplier';
@@ -30,7 +31,11 @@ export async function GET(req: NextRequest) {
       Replenishment.countDocuments(query),
     ]);
 
-    return NextResponse.json({ replenishments, total, page, pages: Math.ceil(total / limit) });
+    const safeReplenishments = replenishments.map((r) =>
+      sanitizeReplenishmentForRole(r as Record<string, unknown>, user.role)
+    );
+
+    return NextResponse.json({ replenishments: safeReplenishments, total, page, pages: Math.ceil(total / limit) });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch replenishments' }, { status: 500 });
   }
@@ -104,7 +109,7 @@ export async function POST(req: NextRequest) {
       req,
     });
 
-    return NextResponse.json(replenishment, { status: 201 });
+    return NextResponse.json(sanitizeReplenishmentForRole(replenishment, user.role), { status: 201 });
   } catch (error) {
     console.error('POST /api/replenishments error:', error);
     return NextResponse.json({ error: 'Failed to create replenishment' }, { status: 500 });

@@ -12,25 +12,30 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        source: '/api/dashboard',
+        // SEC-08: Global HTTP security headers
+        source: '/:path*',
         headers: [
           {
-            key: 'Cache-Control',
-            value: 'private, no-store, no-cache, must-revalidate',
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()',
           },
         ],
       },
       {
-        source: '/api/alerts',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'private, no-store, no-cache, must-revalidate',
-          },
-        ],
-      },
-      {
-        source: '/api/products',
+        // SEC-08: Never publicly cache authenticated API responses
+        source: '/api/:path*',
         headers: [
           {
             key: 'Cache-Control',
@@ -43,4 +48,3 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
-

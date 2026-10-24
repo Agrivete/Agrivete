@@ -3,6 +3,7 @@ import connectDB from '@/lib/mongodb';
 import { getUserFromRequest } from '@/lib/auth';
 import { checkPermission } from '@/lib/permissions';
 import { logActivity } from '@/lib/logActivity';
+import { sanitizeReplenishmentForRole } from '@/lib/sanitize';
 import { Replenishment } from '@/models/Replenishment';
 import { parseJsonBody } from '@/lib/parseJson';
 
@@ -21,15 +22,7 @@ export async function GET(
     const replenishment: any = await Replenishment.findOne({ purchaseId: id }).lean();
     if (!replenishment) return NextResponse.json({ error: 'Replenishment not found' }, { status: 404 });
 
-    if (user.role !== 'owner') {
-      const { subtotal: _s, total: _t, items, ...rest } = replenishment;
-      return NextResponse.json({
-        ...rest,
-        items: (items || []).map(({ unitCost: _c, ...item }: any) => item),
-      });
-    }
-
-    return NextResponse.json(replenishment);
+    return NextResponse.json(sanitizeReplenishmentForRole(replenishment, user.role));
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch replenishment' }, { status: 500 });
   }
@@ -84,7 +77,7 @@ export async function PATCH(
       req,
     });
 
-    return NextResponse.json(replenishment);
+    return NextResponse.json(sanitizeReplenishmentForRole(replenishment, user.role));
   } catch (error) {
     return NextResponse.json({ error: 'Failed to update replenishment' }, { status: 500 });
   }

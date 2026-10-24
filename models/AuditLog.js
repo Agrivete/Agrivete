@@ -19,6 +19,21 @@ const auditSchema = new mongoose.Schema({
 
 auditSchema.index({ entity: 1, entityId: 1, timestamp: -1 });
 auditSchema.index({ userId: 1, timestamp: -1 });
-auditSchema.index({ createdAt: 1 }, { expireAfterSeconds: 7776000 }); // 90 days TTL
+auditSchema.index({ createdAt: 1 }, { expireAfterSeconds: 31536000 }); // 365 days TTL (DB-01)
+
+// DB-01: Append-only immutable audit ledger
+auditSchema.pre('save', function (next) {
+  if (!this.isNew) {
+    return next(new Error('AuditLog is append-only and cannot be modified (DB-01)'));
+  }
+  next();
+});
+
+auditSchema.pre(
+  ['updateOne', 'updateMany', 'findOneAndUpdate', 'replaceOne', 'deleteOne', 'deleteMany', 'findOneAndDelete'],
+  function (next) {
+    next(new Error('AuditLog is append-only and cannot be modified or deleted (DB-01)'));
+  }
+);
 
 export const Audit = mongoose.models.Audit || mongoose.model('Audit', auditSchema);

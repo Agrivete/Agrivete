@@ -3,8 +3,10 @@ import connectDB from '@/lib/mongodb';
 import { getUserFromRequest } from '@/lib/auth';
 import { checkPermission } from '@/lib/permissions';
 import { syncSchema } from '@/lib/validators';
+import { parseJsonBody } from '@/lib/parseJson';
 import { logActivity } from '@/lib/logActivity';
 import { adjustInventory } from '@/lib/inventory';
+import { User } from '@/models/User';
 import { Sale } from '@/models/Sale';
 import { Receiving } from '@/models/Receiving';
 import { InventoryMovement } from '@/models/InventoryMovement';
@@ -15,8 +17,8 @@ import { Replenishment } from '@/models/Replenishment';
 import { rateLimit, getUserRateLimitKey } from '@/lib/rateLimit';
 import mongoose from 'mongoose';
 
-// BR08: Offline transactions retain unique local ID and sync state to prevent duplicates.
-// Processes queued sale/receiving/adjustment transactions in a single pass.
+// BR08 / IR-03 / DB-05 / SEC-04: Offline transactions retain unique local ID and sync state to prevent duplicates.
+// Processes queued sale/receiving/adjustment transactions idempotently with per-item RBAC and active-user verification.
 export async function POST(req: NextRequest) {
   try {
     await connectDB();
@@ -24,6 +26,12 @@ export async function POST(req: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     if (!checkPermission(user.role, 'sync_offline'))
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
+    // SEC-04 / SEC-06: Reject sync from deactivated or revoked user accounts
+    const activeUser = await User.findOne({ userId: user.userId, status: 'active' }).lean();
+    if (!activeUser) {
+      return NextResponse.json({ error: 'Account is inactive or revoked' }, { status: 403 });
+    }
 
     const rl = await rateLimit(`sync:${getUserRateLimitKey(req, user.userId)}`, 20, 60 * 1000);
     if (!rl.allowed) {
@@ -33,21 +41,24 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const body = await req.json();
-    const parsed = syncSchema.safeParse(body);
+    // SEC-09: Safe JSON parsing with structured 400 errorId
+    const parsedBody = await parseJsonBody(req);
+    if ('error' in parsedBody) return parsedBody.error;
+    const parsed = syncSchema.safeParse(parsedBody.data);
     if (!parsed.success)
       return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 });
 
     const { transactions } = parsed.data;
     const processed: Array<{ localId: string; serverId: string; type: string }> = [];
     const failed: Array<{ localId: string; error: string }> = [];
+    const receivedAt = new Date();
 
     for (const tx of transactions) {
       const dbSession = await mongoose.startSession();
       dbSession.startTransaction();
 
       try {
-        // Duplicate prevention by localId (BR08)
+        // Duplicate prevention by localId (BR08 / IR-03)
         let existing = null;
         if (tx.type === 'sale') existing = await Sale.findOne({ localId: tx.localId }).session(dbSession);
         else if (tx.type === 'receiving') existing = await Receiving.findOne({ localId: tx.localId }).session(dbSession);
@@ -69,7 +80,7 @@ export async function POST(req: NextRequest) {
             failed.push({ localId: tx.localId, error: 'Forbidden for role' });
             continue;
           }
-          const serverId = await processSale(tx.data, user.userId, dbSession, req);
+          const serverId = await processSale(tx.data, user.userId, dbSession, req, receivedAt);
           await dbSession.commitTransaction();
           processed.push({ localId: tx.localId, serverId, type: tx.type });
         } else if (tx.type === 'receiving') {
@@ -78,7 +89,7 @@ export async function POST(req: NextRequest) {
             failed.push({ localId: tx.localId, error: 'Forbidden for role' });
             continue;
           }
-          const serverId = await processReceiving(tx.data, user.userId, dbSession, req);
+          const serverId = await processReceiving(tx.data, user.userId, dbSession, req, receivedAt);
           await dbSession.commitTransaction();
           processed.push({ localId: tx.localId, serverId, type: tx.type });
         } else if (tx.type === 'adjustment') {
@@ -87,7 +98,7 @@ export async function POST(req: NextRequest) {
             failed.push({ localId: tx.localId, error: 'Forbidden for role' });
             continue;
           }
-          const serverId = await processAdjustment(tx.data, user.userId, dbSession, req);
+          const serverId = await processAdjustment(tx.data, user.userId, dbSession, req, receivedAt);
           await dbSession.commitTransaction();
           processed.push({ localId: tx.localId, serverId, type: tx.type });
         } else {
@@ -103,7 +114,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ processed, failed, total: transactions.length });
+    return NextResponse.json({ processed, failed, total: transactions.length, receivedAt: receivedAt.toISOString() });
   } catch (error) {
     console.error('POST /api/sync error:', error);
     return NextResponse.json({ error: 'Sync failed' }, { status: 500 });
@@ -114,7 +125,8 @@ async function processSale(
   data: any,
   userId: string,
   session: mongoose.ClientSession,
-  req: NextRequest
+  req: NextRequest,
+  receivedAt: Date
 ): Promise<string> {
   const items = data.items || [];
   if (!items.length) throw new Error('Sale has no items');
@@ -193,7 +205,7 @@ async function processSale(
       entity: 'Sale',
       entityId: saleId,
       afterState: { saleId, total, items: saleItems.length },
-      metadata: { syncedFrom: 'offline', localId: data.localId },
+      metadata: { syncedFrom: 'offline', localId: data.localId, receivedAt: receivedAt.toISOString() },
       req,
     },
     session
@@ -206,7 +218,8 @@ async function processReceiving(
   data: any,
   userId: string,
   session: mongoose.ClientSession,
-  req: NextRequest
+  req: NextRequest,
+  receivedAt: Date
 ): Promise<string> {
   const items = data.items || [];
   if (!items.length) throw new Error('Receiving has no items');
@@ -220,6 +233,17 @@ async function processReceiving(
   for (const item of items) {
     const product = await Product.findOne({ productId: item.productId }).session(session);
     if (!product) throw new Error(`Product not found: ${item.productId}`);
+
+    // BR02 / DB-04: Perishable products (biologicals, medicines, feeds, or hasExpiration=true) require lotNo and expirationDate
+    const isPerishable = product.hasExpiration || product.category === 'medicines' || product.category === 'feeds';
+    if (isPerishable && (item.receivedQuantity ?? 0) > 0) {
+      if (!item.lotNo || !String(item.lotNo).trim()) {
+        throw new Error(`Lot number is required for perishable item: ${product.name} (BR02)`);
+      }
+      if (!item.expirationDate) {
+        throw new Error(`Expiration date is required for perishable item: ${product.name} (BR02)`);
+      }
+    }
 
     const itemCost = (item.receivedQuantity ?? 0) * item.unitCost;
     totalCost += itemCost;
@@ -264,7 +288,7 @@ async function processReceiving(
     supplierId: data.supplierId,
     supplierName: supplier.name,
     referenceNo: data.referenceNo,
-    receivedDate: data.receivedDate ? new Date(data.receivedDate) : new Date(),
+    receivedDate: data.receivedDate ? new Date(data.receivedDate) : receivedAt,
     purchaseId: data.purchaseId,
     status: 'confirmed',
     items: receivingItems,
@@ -272,7 +296,7 @@ async function processReceiving(
     notes: data.notes || '',
     userId,
     confirmedBy: userId,
-    confirmedAt: new Date(),
+    confirmedAt: receivedAt,
     syncStatus: 'synced',
     localId: data.localId,
   });
@@ -292,7 +316,7 @@ async function processReceiving(
         }
       }
       replenishment.status = allReceived ? 'received' : 'partial';
-      replenishment.receivedDate = allReceived ? new Date() : replenishment.receivedDate;
+      replenishment.receivedDate = allReceived ? receivedAt : replenishment.receivedDate;
       await replenishment.save({ session });
     }
   }
@@ -304,7 +328,7 @@ async function processReceiving(
       entity: 'Receiving',
       entityId: receivingId,
       afterState: { receivingId, totalCost, items: receivingItems.length },
-      metadata: { syncedFrom: 'offline', localId: data.localId },
+      metadata: { syncedFrom: 'offline', localId: data.localId, receivedAt: receivedAt.toISOString() },
       req,
     },
     session
@@ -317,7 +341,8 @@ async function processAdjustment(
   data: any,
   userId: string,
   session: mongoose.ClientSession,
-  req: NextRequest
+  req: NextRequest,
+  receivedAt: Date
 ): Promise<string> {
   const product = await Product.findOne({ productId: data.productId, status: 'active' }).session(session);
   if (!product) throw new Error('Product not found');
@@ -352,7 +377,13 @@ async function processAdjustment(
       entityId: data.productId,
       beforeState: { quantityOnHand: previousQty },
       afterState: { quantityOnHand: newQty },
-      metadata: { quantity: data.quantity, reason: data.reason, syncedFrom: 'offline', localId: data.localId },
+      metadata: {
+        quantity: data.quantity,
+        reason: data.reason,
+        syncedFrom: 'offline',
+        localId: data.localId,
+        receivedAt: receivedAt.toISOString(),
+      },
       req,
     },
     session

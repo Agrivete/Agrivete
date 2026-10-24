@@ -10,7 +10,6 @@
     "lint": "next lint",
     "seed": "node --env-file=.env.local scripts/seed.js",
     "backup": "node --env-file=.env.local scripts/backup.js",
-    "cron": "node --env-file=.env.local scripts/cron.js",
     "restore": "node --env-file=.env.local scripts/restore.js",
     "set-role": "node --env-file=.env.local scripts/setRole.js"
   },

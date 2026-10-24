@@ -31,6 +31,21 @@ inventoryMovementSchema.index({ productId: 1, timestamp: -1 });
 inventoryMovementSchema.index({ type: 1, timestamp: -1 });
 inventoryMovementSchema.index({ supplierId: 1, type: 1 });
 
+// DB-01: Append-only immutable stock movement ledger
+inventoryMovementSchema.pre('save', function (next) {
+  if (!this.isNew) {
+    return next(new Error('InventoryMovement is append-only; post a compensating movement instead (DB-01)'));
+  }
+  next();
+});
+
+inventoryMovementSchema.pre(
+  ['updateOne', 'updateMany', 'findOneAndUpdate', 'replaceOne', 'deleteOne', 'deleteMany', 'findOneAndDelete'],
+  function (next) {
+    next(new Error('InventoryMovement is append-only; post a compensating movement instead (DB-01)'));
+  }
+);
+
 export const InventoryMovement =
   mongoose.models.InventoryMovement ||
   mongoose.model('InventoryMovement', inventoryMovementSchema);

@@ -21,16 +21,16 @@ Agrivet resolves these challenges by unifying sales, atomic stock decrements, lo
 - **Proactive Shelf-Life Traceability:** Incoming biologicals and medicated feeds capture manufacturer lot numbers and expiration dates, automatically feeding a 30-day FEFO advance alert schedule.
 - **Operational Continuity:** Cashiers can process counter sales offline via browser IndexedDB; reconnecting triggers idempotent batch synchronization using unique `localId` keys.
 
-## Engineering Standards & Skills Reference
+## Agent Suite Governance
 
-Detailed technical practices and implementation rules are codified in [`docs/ENGINEERING_SKILLS.md`](ENGINEERING_SKILLS.md):
-- **Software Architecture:** React Server Components (RSC) by default, modular route handlers, domain service layer, and two-tier multi-tenant isolation.
-- **Database Engineering:** Normalized Mongoose collections, multi-document ACID transactions (`mongoose.startSession()`), `$gte` atomic guards, and native MongoDB TTL retention.
-- **DevOps & Cloud:** Vercel automated CI/CD, Edge vs Node.js serverless specialization, environment variable segregation, and automated backup scripts.
-- **Backend Engineering:** Stateless Jose JWT auth at Edge, 4-tier RBAC (`lib/permissions.js`), Zod payload parsing, token-bucket rate limits, and IndexedDB offline batch sync.
-- **Security & Vulnerability Defense:** Tenant IDOR defense (`businessName: user.businessName`), OWASP input validation, BR06 cost redaction, and Bcrypt (12 rounds) hashing.
-- **Performance & UX:** Bundle optimization, private caching (`Cache-Control: private`), and single-toast UI management (`visibleToasts={1}`).
-- **Testing & Quality:** Strict TypeScript, ISO/IEC 25010 metrics verification, responsive mobile-first layouts, and zero-error production build gate.
+All engineering, architectural, database, integration, UI/UX, growth, and security rules are enforced by the single-responsibility agents in [`agents/`](../agents/README.md):
+- [`productmanageragent.md`](../agents/productmanageragent.md) (`PM`) — Requirements, BR01–BR08 registry, waivers, and defense traceability.
+- [`systemsdesignagent.md`](../agents/systemsdesignagent.md) (`SD`) — CAP/consistency, SLOs, bottlenecks, scaling order, and ADRs.
+- [`dbaagent.md`](../agents/dbaagent.md) (`DB`) — MongoDB/Mongoose schema invariants, append-only ledgers, ACID transactions, tenant scoping, and indexing.
+- [`integrationagent.md`](../agents/integrationagent.md) (`IR`) — Offline outbox (`lib/offlineQueue.js`, `lib/useOfflineSync.ts`, `/api/sync`), idempotency, retries/jitter, and cross-tab locks.
+- [`uiuxagent.md`](../agents/uiuxagent.md) (`UX`) — Dark mode, responsive layout, confirmation modals, single-toast rule (`visibleToasts={1}`), custom 404, sync badges, and WCAG 2.2 AA.
+- [`growthagent.md`](../agents/growthagent.md) (`GR`) — Public SEO metadata, `sitemap.ts`, `robots.ts`, and landing-page claim integrity.
+- [`securityagent.md`](../agents/securityagent.md) (`SEC`) — Threat model, tenant/BOLA isolation, cookie-only auth, offline queue untrusted-input defense, and HTTP security headers.
 
 ## Roles & Multi-Tenant Separation
 
@@ -75,29 +75,22 @@ Agrivet enforces a strict two-tier role architecture:
 
 ## Business Rules Summary
 
-| ID | Name | Core Mandate |
-|---|---|---|
-| **BR01** | **Sale Stock Reduction** | Completed POS sales atomically deduct on-hand stock. Voiding/cancelling restores stock via atomic `$inc`. |
-| **BR02** | **Receiving Stock Increment** | Stock increases only upon receiving confirmation; requires lot number and expiration date for perishable lines. |
-| **BR03** | **Audited Adjustments** | Stock adjustments require authorized roles (`owner`, `manager`), a valid reason enum (`damage`, `loss`, `correction`, `reconciliation`), and must never drop balances below zero. |
-| **BR04** | **Low-Stock Alerting** | Products with `quantityOnHand <= lowStockThreshold` are automatically flagged across dashboard and inventory alerts. |
-| **BR05** | **30-Day FEFO Expiry** | Batches expiring within 30 days are automatically surfaced and sorted chronologically (`daysUntilExpiry ASC`). |
-| **BR06** | **Cost & Profit Isolation** | `buyingCost`, `unitCost`, gross profit, and profit margins are stripped at the server layer for non-owner roles. |
-| **BR07** | **Immutable Audit Trail** | Every inventory-modifying event and administrative mutation logs an immutable record with user ID, IP, User-Agent, and state diffs. |
-| **BR08** | **Idempotent Offline Sync** | Offline transactions carry unique `localId` keys; the sync endpoint safely ignores duplicate submissions on replay. |
-
-## Security & Architecture Rules
-
-1. **Authentication:** Tokens are signed using `jsonwebtoken` (Node.js runtime) and verified cryptographically at the Edge using `jose.jwtVerify` (Edge runtime).
-2. **Session Cookies:** Stored exclusively in `httpOnly`, `Secure`, `SameSite=Lax` cookies named `agrivet_token`. Never write or read JWTs in `localStorage`.
-3. **Payload Sanitization:** All incoming requests pass through `lib/parseJson.ts` (returning HTTP 400 with an `errorId` on malformed JSON) and Zod validation schemas (`lib/validators.js`).
-4. **Rate Limiting:** Authentication (`/api/auth/*`) and synchronization (`/api/sync`) routes are protected by a distributed MongoDB token bucket (`RateLimitBucket`) returning HTTP 429 with `Retry-After`.
-5. **Private Caching:** Dynamic routes enforce `Cache-Control: private, no-store, no-cache, must-revalidate` in `next.config.ts`, preventing CDN data leaks.
+| ID | Name | Core Mandate | Owning Agents |
+|---|---|---|---|
+| **BR01** | **Sale Stock Reduction** | Completed POS sales atomically deduct on-hand stock. Voiding/cancelling restores stock via atomic `$inc`. | `DB-02`, `DB-09` |
+| **BR02** | **Receiving Stock Increment** | Stock increases only upon receiving confirmation; requires lot number and expiration date for perishable lines. | `DB-04` |
+| **BR03** | **Audited Adjustments** | Stock adjustments require authorized roles (`owner`, `manager`), a valid reason enum (`damage`, `loss`, `correction`, `reconciliation`), and must never drop balances below zero. | `DB-04`, `DB-06` |
+| **BR04** | **Low-Stock Alerting** | Products with `quantityOnHand <= lowStockThreshold` are automatically flagged across dashboard and inventory alerts. | `DB-03` |
+| **BR05** | **30-Day FEFO Expiry** | Batches expiring within 30 days are automatically surfaced and sorted chronologically (`daysUntilExpiry ASC`). | `DB-07` |
+| **BR06** | **Cost & Profit Isolation** | `buyingCost`, `unitCost`, gross profit, and profit margins are stripped at the server layer (`lib/sanitize.ts`) for non-owner roles. | `DB-06`, `UX-14`, `SEC-02` |
+| **BR07** | **Immutable Audit Trail** | Every inventory-modifying event and administrative mutation logs an append-only record with user ID, IP, User-Agent, and state diffs (365-day TTL). | `DB-01` |
+| **BR08** | **Idempotent Offline Sync** | Offline transactions carry unique `localId` keys; `/api/sync` safely deduplicates replays and tracks `pending/inflight/rejected/flagged` states. | `DB-05`, `IR-03`, `IR-04` |
 
 ## Conventions & Repository Layout
 
 ```
 agrivet-next/
+├── agents/                   # 7-Agent Governance Suite (PM, SD, DB, IR, UX, GR, SEC)
 ├── app/                      # Next.js 15 App Router pages & API routes
 │   ├── (public)/             # Landing (/), Login (/login), Register (/register)
 │   ├── admin/                # Platform Admin (/admin, /admin/businesses)
@@ -110,15 +103,18 @@ agrivet-next/
 │   ├── suppliers/            # Vendor directory & alternatives
 │   ├── reports/              # PDF/CSV stream exporter
 │   ├── users/                # Store-scoped employee management
-│   ├── settings/             # Store configuration
+│   ├── settings/             # Store configuration & offline sync queue review
 │   ├── api/                  # REST Route Handlers (/api/*)
+│   ├── not-found.tsx         # Custom 404 page (UX-09)
+│   ├── sitemap.ts            # Public XML sitemap (GR-05)
+│   ├── robots.ts             # Crawler rules (GR-05)
 │   ├── loading.tsx           # Branded root loading spinner
 │   └── error.tsx             # Global error boundary
 ├── components/               # React 19 UI components
 │   ├── brand/                # AgrivetLogo, BrandMark, NavbarLogo
 │   ├── layout/               # AppLayout, Header, Sidebar, MobileDrawer
 │   ├── marketing/            # LandingPage components
-│   └── ui/                   # shadcn/ui primitives (Dialog, Table, etc.)
+│   └── ui/                   # shadcn/ui primitives, ThemeToggle, Toaster
 ├── lib/                      # Core business logic & utilities
 │   ├── auth.js               # JWT minting & cookie management
 │   ├── inventory.js          # Atomic conditional stock mutation engine
@@ -126,12 +122,13 @@ agrivet-next/
 │   ├── sanitize.ts           # BR06 cost/margin redaction helpers
 │   ├── validators.js         # Zod schemas & input bounds
 │   ├── rateLimit.ts          # Distributed token-bucket rate limiter
-│   ├── offlineQueue.js       # IndexedDB transaction queue
+│   ├── offlineQueue.js       # IndexedDB outbox with retry/jitter & Web Locks
+│   ├── useOfflineSync.ts     # React hook for online/visibility/timer sync triggers
 │   ├── mongodb.js            # Cached Mongoose connection pool
 │   ├── logActivity.js        # Non-repudiation audit logging
 │   └── logger.ts             # Structured JSON logger with errorId
 ├── models/                   # Mongoose 8 Document Schemas
-└── docs/                     # Project architectural documentation
+└── docs/                     # Project context (CONTEXT.md) & manuscript
 ```
 
 ### Identifier Prefix Conventions:
@@ -144,4 +141,3 @@ agrivet-next/
 - Movements: `MOV-`
 - Audit Events: `EVT-`
 - Offline Local: `LOCAL-`
-
