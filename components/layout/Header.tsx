@@ -5,13 +5,12 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { LogOut, Bell, Shield, Menu, Sun, Moon, Settings, Search } from 'lucide-react';
+import { LogOut, Bell, Shield, Menu, Sun, Moon, Search } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { useOfflineSync } from '@/lib/useOfflineSync';
 import { getPendingCount } from '@/lib/offlineQueue';
 import { Badge } from '../ui';
 import { SyncIndicator } from './Sidebar';
-import { VercelIconsMenuWithTooltip } from '@/components/v1/skiper43';
 import { openCommandPalette } from '@/components/v1/skiper92';
 import { toast } from 'sonner';
 
@@ -31,7 +30,12 @@ const PAGE_TITLES: Record<string, string> = {
   '/settings': 'Settings',
 };
 
-export function Header({ onMenuClick }: { onMenuClick: () => void }) {
+interface HeaderProps {
+  onMenuClick: () => void;
+  onToggleSidebar?: () => void;
+}
+
+export function Header({ onMenuClick, onToggleSidebar }: HeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
@@ -64,60 +68,9 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
     router.push('/login');
   }, [logout, router]);
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 's' && event.shiftKey) {
-        event.preventDefault();
-        router.push('/settings');
-      } else if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'q') {
-        event.preventDefault();
-        handleLogout();
-      }
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [router, handleLogout]);
-
   const toggleTheme = () => {
     setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
   };
-
-  const quickMenuItems = [
-    {
-      id: 'notifications',
-      label: hasPendingAlerts ? 'Pending sync alerts' : 'Notifications',
-      icon: Bell,
-      hasBadge: hasPendingAlerts,
-      onClick: () => {
-        toast.dismiss();
-        if (hasPendingAlerts) {
-          toast.info('Sync queue attention', {
-            id: 'notifications-toast',
-            description: `${sync.pending} pending, ${sync.flagged} flagged, ${sync.rejected} rejected.`,
-          });
-        } else {
-          toast.info('No new notifications', {
-            id: 'notifications-toast',
-            description: "You're all caught up!",
-          });
-        }
-      },
-    },
-    {
-      id: 'settings',
-      label: 'Settings',
-      icon: Settings,
-      shortcut: ['⌘', 'S'],
-      onClick: () => router.push('/settings'),
-    },
-    {
-      id: 'logout',
-      label: 'Sign out',
-      icon: LogOut,
-      shortcut: ['⌘', 'Q'],
-      onClick: handleLogout,
-    },
-  ];
 
   const initials = user
     ? user.name
@@ -130,12 +83,27 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
 
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b border-white/10 bg-brand-800 px-4 sm:px-6 lg:px-8 dark:border-slate-800 dark:bg-slate-900">
-      {/* Left: ONLY the page title */}
+      {/* Left: Hamburger menu toggle + ONLY page title */}
       <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => {
+            if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
+              onToggleSidebar?.();
+            } else {
+              onMenuClick();
+            }
+          }}
+          aria-label="Toggle navigation menu"
+          title="Toggle navigation menu"
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
         <h1 className="text-base font-semibold tracking-tight text-white">{pageTitle}</h1>
       </div>
 
-      {/* Center: Empty on mobile; global command palette trigger on desktop */}
+      {/* Center: Search trigger on desktop, empty on mobile */}
       <div className="hidden md:flex flex-1 justify-center px-4">
         <button
           type="button"
@@ -145,7 +113,7 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
         >
           <span className="flex items-center gap-2 truncate">
             <Search className="h-3.5 w-3.5 shrink-0 text-brand-200 dark:text-brand-400" />
-            <span>Quick jump or search...</span>
+            <span>Search pages &amp; actions...</span>
           </span>
           <span className="inline-flex items-center gap-1">
             <kbd className="rounded border border-white/20 bg-white/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-white/90 dark:border-slate-700 dark:bg-slate-900">
@@ -155,7 +123,7 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
         </button>
       </div>
 
-      {/* Right: Clean flex row with gap-3 */}
+      {/* Right side: Dark Mode Toggle -> Notification Bell -> User Avatar */}
       <div className="flex items-center gap-3">
         <SyncIndicator
           pending={sync.pending}
@@ -179,10 +147,37 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
           )}
         </button>
 
-        {/* Vercel-style Icons Menu with Spring Tooltip (skiper43) */}
-        <VercelIconsMenuWithTooltip items={quickMenuItems} />
+        {/* Notification Bell */}
+        <button
+          type="button"
+          onClick={() => {
+            toast.dismiss();
+            if (hasPendingAlerts) {
+              toast.info('Sync queue attention', {
+                id: 'notifications-toast',
+                description: `${sync.pending} pending, ${sync.flagged} flagged, ${sync.rejected} rejected.`,
+              });
+            } else {
+              toast.info('No new notifications', {
+                id: 'notifications-toast',
+                description: "You're all caught up!",
+              });
+            }
+          }}
+          className="relative grid h-9 w-9 shrink-0 place-items-center rounded-lg text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+          aria-label="Notifications"
+          title="Notifications"
+        >
+          <Bell className="h-[18px] w-[18px]" />
+          {hasPendingAlerts && (
+            <span
+              className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-amber-400 ring-2 ring-brand-800 dark:ring-slate-900"
+              aria-hidden="true"
+            />
+          )}
+        </button>
 
-        {/* User Avatar with Dropdown (Role badge + Logout) */}
+        {/* User Avatar with Dropdown */}
         {user ? (
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
@@ -216,16 +211,8 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
                 </div>
 
                 <DropdownMenu.Item
-                  onSelect={() => router.push('/settings')}
-                  className="mt-1 flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 outline-none transition-colors hover:bg-slate-100 focus:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 dark:focus:bg-slate-800"
-                >
-                  <Settings className="h-4 w-4 text-brand-700 dark:text-brand-400" />
-                  <span>Settings</span>
-                </DropdownMenu.Item>
-
-                <DropdownMenu.Item
                   onSelect={handleLogout}
-                  className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-red-600 outline-none transition-colors hover:bg-red-50 focus:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40 dark:focus:bg-red-950/40"
+                  className="mt-1 flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-red-600 outline-none transition-colors hover:bg-red-50 focus:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40 dark:focus:bg-red-950/40"
                 >
                   <LogOut className="h-4 w-4" />
                   <span>Sign out</span>
@@ -241,16 +228,6 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
             Sign in
           </Link>
         )}
-
-        {/* Mobile menu button (only on mobile) */}
-        <button
-          type="button"
-          onClick={onMenuClick}
-          className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-white/80 transition-colors hover:bg-white/10 hover:text-white lg:hidden"
-          aria-label="Open navigation menu"
-        >
-          <Menu className="h-5 w-5" />
-        </button>
       </div>
     </header>
   );

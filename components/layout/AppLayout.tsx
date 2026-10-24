@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect, type ReactNode } from 'react';
-import { useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
 import { Sidebar, Header, MobileDrawer } from '.';
@@ -11,6 +10,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -30,10 +30,13 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="app-background flex min-h-screen lg:h-screen lg:overflow-hidden">
-      <Sidebar />
+      <Sidebar isOpen={isSidebarOpen} />
       <MobileDrawer open={mobileDrawerOpen} onOpenChange={setMobileDrawerOpen} />
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <Header onMenuClick={() => setMobileDrawerOpen(true)} />
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col transition-all duration-300">
+        <Header
+          onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
+          onMenuClick={() => setMobileDrawerOpen(true)}
+        />
         <main className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
           {children}
         </main>
