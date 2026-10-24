@@ -156,15 +156,20 @@ Agrivet is designed for zero-config, highly-available deployment on **Vercel** p
 
 ---
 
-## Academic Thesis Deliverables
+## Academic Thesis & Evaluation Documentation
 
-The primary capstone manuscript and evaluation deliverables:
+The complete academic thesis manuscript and supporting technical evaluation documentation:
 
-| Document | Description | Location |
+| Document | Description | Format / Location |
 |---|---|---|
 | **Complete Capstone Manuscript** | Full academic thesis manuscript for BAM-285 | [`docs/BAM-285-COMPLETE-MANUSCRIPT.md`](docs/BAM-285-COMPLETE-MANUSCRIPT.md) |
+| **System Architecture & Context** | System scope, invariants, and business rules (`BR01`–`BR08`) | [`docs/CONTEXT.md`](docs/CONTEXT.md) |
+| **Defense Panel Q&A Guide** | Evaluator defense questions, answers, and technical rationale | [`docs/DEFENSE_QA.md`](docs/DEFENSE_QA.md) |
+| **STRIDE Threat Model** | Comprehensive security posture, threat vectors, and mitigations | [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md) |
+| **Service Level Objectives (SLOs)** | System availability, latency, and reliability targets | [`docs/SLO.md`](docs/SLO.md) |
+| **Architecture Decision Record (ADR)** | CAP/PACELC trade-offs in offline POS & inventory sync | [`docs/adr/001-cap-pacelc-offline-vs-inventory.md`](docs/adr/001-cap-pacelc-offline-vs-inventory.md) |
 | **System Security Test Suite** | 37 automated tests validating RBAC and data boundaries | [`tests/security/`](tests/security/) |
-| **Zero-Drift Invariant Script** | Automated mathematical stock balance reconciliation | [`scripts/reconcile-balances.js`](scripts/reconcile-balances.js) |
+| **Zero-Drift Invariant Tool** | Automated mathematical stock balance reconciliation | [`scripts/reconcile-balances.js`](scripts/reconcile-balances.js) |
 
 ---
 
