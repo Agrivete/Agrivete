@@ -9,7 +9,7 @@
 
 Enterprise-grade retail Point-of-Sale (POS), First-Expired, First-Out (FEFO) batch lot inventory, and supplier procurement system built specifically for agricultural and veterinary supply retailers.
 
-Developed as the capstone software deliverable for **BAM-285** under strict 7-agent software governance (`PM > SD > DB > IR > UX > GR > SEC`).
+Developed as the capstone software deliverable for **BAM-285**.
 
 ---
 
@@ -19,8 +19,8 @@ Developed as the capstone software deliverable for **BAM-285** under strict 7-ag
 3. [Step-by-Step Local Setup Guide](#step-by-step-local-setup-guide)
 4. [Testing & Zero-Drift Audit Verification](#testing--zero-drift-audit-verification)
 5. [Step-by-Step Production Deployment Guide (Vercel + Atlas)](#step-by-step-production-deployment-guide-vercel--atlas)
-6. [Academic Panel Defense Documentation](#academic-panel-defense-documentation)
-7. [Governance & Repository Layout](#governance--repository-layout)
+6. [Academic Thesis Deliverables](#academic-thesis-deliverables)
+7. [Repository Layout](#repository-layout)
 
 ---
 
@@ -143,7 +143,7 @@ Agrivet is designed for zero-config, highly-available deployment on **Vercel** p
 2. Connect your GitHub account and import repository `Agrivete/Agrivete`.
 3. In **Project Settings**:
    - **Framework Preset:** `Next.js`
-   - **Root Directory:** `./` (or leave default if the repository root contains `package.json`)
+   - **Root Directory:** `./`
 4. Under **Environment Variables**, add:
    - `MONGODB_URI`: Your MongoDB Atlas URI.
    - `JWT_SECRET`: A secure, random 64-byte string.
@@ -156,35 +156,22 @@ Agrivet is designed for zero-config, highly-available deployment on **Vercel** p
 
 ---
 
-## Academic Panel Defense Documentation
+## Academic Thesis Deliverables
 
-The `docs/` directory contains complete academic and architectural evidence for the **BAM-285** defense panel:
+The primary capstone manuscript and evaluation deliverables:
 
-| Document | Purpose & Standard | Key Content |
+| Document | Description | Location |
 |---|---|---|
-| **[`docs/CONTEXT.md`](docs/CONTEXT.md)** | Baseline System Specification | Purpose, multi-tenant roles, business rules `BR01`–`BR08`, and repository scope. |
-| **[`docs/DEFENSE_QA.md`](docs/DEFENSE_QA.md)** | Academic Panel Defense Matrix (`PM-11`) | Expected thesis panel questions mapped directly to business rules, code files, MongoDB queries, and test evidence. |
-| **[`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md)** | STRIDE Threat Model (`SEC-01`) | Evaluation of all 5 trust boundaries (IndexedDB, Edge middleware, API routes, Atlas database, and tenant tiers). |
-| **[`docs/SLO.md`](docs/SLO.md)** | Service Level Objectives (`SD-03` / `SD-04`) | Availability targets (99.9%), RPO (< 1 hr), RTO (< 2 hrs), and p95/p99 latency budgets per user journey. |
-| **[`docs/adr/001-cap-pacelc-offline-vs-inventory.md`](docs/adr/001-cap-pacelc-offline-vs-inventory.md)** | Architectural Decision Record (`SD-01`) | Mathematical rationale for AP offline counter checkout vs. CP primary server ACID inventory transactions. |
-| **[`docs/BAM-285-COMPLETE-MANUSCRIPT.md`](docs/BAM-285-COMPLETE-MANUSCRIPT.md)** | Read-Only Academic Thesis Manuscript | Complete capstone thesis manuscript (read-only reference). |
+| **Complete Capstone Manuscript** | Full academic thesis manuscript for BAM-285 | [`docs/BAM-285-COMPLETE-MANUSCRIPT.md`](docs/BAM-285-COMPLETE-MANUSCRIPT.md) |
+| **System Security Test Suite** | 37 automated tests validating RBAC and data boundaries | [`tests/security/`](tests/security/) |
+| **Zero-Drift Invariant Script** | Automated mathematical stock balance reconciliation | [`scripts/reconcile-balances.js`](scripts/reconcile-balances.js) |
 
 ---
 
-## Governance & Repository Layout
-
-Engineering decisions follow the single-responsibility agent suite in [`agents/`](agents/README.md):
-- **`PM`** ([`productmanageragent.md`](agents/productmanageragent.md)): Business rule registry (`BR01`–`BR08`), defense traceability, and waivers.
-- **`SD`** ([`systemsdesignagent.md`](agents/systemsdesignagent.md)): CAP/PACELC consistency, SLO budgets, capacity models, and ADRs.
-- **`DB`** ([`dbaagent.md`](agents/dbaagent.md)): MongoDB schema invariants, ACID transactions, append-only ledgers, and indexing.
-- **`IR`** ([`integrationagent.md`](agents/integrationagent.md)): Offline outbox (`lib/offlineQueue.js`), idempotency, and cross-tab locks.
-- **`UX`** ([`uiuxagent.md`](agents/uiuxagent.md)): Dark mode, thermal receipts, single-toast limit, and WCAG 2.2 AA.
-- **`GR`** ([`growthagent.md`](agents/growthagent.md)): Landing page SEO, `sitemap.ts`, `robots.ts`, and public claim verification.
-- **`SEC`** ([`securityagent.md`](agents/securityagent.md)): STRIDE threat model, tenant BOLA tests, and NoSQL injection defense.
+## Repository Layout
 
 ```
 agrivet-next/
-├── agents/                   # 7-Agent Governance Suite
 ├── app/                      # Next.js 15 App Router pages & API routes
 │   ├── (public)/             # Landing (/), Login (/login), Register (/register)
 │   ├── admin/                # Platform Admin Tier (/admin, /admin/businesses)
@@ -199,7 +186,7 @@ agrivet-next/
 │   ├── settings/             # Offline Queue & Zero-Drift Reconciliation (DB-02)
 │   └── users/                # Store User Provisioning (Owner Exclusive)
 ├── components/               # UI Primitives & POS Receipt Components
-├── docs/                     # Academic Defense Matrix, Threat Model, SLO, & ADRs
+├── docs/                     # Capstone Thesis Manuscript (BAM-285)
 ├── lib/                      # Core Transactions, Offline Queue, Auth, & Validators
 ├── models/                   # Mongoose Invariants & Append-Only Schemas
 ├── scripts/                  # Seed, Backup, Restore, & Balance Reconciliation CLI

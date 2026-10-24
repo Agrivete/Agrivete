@@ -36,3 +36,14 @@ logs/
 
 # Test artifacts
 .taste-skill/
+
+
+# Local Agent & Governance Docs (Internal Only — Not Pushed to GitHub)
+AGENTS.md
+agents/
+docs/CONTEXT.md
+docs/DEFENSE_QA.md
+docs/SLO.md
+docs/THREAT_MODEL.md
+docs/adr/
+AI-REVIEW-BRIEF.md
