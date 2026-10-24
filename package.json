@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "node --test tests/security/*.test.js",
     "seed": "node --env-file=.env.local scripts/seed.js",
     "backup": "node --env-file=.env.local scripts/backup.js",
     "restore": "node --env-file=.env.local scripts/restore.js",
