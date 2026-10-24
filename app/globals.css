@@ -223,3 +223,44 @@
     scroll-behavior: auto !important;
   }
 }
+
+
+/* POS Thermal Receipt Print Styles (80mm standard roll) */
+@media print {
+  /* Hide all app surfaces during print */
+  body * {
+    visibility: hidden !important;
+  }
+
+  /* Expose only the dedicated receipt element */
+  #pos-receipt-print-area,
+  #pos-receipt-print-area * {
+    visibility: visible !important;
+  }
+
+  #pos-receipt-print-area {
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 76mm !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 4mm 2mm !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    border: none !important;
+    box-shadow: none !important;
+    font-family: 'Courier New', Courier, monospace !important;
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+  }
+
+  #pos-receipt-print-area .receipt-divider {
+    border-color: #000000 !important;
+  }
+
+  @page {
+    size: 80mm auto;
+    margin: 0;
+  }
+}

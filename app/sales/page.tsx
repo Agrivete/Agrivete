@@ -1,20 +1,22 @@
 'use client';
 
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
-import { Plus, ShoppingCart, Search, Ban } from 'lucide-react';
+import { useCallback, useEffect, useState, type FormEvent, type KeyboardEvent as ReactKeyboardEvent } from 'react';
+import { Plus, ShoppingCart, Search, Ban, Receipt, Printer, X, Check } from 'lucide-react';
 import { AppLayout } from '@/components/layout';
 import {
   Card, CardHeader, CardContent, Table, Badge, StatusBadge, Button, Input, Select, Modal, Pagination, EmptyState, PageLoader, ConfirmModal,
 } from '@/components/ui';
+import { ReceiptModal, type ReceiptData } from '@/components/sales/ReceiptModal';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
 import { toast } from 'sonner';
 
 interface SaleRow {
   saleId: string;
+  receiptNumber?: string;
   date: string;
   customerName: string;
-  items: Array<{ productId: string; productName: string; quantity: number; unitPrice: number; subtotal: number }>;
+  items: Array<{ productId: string; productName: string; quantity: number; unitPrice: number; subtotal: number; lotNo?: string }>;
   subtotal: number;
   discount: number;
   total: number;
@@ -39,15 +41,17 @@ interface SaleFormItem {
 }
 
 export default function SalesPage() {
-  const { hasRole } = useAuth();
+  const { user, hasRole } = useAuth();
 
   const [sales, setSales] = useState<SaleRow[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
   const [statusFilter, setStatusFilter] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
 
+  // Sale Modal state
   const [saleModal, setSaleModal] = useState(false);
   const [products, setProducts] = useState<ProductOption[]>([]);
   const [items, setItems] = useState<SaleFormItem[]>([]);
@@ -56,6 +60,13 @@ export default function SalesPage() {
   const [discount, setDiscount] = useState('0');
   const [submitting, setSubmitting] = useState(false);
 
+  // Quick item search / scan within Sale Modal
+  const [quickSearch, setQuickSearch] = useState('');
+
+  // Receipt Modal state
+  const [activeReceipt, setActiveReceipt] = useState<ReceiptData | null>(null);
+
+  // Cancel target state
   const [cancelTarget, setCancelTarget] = useState<SaleRow | null>(null);
   const [cancelling, setCancelling] = useState(false);
 
@@ -73,7 +84,7 @@ export default function SalesPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, statusFilter, toast]);
+  }, [page, statusFilter]);
 
   useEffect(() => {
     load();
@@ -87,6 +98,7 @@ export default function SalesPage() {
       setPaymentMethod('cash');
       setCustomerName('');
       setDiscount('0');
+      setQuickSearch('');
       setSaleModal(true);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to load products');
@@ -108,6 +120,52 @@ export default function SalesPage() {
     });
   };
 
+  // Quick-add product from search bar / barcode scan
+  const quickAddProduct = (prod: ProductOption) => {
+    const existingIndex = items.findIndex((it) => it.productId === prod.productId);
+    if (existingIndex >= 0) {
+      const currentQty = items[existingIndex].quantity;
+      if (currentQty >= prod.quantityOnHand) {
+        toast.error(`Cannot exceed available stock (${prod.quantityOnHand} ${prod.unit})`, { id: 'stock-limit' });
+        return;
+      }
+      updateItem(existingIndex, { quantity: Math.min(1000, currentQty + 1) });
+      toast.success(`Incremented ${prod.name} (Qty: ${currentQty + 1})`, { id: 'quick-add' });
+    } else {
+      setItems([
+        ...items,
+        {
+          productId: prod.productId,
+          productName: prod.name,
+          quantity: 1,
+          unitPrice: prod.sellingPrice,
+        },
+      ]);
+      toast.success(`Added ${prod.name}`, { id: 'quick-add' });
+    }
+    setQuickSearch('');
+  };
+
+  const handleQuickSearchKeyDown = (e: ReactKeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const matches = matchingQuickProducts;
+      if (matches.length > 0) {
+        quickAddProduct(matches[0]);
+      }
+    }
+  };
+
+  const matchingQuickProducts = quickSearch.trim()
+    ? products
+        .filter(
+          (p) =>
+            p.name.toLowerCase().includes(quickSearch.toLowerCase()) ||
+            p.productId.toLowerCase().includes(quickSearch.toLowerCase())
+        )
+        .slice(0, 6)
+    : [];
+
   const formatCurrency = (val: number) => {
     if (isNaN(val) || !isFinite(val)) return '₱0.00';
     return val.toLocaleString('en-PH', { style: 'currency', currency: 'PHP' });
@@ -124,7 +182,7 @@ export default function SalesPage() {
     }
     setSubmitting(true);
     try {
-      await api.post('/api/sales', {
+      const recorded = await api.post<SaleRow>('/api/sales', {
         items: items.map((it) => ({
           productId: it.productId,
           quantity: Math.min(1000, Math.max(1, it.quantity)),
@@ -134,9 +192,32 @@ export default function SalesPage() {
         customerName: customerName.trim().slice(0, 50),
         discount: Math.min(1000000, Math.max(0, parseFloat(discount) || 0)),
       });
+
       toast.success('Sale recorded — inventory deducted (BR01)');
       setSaleModal(false);
       load();
+
+      // Automatically present receipt modal for printing or viewing
+      setActiveReceipt({
+        saleId: recorded.saleId,
+        receiptNumber: recorded.receiptNumber || recorded.saleId,
+        date: recorded.date || new Date().toISOString(),
+        customerName: customerName.trim() || 'Walk-in',
+        paymentMethod,
+        items: items.map((it) => ({
+          productId: it.productId,
+          productName: it.productName,
+          quantity: it.quantity,
+          unitPrice: it.unitPrice,
+          subtotal: it.quantity * it.unitPrice,
+        })),
+        subtotal,
+        discount: parseFloat(discount) || 0,
+        total: totalAmount,
+        status: 'completed',
+        cashierName: user?.name,
+        businessName: user?.businessName || 'Agrivet Store',
+      });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to record sale');
     } finally {
@@ -159,15 +240,29 @@ export default function SalesPage() {
     }
   };
 
+  // Filter sales list locally if search query is provided
+  const displayedSales = searchTerm.trim()
+    ? sales.filter(
+        (s) =>
+          s.saleId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (s.customerName && s.customerName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (s.receiptNumber && s.receiptNumber.toLowerCase().includes(searchTerm.toLowerCase()))
+      )
+    : sales;
+
   return (
     <AppLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">Sales & Transactions</h2>
-            <p className="text-xs text-slate-500">{total} total transactions</p>
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Sales &amp; POS Checkout</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400">{total} total transactions</p>
           </div>
-          <Button leftIcon={<Plus className="h-4 w-4" />} onClick={openSaleModal}>
+          <Button
+            leftIcon={<Plus className="h-4 w-4" />}
+            onClick={openSaleModal}
+            className="bg-brand-700 hover:bg-brand-800 text-white"
+          >
             New Sale
           </Button>
         </div>
@@ -175,28 +270,43 @@ export default function SalesPage() {
         <Card className="min-h-0">
           <CardHeader
             title="Transactions"
-            description="Completed sales auto-deduct stock (BR01)"
+            description="Completed sales auto-deduct stock atomically (BR01)"
             className="sm:[&>div:last-child]:shrink-0"
             action={
               <div className="flex w-full flex-col gap-2 sm:w-max sm:flex-row sm:items-center sm:gap-2">
                 <div className="relative w-full sm:w-64 sm:shrink-0">
                   <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
                   <input
-                    placeholder="Search..."
-                    className="h-11 w-full rounded-lg border border-slate-300 pl-8 pr-2 text-xs"
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search by ID or customer..."
+                    className="h-10 w-full rounded-lg border border-slate-300 bg-white pl-8 pr-2 text-xs text-slate-900 placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
                   />
+                  {searchTerm && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchTerm('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  )}
                 </div>
                 <div className="w-full sm:w-44 sm:shrink-0">
                   <Select
                     value={statusFilter}
-                    onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+                    onChange={(e) => {
+                      setStatusFilter(e.target.value);
+                      setPage(1);
+                    }}
                     options={[
                       { value: 'completed', label: 'Completed' },
                       { value: 'cancelled', label: 'Cancelled' },
                       { value: 'refunded', label: 'Refunded' },
                     ]}
                     placeholder="All statuses"
-                    className="h-11 w-full text-xs"
+                    className="h-10 w-full text-xs"
                   />
                 </div>
               </div>
@@ -208,27 +318,107 @@ export default function SalesPage() {
             ) : (
               <Table
                 columns={[
-                  { key: 'saleId', header: 'Sale ID', accessor: (r) => <code className="text-xs text-slate-500">{r.saleId}</code> },
+                  {
+                    key: 'saleId',
+                    header: 'Sale ID',
+                    accessor: (r) => (
+                      <div className="flex flex-col">
+                        <code className="text-xs font-semibold text-slate-900 dark:text-slate-100">{r.saleId}</code>
+                        {r.receiptNumber && (
+                          <span className="text-[10px] text-slate-400 dark:text-slate-500">{r.receiptNumber}</span>
+                        )}
+                      </div>
+                    ),
+                  },
                   { key: 'customerName', header: 'Customer', accessor: (r) => r.customerName || 'Walk-in' },
-                  { key: 'items', header: 'Items', accessor: (r) => r.items.reduce((s, i) => s + i.quantity, 0) },
-                  { key: 'date', header: 'Date', accessor: (r) => new Date(r.date).toLocaleString('en-PH') },
+                  {
+                    key: 'items',
+                    header: 'Items',
+                    accessor: (r) => (
+                      <span className="inline-flex items-center gap-1 font-medium">
+                        {r.items.reduce((s, i) => s + i.quantity, 0)}{' '}
+                        <span className="text-xs text-slate-400 font-normal">({r.items.length} lines)</span>
+                      </span>
+                    ),
+                  },
+                  {
+                    key: 'date',
+                    header: 'Date',
+                    accessor: (r) => (
+                      <span className="text-xs text-slate-600 dark:text-slate-300">
+                        {new Date(r.date).toLocaleString('en-PH', {
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </span>
+                    ),
+                  },
                   ...(hasRole('owner')
                     ? [{ key: 'subtotal', header: 'Subtotal', accessor: (r: SaleRow) => formatCurrency(r.subtotal) }]
                     : []),
-                  { key: 'total', header: 'Total', accessor: (r) => <span className="font-semibold">{formatCurrency(r.total)}</span> },
+                  {
+                    key: 'total',
+                    header: 'Total',
+                    accessor: (r) => <span className="font-semibold text-slate-900 dark:text-slate-100">{formatCurrency(r.total)}</span>,
+                  },
                   { key: 'paymentMethod', header: 'Payment', accessor: (r) => <StatusBadge status={r.paymentMethod} /> },
                   { key: 'status', header: 'Status', accessor: (r) => <StatusBadge status={r.status} /> },
                   {
-                    key: 'actions', header: '',
-                    accessor: (r) =>
-                      r.status === 'completed' && hasRole('owner', 'manager') ? (
-                        <Button size="sm" variant="ghost" onClick={() => setCancelTarget(r)}>
-                          <Ban className="h-3.5 w-3.5 text-red-500" />
+                    key: 'actions',
+                    header: 'Actions',
+                    accessor: (r) => (
+                      <div className="flex items-center gap-1">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          title="View &amp; Print Receipt"
+                          aria-label={`Print receipt for sale ${r.saleId}`}
+                          onClick={() =>
+                            setActiveReceipt({
+                              saleId: r.saleId,
+                              receiptNumber: r.receiptNumber || r.saleId,
+                              date: r.date,
+                              customerName: r.customerName || 'Walk-in',
+                              paymentMethod: r.paymentMethod,
+                              items: r.items.map((it) => ({
+                                productId: it.productId,
+                                productName: it.productName,
+                                quantity: it.quantity,
+                                unitPrice: it.unitPrice,
+                                subtotal: it.subtotal,
+                                lotNo: it.lotNo,
+                              })),
+                              subtotal: r.subtotal ?? r.total,
+                              discount: r.discount ?? 0,
+                              total: r.total,
+                              status: r.status,
+                              cashierName: user?.name,
+                              businessName: user?.businessName || 'Agrivet Store',
+                            })
+                          }
+                          className="h-8 w-8 p-0 text-brand-700 hover:bg-brand-50 hover:text-brand-800 dark:text-brand-400 dark:hover:bg-brand-950/50"
+                        >
+                          <Receipt className="h-4 w-4" />
                         </Button>
-                      ) : null,
+                        {r.status === 'completed' && hasRole('owner', 'manager') && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            title="Cancel Sale"
+                            aria-label={`Cancel sale ${r.saleId}`}
+                            onClick={() => setCancelTarget(r)}
+                            className="h-8 w-8 p-0 text-red-500 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/40"
+                          >
+                            <Ban className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ),
                   },
                 ]}
-                data={sales}
+                data={displayedSales}
                 keyExtractor={(r) => r.saleId}
                 emptyMessage="No transactions found"
               />
@@ -238,40 +428,48 @@ export default function SalesPage() {
         </Card>
       </div>
 
+      {/* Record Sale / POS Counter Modal */}
       <Modal
         open={saleModal}
         onClose={() => setSaleModal(false)}
-        title="Record Sale"
-        description="Stock is deducted automatically when the sale completes"
+        title="Record Counter Sale"
+        description="POS sale atomically decrements on-hand inventory balances (BR01)"
         size="lg"
         footer={
           <>
-            <Button variant="ghost" onClick={() => setSaleModal(false)}>Cancel</Button>
-            <Button onClick={submitSale} loading={submitting} leftIcon={<ShoppingCart className="h-4 w-4" />}>
+            <Button variant="ghost" onClick={() => setSaleModal(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={submitSale}
+              loading={submitting}
+              leftIcon={<ShoppingCart className="h-4 w-4" />}
+              className="bg-brand-700 hover:bg-brand-800 text-white"
+            >
               Complete Sale — {formatCurrency(totalAmount)}
             </Button>
           </>
         }
       >
         <form onSubmit={submitSale} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Input
               label="Customer name"
-              placeholder="Walk-in"
+              placeholder="Walk-in customer"
               maxLength={50}
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value.slice(0, 50))}
             />
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               <Select
-                label="Payment"
+                label="Payment Method"
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
                 options={[
                   { value: 'cash', label: 'Cash' },
                   { value: 'card', label: 'Card' },
                   { value: 'gcash', label: 'GCash' },
-                  { value: 'credit', label: 'Credit' },
+                  { value: 'credit', label: 'Store Credit' },
                 ]}
               />
               <Input
@@ -290,19 +488,91 @@ export default function SalesPage() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-slate-200">
-            <div className="flex items-center justify-between border-b border-slate-100 px-4 py-2.5">
-              <span className="text-xs font-semibold text-slate-700">Items</span>
-              <Button size="sm" variant="outline" type="button" onClick={addItem} leftIcon={<Plus className="h-3 w-3" />}>
-                Add item
+          {/* Quick-Add Product Search Bar */}
+          <div className="relative rounded-xl border border-brand-200 bg-brand-50/50 p-3 dark:border-brand-900/50 dark:bg-brand-950/20">
+            <label className="mb-1 block text-xs font-semibold text-brand-900 dark:text-brand-300">
+              Quick Item Lookup &amp; Fast Add
+            </label>
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-brand-600 dark:text-brand-400" />
+              <input
+                type="text"
+                value={quickSearch}
+                onChange={(e) => setQuickSearch(e.target.value)}
+                onKeyDown={handleQuickSearchKeyDown}
+                placeholder="Type product name, category, or scan barcode... (Press Enter to add)"
+                className="h-10 w-full rounded-lg border border-brand-300 bg-white pl-9 pr-3 text-xs text-slate-900 placeholder:text-slate-400 focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600 dark:border-brand-800 dark:bg-slate-900 dark:text-slate-100"
+              />
+              {quickSearch && (
+                <button
+                  type="button"
+                  onClick={() => setQuickSearch('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+
+            {/* Autocomplete Dropdown */}
+            {matchingQuickProducts.length > 0 && (
+              <div className="absolute left-3 right-3 top-full z-20 mt-1 max-h-52 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900">
+                <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                  Select item to add to cart:
+                </div>
+                {matchingQuickProducts.map((prod) => (
+                  <button
+                    key={prod.productId}
+                    type="button"
+                    onClick={() => quickAddProduct(prod)}
+                    className="flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-xs transition-colors hover:bg-brand-50 dark:hover:bg-brand-950/50"
+                  >
+                    <div>
+                      <span className="font-medium text-slate-900 dark:text-slate-100">{prod.name}</span>
+                      <span className="ml-2 text-[10px] text-slate-500 dark:text-slate-400">
+                        ({prod.quantityOnHand} {prod.unit} in stock)
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-brand-700 dark:text-brand-400">
+                        {formatCurrency(prod.sellingPrice)}
+                      </span>
+                      <span className="rounded bg-brand-100 px-1.5 py-0.5 text-[10px] font-bold text-brand-800 dark:bg-brand-900 dark:text-brand-200">
+                        + Add
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Cart Items List */}
+          <div className="rounded-xl border border-slate-200 dark:border-slate-800">
+            <div className="flex items-center justify-between border-b border-slate-100 px-4 py-2.5 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40">
+              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                Items in Cart ({items.length})
+              </span>
+              <Button
+                size="sm"
+                variant="outline"
+                type="button"
+                onClick={addItem}
+                leftIcon={<Plus className="h-3 w-3" />}
+              >
+                Add Row
               </Button>
             </div>
-            <div className="max-h-72 space-y-3 overflow-y-auto px-4 py-3">
+            <div className="max-h-64 space-y-3 overflow-y-auto px-4 py-3">
               {items.length === 0 && (
-                <p className="py-6 text-center text-xs text-slate-400">No items yet — click “Add item”</p>
+                <div className="py-8 text-center">
+                  <p className="text-xs text-slate-400 dark:text-slate-500">
+                    Cart is empty — scan/type in the lookup box above or click &ldquo;Add Row&rdquo;
+                  </p>
+                </div>
               )}
               {items.map((item, index) => (
-                <div key={index} className="grid grid-cols-12 items-end gap-2">
+                <div key={index} className="grid grid-cols-12 items-end gap-2 border-b border-slate-100 pb-2.5 last:border-0 dark:border-slate-800">
                   <div className="col-span-5">
                     <Select
                       label="Product"
@@ -330,7 +600,7 @@ export default function SalesPage() {
                   </div>
                   <div className="col-span-2">
                     <Input
-                      label="Price"
+                      label="Price (₱)"
                       type="number"
                       min="0"
                       max="100000"
@@ -343,14 +613,14 @@ export default function SalesPage() {
                       }}
                     />
                   </div>
-                  <div className="col-span-2 pb-1 text-xs text-slate-500">
+                  <div className="col-span-2 pb-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300">
                     {formatCurrency((item.quantity || 0) * (item.unitPrice || 0))}
                   </div>
-                  <div className="col-span-1 pb-1 text-right">
+                  <div className="col-span-1 pb-1.5 text-right">
                     <button
                       type="button"
                       onClick={() => setItems(items.filter((_, i) => i !== index))}
-                      className="text-xs text-red-500 hover:text-red-700"
+                      className="text-xs font-medium text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                     >
                       Remove
                     </button>
@@ -358,14 +628,22 @@ export default function SalesPage() {
                 </div>
               ))}
             </div>
-            <div className="flex items-center justify-between border-t border-slate-100 px-4 py-2.5 text-sm">
-              <span className="text-xs text-slate-500">Subtotal</span>
-              <span className="font-semibold">{formatCurrency(subtotal)}</span>
+            <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/60 px-4 py-2.5 text-sm dark:border-slate-800 dark:bg-slate-900/40">
+              <span className="text-xs text-slate-500 dark:text-slate-400">Subtotal</span>
+              <span className="font-semibold text-slate-900 dark:text-slate-100">{formatCurrency(subtotal)}</span>
             </div>
           </div>
         </form>
       </Modal>
 
+      {/* POS Receipt Preview & Print Modal */}
+      <ReceiptModal
+        open={!!activeReceipt}
+        onClose={() => setActiveReceipt(null)}
+        receipt={activeReceipt}
+      />
+
+      {/* Cancel Transaction Modal */}
       <ConfirmModal
         open={!!cancelTarget}
         onClose={() => setCancelTarget(null)}
