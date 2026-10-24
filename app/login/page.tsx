@@ -20,6 +20,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
 import { AgrivetLogo } from '@/components/brand';
 import { ThemeToggle } from '@/components/ui';
+import { SmoothInput } from '@/components/v1/skiper106';
 
 export default function LoginPage() {
   return (
@@ -202,10 +203,10 @@ function LoginForm() {
                   Email address
                 </label>
                 <div className="relative">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                  <div className="pointer-events-none absolute inset-y-0 left-0 z-10 flex items-center pl-3 text-slate-400">
                     <Mail className="h-4 w-4" />
                   </div>
-                  <input
+                  <SmoothInput
                     id="email"
                     type="email"
                     placeholder="you@agrivet.com"
@@ -223,10 +224,10 @@ function LoginForm() {
                   Password
                 </label>
                 <div className="relative">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                  <div className="pointer-events-none absolute inset-y-0 left-0 z-10 flex items-center pl-3 text-slate-400">
                     <Lock className="h-4 w-4" />
                   </div>
-                  <input
+                  <SmoothInput
                     id="password"
                     type={showPassword ? 'text' : 'password'}
                     placeholder="Enter your password"
@@ -239,7 +240,7 @@ function LoginForm() {
                   <button
                     type="button"
                     onClick={() => setShowPassword((prev) => !prev)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                    className="absolute inset-y-0 right-0 z-10 flex items-center pr-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -269,7 +270,7 @@ function LoginForm() {
             </div>
 
             <div className="mt-3.5 text-center text-xs text-slate-500 dark:text-slate-400">
-              Don't have an account?{' '}
+              Don&apos;t have an account?{' '}
               <Link href="/register" className="font-semibold text-brand-800 dark:text-brand-400 hover:text-brand-900 hover:underline">
                 Sign up
               </Link>

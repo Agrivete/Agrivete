@@ -21,6 +21,7 @@ import {
 import { useAuth } from '@/lib/AuthContext';
 import { AgrivetLogo } from '@/components/brand';
 import { ThemeToggle } from '@/components/ui';
+import { SmoothInput } from '@/components/v1/skiper106';
 import { toast } from 'sonner';
 
 export default function RegisterPage() {
@@ -282,10 +283,10 @@ function RegisterForm() {
                       Business Name
                     </label>
                     <div className="relative">
-                      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 flex items-center pl-3 text-slate-400">
                         <Building2 className="h-4 w-4" />
                       </div>
-                      <input
+                      <SmoothInput
                         id="businessName"
                         type="text"
                         placeholder="GreenFields Agrivet Supply"
@@ -303,10 +304,10 @@ function RegisterForm() {
                       Owner Full Name
                     </label>
                     <div className="relative">
-                      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 flex items-center pl-3 text-slate-400">
                         <User className="h-4 w-4" />
                       </div>
-                      <input
+                      <SmoothInput
                         id="name"
                         type="text"
                         placeholder="Juan Dela Cruz"
@@ -325,10 +326,10 @@ function RegisterForm() {
                       Email address
                     </label>
                     <div className="relative">
-                      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 flex items-center pl-3 text-slate-400">
                         <Mail className="h-4 w-4" />
                       </div>
-                      <input
+                      <SmoothInput
                         id="email"
                         type="email"
                         placeholder="owner@agrivet.com"
@@ -347,10 +348,10 @@ function RegisterForm() {
                       Password (min. 8 characters)
                     </label>
                     <div className="relative">
-                      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 flex items-center pl-3 text-slate-400">
                         <Lock className="h-4 w-4" />
                       </div>
-                      <input
+                      <SmoothInput
                         id="password"
                         type={showPassword ? 'text' : 'password'}
                         placeholder="Create a password"
@@ -364,7 +365,7 @@ function RegisterForm() {
                       <button
                         type="button"
                         onClick={() => setShowPassword((prev) => !prev)}
-                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                        className="absolute inset-y-0 right-0 z-10 flex items-center pr-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
                         aria-label={showPassword ? 'Hide password' : 'Show password'}
                       >
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -377,10 +378,10 @@ function RegisterForm() {
                       Confirm password
                     </label>
                     <div className="relative">
-                      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 flex items-center pl-3 text-slate-400">
                         <Lock className="h-4 w-4" />
                       </div>
-                      <input
+                      <SmoothInput
                         id="confirmPassword"
                         type={showConfirmPassword ? 'text' : 'password'}
                         placeholder="Confirm your password"
@@ -394,7 +395,7 @@ function RegisterForm() {
                       <button
                         type="button"
                         onClick={() => setShowConfirmPassword((prev) => !prev)}
-                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                        className="absolute inset-y-0 right-0 z-10 flex items-center pr-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
                         aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
                       >
                         {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { AgrivetLogo, NavbarLogo } from '@/components/brand';
 import { ThemeToggle } from '@/components/ui';
+import { ScrollToTop } from './ScrollToTop';
 
 type Overlay = 'menu' | 'request' | null;
 
@@ -779,6 +780,8 @@ export default function LandingPage() {
           </form>
         </section>
       </div>
+
+      <ScrollToTop />
     </div>
   );
 }

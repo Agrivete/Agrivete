@@ -4,6 +4,7 @@ import './landing-page.css';
 import { AuthProvider } from '@/lib/AuthContext';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from '@/components/ui/toaster';
+import { Skiper92 } from '@/components/v1/skiper92';
 
 export const metadata: Metadata = {
   title: {
@@ -34,6 +35,7 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             <Toaster />
+            <Skiper92 />
             {children}
           </AuthProvider>
         </ThemeProvider>

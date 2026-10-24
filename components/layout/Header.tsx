@@ -1,17 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
-import { LogOut, Bell, Shield, Menu, Sun, Moon } from 'lucide-react';
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
+import { LogOut, Bell, Shield, Menu, Sun, Moon, Settings, Search } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { useOfflineSync } from '@/lib/useOfflineSync';
 import { getPendingCount } from '@/lib/offlineQueue';
 import { Badge } from '../ui';
 import { SyncIndicator } from './Sidebar';
+import { VercelIconsMenuWithTooltip } from '@/components/v1/skiper43';
+import { openCommandPalette } from '@/components/v1/skiper92';
 import { toast } from 'sonner';
-import { NavbarLogo } from '@/components/brand';
 
 const PAGE_TITLES: Record<string, string> = {
   '/dashboard': 'Dashboard',
@@ -42,9 +44,9 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
   }, []);
 
   const pageTitle = PAGE_TITLES[pathname] || 'Dashboard';
+  const hasPendingAlerts = sync.pending > 0 || sync.flagged > 0 || sync.rejected > 0;
 
-  const handleLogout = async () => {
-    // SEC-04 / UX-07: Confirm before signing out if there are unsynced offline transactions
+  const handleLogout = useCallback(async () => {
     try {
       const pending = await getPendingCount();
       if (pending > 0) {
@@ -60,40 +62,113 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
     toast.dismiss();
     toast.success('Signed out', { id: 'auth-toast', description: 'You have been signed out successfully.' });
     router.push('/login');
-  };
+  }, [logout, router]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 's' && event.shiftKey) {
+        event.preventDefault();
+        router.push('/settings');
+      } else if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'q') {
+        event.preventDefault();
+        handleLogout();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [router, handleLogout]);
 
   const toggleTheme = () => {
     setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
   };
 
+  const quickMenuItems = [
+    {
+      id: 'notifications',
+      label: hasPendingAlerts ? 'Pending sync alerts' : 'Notifications',
+      icon: Bell,
+      hasBadge: hasPendingAlerts,
+      onClick: () => {
+        toast.dismiss();
+        if (hasPendingAlerts) {
+          toast.info('Sync queue attention', {
+            id: 'notifications-toast',
+            description: `${sync.pending} pending, ${sync.flagged} flagged, ${sync.rejected} rejected.`,
+          });
+        } else {
+          toast.info('No new notifications', {
+            id: 'notifications-toast',
+            description: "You're all caught up!",
+          });
+        }
+      },
+    },
+    {
+      id: 'settings',
+      label: 'Settings',
+      icon: Settings,
+      shortcut: ['⌘', 'S'],
+      onClick: () => router.push('/settings'),
+    },
+    {
+      id: 'logout',
+      label: 'Sign out',
+      icon: LogOut,
+      shortcut: ['⌘', 'Q'],
+      onClick: handleLogout,
+    },
+  ];
+
+  const initials = user
+    ? user.name
+        .split(' ')
+        .map((n) => n[0])
+        .slice(0, 2)
+        .join('')
+        .toUpperCase()
+    : 'AG';
+
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between border-b border-white/10 dark:border-slate-800 bg-brand-800 dark:bg-slate-900 px-4 sm:px-6 lg:px-8">
-      {/* Left: Mobile Logo or Desktop Page Title */}
+    <header className="flex h-16 shrink-0 items-center justify-between border-b border-white/10 bg-brand-800 px-4 sm:px-6 lg:px-8 dark:border-slate-800 dark:bg-slate-900">
+      {/* Left: ONLY the page title */}
       <div className="flex items-center gap-3">
-        <div className="lg:hidden">
-          <NavbarLogo href={user?.role === 'admin' ? '/admin' : '/dashboard'} size="sm" showWordmark={true} />
-        </div>
-        <div className="hidden lg:flex lg:items-center lg:gap-2.5">
-          <span className="text-sm font-semibold text-white">{pageTitle}</span>
-          {user?.businessName && (
-            <>
-              <span className="text-white/30">·</span>
-              <span className="text-xs font-medium text-white/75">{user.businessName}</span>
-            </>
-          )}
-        </div>
+        <h1 className="text-base font-semibold tracking-tight text-white">{pageTitle}</h1>
       </div>
 
-      {/* Right: Actions */}
-      <div className="flex items-center gap-2 sm:gap-3">
-        {/* Sync indicator */}
-        <SyncIndicator pending={sync.pending} rejected={sync.rejected} flagged={sync.flagged} offline={sync.offline} />
+      {/* Center: Empty on mobile; global command palette trigger on desktop */}
+      <div className="hidden md:flex flex-1 justify-center px-4">
+        <button
+          type="button"
+          onClick={openCommandPalette}
+          aria-label="Open command palette"
+          className="flex h-9 w-full max-w-xs items-center justify-between gap-3 rounded-xl border border-white/15 bg-white/10 px-3 text-xs text-white/80 transition-colors hover:bg-white/15 hover:text-white dark:border-slate-800 dark:bg-slate-800/70 dark:text-slate-300 dark:hover:bg-slate-800"
+        >
+          <span className="flex items-center gap-2 truncate">
+            <Search className="h-3.5 w-3.5 shrink-0 text-brand-200 dark:text-brand-400" />
+            <span>Quick jump or search...</span>
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <kbd className="rounded border border-white/20 bg-white/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-white/90 dark:border-slate-700 dark:bg-slate-900">
+              Ctrl K
+            </kbd>
+          </span>
+        </button>
+      </div>
 
-        {/* Theme Toggle Button */}
+      {/* Right: Clean flex row with gap-3 */}
+      <div className="flex items-center gap-3">
+        <SyncIndicator
+          pending={sync.pending}
+          rejected={sync.rejected}
+          flagged={sync.flagged}
+          offline={sync.offline}
+        />
+
+        {/* Dark Mode Toggle */}
         <button
           type="button"
           onClick={toggleTheme}
-          className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-white/85 transition-colors hover:bg-white/10 hover:text-white"
           aria-label={mounted && resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
           title={mounted && resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
         >
@@ -104,78 +179,78 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
           )}
         </button>
 
-        {/* Notifications button */}
-        <button
-          type="button"
-          className="relative grid h-9 w-9 shrink-0 place-items-center rounded-lg text-white/70 transition-colors hover:bg-white/10 hover:text-white"
-          aria-label="Notifications"
-          onClick={() => {
-            toast.dismiss();
-            toast.info('No new notifications', { id: 'notifications-toast', description: "You're all caught up!" });
-          }}
-        >
-          <Bell className="h-[18px] w-[18px]" />
-          <span className="absolute right-0.5 top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-brand-700 px-1 text-[9px] font-bold leading-none text-white" aria-hidden="true">0</span>
-        </button>
+        {/* Vercel-style Icons Menu with Spring Tooltip (skiper43) */}
+        <VercelIconsMenuWithTooltip items={quickMenuItems} />
+
+        {/* User Avatar with Dropdown (Role badge + Logout) */}
+        {user ? (
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild>
+              <button
+                type="button"
+                aria-label="Open user menu"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white ring-2 ring-white/20 transition-transform hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              >
+                {initials}
+              </button>
+            </DropdownMenu.Trigger>
+
+            <DropdownMenu.Portal>
+              <DropdownMenu.Content
+                align="end"
+                sideOffset={8}
+                className="z-50 w-56 rounded-xl border border-slate-200 bg-white p-1.5 text-slate-900 shadow-xl dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+              >
+                <div className="border-b border-slate-100 px-3 py-2.5 dark:border-slate-800">
+                  <p className="truncate text-sm font-semibold">{user.name}</p>
+                  <p className="truncate text-xs text-slate-500 dark:text-slate-400">{user.email}</p>
+                  <div className="mt-2 flex items-center gap-1.5">
+                    <Shield className="h-3.5 w-3.5 text-brand-700 dark:text-brand-400" aria-hidden="true" />
+                    <Badge
+                      variant="default"
+                      className="bg-brand-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-brand-800 dark:bg-brand-950 dark:text-brand-300"
+                    >
+                      {user.role}
+                    </Badge>
+                  </div>
+                </div>
+
+                <DropdownMenu.Item
+                  onSelect={() => router.push('/settings')}
+                  className="mt-1 flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 outline-none transition-colors hover:bg-slate-100 focus:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 dark:focus:bg-slate-800"
+                >
+                  <Settings className="h-4 w-4 text-brand-700 dark:text-brand-400" />
+                  <span>Settings</span>
+                </DropdownMenu.Item>
+
+                <DropdownMenu.Item
+                  onSelect={handleLogout}
+                  className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-red-600 outline-none transition-colors hover:bg-red-50 focus:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40 dark:focus:bg-red-950/40"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Sign out</span>
+                </DropdownMenu.Item>
+              </DropdownMenu.Content>
+            </DropdownMenu.Portal>
+          </DropdownMenu.Root>
+        ) : (
+          <Link
+            href="/login"
+            className="h-9 rounded-lg bg-white/10 px-3.5 py-2 text-xs font-medium text-white transition-colors hover:bg-white/20"
+          >
+            Sign in
+          </Link>
+        )}
 
         {/* Mobile menu button (only on mobile) */}
         <button
           type="button"
           onClick={onMenuClick}
-          className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-white/70 transition-colors hover:bg-white/10 hover:text-white lg:hidden"
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-white/80 transition-colors hover:bg-white/10 hover:text-white lg:hidden"
           aria-label="Open navigation menu"
         >
           <Menu className="h-5 w-5" />
         </button>
-
-        {/* Desktop user menu and sign in */}
-        <div className="hidden lg:flex lg:items-center lg:gap-3">
-          {user ? (
-            <div className="flex items-center gap-2 border-l border-white/10 pl-3">
-              <div className="text-right">
-                <p className="text-xs font-semibold text-white">{user.name}</p>
-                <div className="mt-1 flex items-center justify-end gap-1">
-                  <Shield className="h-3 w-3 text-white/50" aria-hidden="true" />
-                  <Badge variant="default" className="px-2 uppercase tracking-wide bg-white/10 text-white">
-                    {user.role}
-                  </Badge>
-                </div>
-              </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-700 text-sm font-bold text-white">
-                {user.name
-                  .split(' ')
-                  .map((n) => n[0])
-                  .slice(0, 2)
-                  .join('')
-                  .toUpperCase()}
-              </div>
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="grid h-9 w-9 place-items-center rounded-lg text-white/70 transition-colors hover:bg-white/10 hover:text-white"
-                aria-label="Sign out"
-                title="Sign out"
-              >
-                <LogOut className="h-[18px] w-[18px]" />
-              </button>
-            </div>
-          ) : (
-            <>
-              <Link
-                href="/login"
-                className="h-10 px-4 rounded-lg bg-white/10 text-white text-sm font-medium transition-colors hover:bg-white/20"
-              >
-                Sign in
-              </Link>
-              <Link
-                href="/register"
-                className="h-10 px-4 rounded-lg bg-brand-700 text-white text-sm font-medium transition-colors hover:bg-brand-800"
-              >
-                Get started
-              </Link>
-            </>
-          )}
-        </div>
       </div>
     </header>
   );

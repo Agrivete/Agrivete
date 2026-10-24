@@ -22,3 +22,4 @@ Stack: Next.js 15.5 App Router, React 19, TypeScript (strict), Tailwind CSS 4, M
 - **Toast presentation limit (`UX-08`):** Configure `<Toaster />` with `visibleToasts={1}` and `expand={false}` to prevent stacked toast overlap.
 - **Academic Manuscript Integrity:** Never modify `docs/BAM-285-COMPLETE-MANUSCRIPT.md` without explicit user instruction.
 - **Done means:** `npm run build` passes with 0 errors across all routes, type-checked, responsive at 375px mobile and 1080p desktop, Dark Mode contrast verified, and loading/empty/error states exist.
+
