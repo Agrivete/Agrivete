@@ -64,15 +64,22 @@ export async function GET(req: NextRequest) {
       req,
     });
 
+    const dateSlug = new Date().toISOString().slice(0, 10);
+
     if (format === 'csv') {
       const csvStringifier = createObjectCsvStringifier({
-        header: headers.map((h) => ({ id: h.toLowerCase().replace(/\s+/g, '_').replace(/%/g, 'pct'), title: h })),
+        header: headers.map((h) => ({
+          id: h.toLowerCase().replace(/[\s-]+/g, '_').replace(/%/g, 'pct'),
+          title: h,
+        })),
       });
-      const csv = csvStringifier.getHeaderString() + csvStringifier.stringifyRecords(data);
+      // Prepend UTF-8 BOM (\uFEFF) so Excel, Google Sheets & LibreOffice parse symbols and text correctly
+      const csv = '\uFEFF' + csvStringifier.getHeaderString() + csvStringifier.stringifyRecords(data);
       return new NextResponse(csv, {
         headers: {
-          'Content-Type': 'text/csv',
-          'Content-Disposition': `attachment; filename="${type}_report_${Date.now()}.csv"`,
+          'Content-Type': 'text/csv; charset=utf-8',
+          'Content-Disposition': `attachment; filename="agrivet_${type}_report_${dateSlug}.csv"`,
+          'Cache-Control': 'no-store',
         },
       });
     }
@@ -82,7 +89,8 @@ export async function GET(req: NextRequest) {
       return new NextResponse(new Uint8Array(pdfBuffer), {
         headers: {
           'Content-Type': 'application/pdf',
-          'Content-Disposition': `attachment; filename="${type}_report_${Date.now()}.pdf"`,
+          'Content-Disposition': `attachment; filename="agrivet_${type}_report_${dateSlug}.pdf"`,
+          'Cache-Control': 'no-store',
         },
       });
     }
@@ -99,7 +107,11 @@ async function getSalesData(startDate: string | null, endDate: string | null, ro
   if (startDate || endDate) {
     const dateFilter: Record<string, Date> = {};
     if (startDate) dateFilter.$gte = new Date(startDate);
-    if (endDate) dateFilter.$lte = new Date(endDate);
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      dateFilter.$lte = end;
+    }
     match.date = dateFilter;
   }
 
@@ -110,16 +122,20 @@ async function getSalesData(startDate: string | null, endDate: string | null, ro
       date: new Date(s.date).toLocaleDateString('en-PH'),
       sale_id: s.saleId,
       items: s.items.length,
-      total: s.total,
-      payment: s.paymentMethod,
-      status: s.status,
     };
     if (role === 'owner') {
-      base.subtotal = s.subtotal;
-      base.discount = s.discount;
+      base.subtotal = s.subtotal ?? s.total;
+      base.discount = s.discount ?? 0;
+      base.total = s.total;
       base.cost = cost;
       base.profit = s.total - cost;
+      base.payment = s.paymentMethod;
       base.cashier = s.userId;
+      base.status = s.status;
+    } else {
+      base.total = s.total;
+      base.payment = s.paymentMethod;
+      base.status = s.status;
     }
     return base;
   });
@@ -140,11 +156,13 @@ async function getInventoryData(role: string) {
       on_hand: qty,
       threshold: p.lowStockThreshold,
       low_stock: qty <= p.lowStockThreshold ? 'Yes' : 'No',
-      selling_price: p.sellingPrice,
     };
     if (role === 'owner') {
       base.buying_cost = p.buyingCost;
+      base.selling_price = p.sellingPrice;
       base.stock_value = qty * p.buyingCost;
+    } else {
+      base.selling_price = p.sellingPrice;
     }
     return base;
   });
@@ -155,7 +173,11 @@ async function getProfitabilityData(startDate: string | null, endDate: string | 
   if (startDate || endDate) {
     const dateFilter: Record<string, Date> = {};
     if (startDate) dateFilter.$gte = new Date(startDate);
-    if (endDate) dateFilter.$lte = new Date(endDate);
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      dateFilter.$lte = end;
+    }
     match.date = dateFilter;
   }
 
@@ -176,14 +198,19 @@ async function getProfitabilityData(startDate: string | null, endDate: string | 
         product_id: '$_id',
         product: 1,
         qty_sold: 1,
-        revenue: 1,
-        cost: 1,
-        profit: { $subtract: ['$revenue', '$cost'] },
+        revenue: { $round: ['$revenue', 2] },
+        cost: { $round: ['$cost', 2] },
+        profit: { $round: [{ $subtract: ['$revenue', '$cost'] }, 2] },
         margin_pct: {
-          $cond: [
-            { $gt: ['$revenue', 0] },
-            { $multiply: [{ $divide: [{ $subtract: ['$revenue', '$cost'] }, '$revenue'] }, 100] },
-            0,
+          $round: [
+            {
+              $cond: [
+                { $gt: ['$revenue', 0] },
+                { $multiply: [{ $divide: [{ $subtract: ['$revenue', '$cost'] }, '$revenue'] }, 100] },
+                0,
+              ],
+            },
+            2,
           ],
         },
       },
@@ -199,7 +226,11 @@ async function getSupplierData(startDate: string | null, endDate: string | null)
   if (startDate || endDate) {
     const dateFilter: Record<string, Date> = {};
     if (startDate) dateFilter.$gte = new Date(startDate);
-    if (endDate) dateFilter.$lte = new Date(endDate);
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      dateFilter.$lte = end;
+    }
     match.receivedDate = dateFilter;
   }
 
@@ -211,7 +242,7 @@ async function getSupplierData(startDate: string | null, endDate: string | null)
         supplier: { $first: '$supplierName' },
         deliveries: { $sum: 1 },
         items: { $sum: { $sum: '$items.receivedQuantity' } },
-        total_cost: { $sum: '$totalCost' },
+        total_cost: { $round: [{ $sum: '$totalCost' }, 2] },
       },
     },
     {
@@ -239,36 +270,43 @@ async function generatePDF(type: string, data: Record<string, unknown>[], header
     doc.on('end', () => resolve(Buffer.concat(chunks)));
     doc.on('error', reject);
 
-    // Title
-    doc.fontSize(18).fillColor('#1B5E20').text(`${type.charAt(0).toUpperCase() + type.slice(1)} Report`, { align: 'center' });
-    doc.fontSize(9).fillColor('#666').text(`Generated: ${new Date().toLocaleString('en-PH')} | Agrivet System`, { align: 'center' });
+    // Title & Header branding
+    doc.fontSize(18).fillColor('#1B5E20').text(`Agrivet — ${type.charAt(0).toUpperCase() + type.slice(1)} Report`, { align: 'center' });
+    doc.fontSize(9).fillColor('#666666').text(`Generated: ${new Date().toLocaleString('en-PH')} | BAM-285 Capstone System`, { align: 'center' });
     doc.moveDown(0.5);
 
     const tableTop = doc.y;
     const colWidth = (doc.page.width - 60) / headers.length;
+    const headerIds = headers.map((h) => h.toLowerCase().replace(/[\s-]+/g, '_').replace(/%/g, 'pct'));
 
     // Headers
-    doc.fillColor('#1B5E20').fontSize(7);
+    doc.fillColor('#1B5E20').fontSize(7.5);
     headers.forEach((header, i) => {
       doc.font('Helvetica-Bold').text(header, 30 + i * colWidth, tableTop, { width: colWidth - 4, ellipsis: true });
     });
-    doc.moveTo(30, tableTop + 13).lineTo(doc.page.width - 30, tableTop + 13).strokeColor('#1B5E20').stroke();
+    doc.moveTo(30, tableTop + 14).lineTo(doc.page.width - 30, tableTop + 14).strokeColor('#1B5E20').stroke();
 
     // Rows
-    let y = tableTop + 18;
+    let y = tableTop + 20;
     data.forEach((row, rowIndex) => {
       if (y > doc.page.height - 50) {
         doc.addPage();
         y = 30;
       }
-      doc.fillColor(rowIndex % 2 === 0 ? '#f9fafb' : '#ffffff');
       if (rowIndex % 2 === 0) {
-        doc.rect(28, y - 2, doc.page.width - 56, 14).fill();
+        doc.fillColor('#f8fafc').rect(28, y - 2, doc.page.width - 56, 14).fill();
       }
-      const values = Object.values(row);
-      values.forEach((value, i) => {
+      headerIds.forEach((id, i) => {
+        let val = row[id];
+        if (typeof val === 'number') {
+          val = id.includes('cost') || id.includes('total') || id.includes('price') || id.includes('profit') || id.includes('revenue') || id.includes('subtotal') || id.includes('value')
+            ? `P${val.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+            : id.includes('pct')
+              ? `${val}%`
+              : val.toLocaleString('en-PH');
+        }
         doc.font('Helvetica').fontSize(6.5).fillColor('#1f2937').text(
-          String(value ?? ''),
+          String(val ?? '—'),
           30 + i * colWidth,
           y,
           { width: colWidth - 4, ellipsis: true }
@@ -280,4 +318,3 @@ async function generatePDF(type: string, data: Record<string, unknown>[], header
     doc.end();
   });
 }
-
