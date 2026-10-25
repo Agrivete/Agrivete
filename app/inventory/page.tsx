@@ -228,8 +228,8 @@ function InventoryContent() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">Inventory Management</h2>
-            <p className="text-xs text-slate-500">Real-time stock balances with full movement audit trail</p>
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Inventory Management</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Real-time stock balances with full movement audit trail</p>
           </div>
           {hasRole('owner', 'manager') && (
             <Button leftIcon={<Plus className="h-4 w-4" />} onClick={() => openProductModal()}>

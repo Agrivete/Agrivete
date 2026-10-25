@@ -324,8 +324,8 @@ export default function SuppliersPage() {
         <div className="space-y-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-lg font-semibold text-slate-900">Supplier Management</h2>
-              <p className="text-xs text-slate-500">Centralized contacts, purchase & delivery history</p>
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Supplier Management</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Centralized contacts, purchase & delivery history</p>
             </div>
             <Button leftIcon={<Plus className="h-4 w-4" />} onClick={openCreate}>
               Add Supplier
@@ -337,12 +337,14 @@ export default function SuppliersPage() {
               title="Suppliers"
               description={`${displayedSuppliers.length} shown of ${suppliers.length} registered`}
               action={
-                <div className="inline-flex rounded-xl bg-slate-100 p-1">
+                <div className="inline-flex rounded-xl bg-slate-100 dark:bg-slate-800 p-1">
                   <button
                     type="button"
                     onClick={() => setViewFilter('all')}
                     className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-                      viewFilter === 'all' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                      viewFilter === 'all'
+                        ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-900 dark:text-slate-100'
+                        : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
                     }`}
                   >
                     All suppliers
@@ -351,7 +353,9 @@ export default function SuppliersPage() {
                     type="button"
                     onClick={() => setViewFilter('availableToday')}
                     className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-                      viewFilter === 'availableToday' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                      viewFilter === 'availableToday'
+                        ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-900 dark:text-slate-100'
+                        : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
                     }`}
                   >
                     Available today

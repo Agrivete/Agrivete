@@ -60,8 +60,8 @@ export default function ReportsPage() {
     <AppLayout>
       <div className="space-y-6">
         <div>
-          <h2 className="text-lg font-semibold text-slate-900">Reports & Analytics</h2>
-          <p className="text-xs text-slate-500">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Reports & Analytics</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             Exportable sales, inventory, profitability (owner-only) and supplier performance reports
           </p>
         </div>

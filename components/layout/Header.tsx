@@ -82,9 +82,9 @@ export function Header({ onMenuClick, onToggleSidebar }: HeaderProps) {
     : 'AG';
 
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between border-b border-white/10 bg-brand-800 px-4 sm:px-6 lg:px-8 dark:border-slate-800 dark:bg-slate-900">
+    <header className="flex h-16 shrink-0 items-center justify-between border-b border-white/10 bg-brand-800 px-3.5 sm:px-6 lg:px-8 dark:border-slate-800 dark:bg-slate-900">
       {/* Left: Hamburger menu toggle + ONLY page title */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         <button
           type="button"
           onClick={() => {
@@ -100,7 +100,7 @@ export function Header({ onMenuClick, onToggleSidebar }: HeaderProps) {
         >
           <Menu className="h-5 w-5" />
         </button>
-        <h1 className="text-base font-semibold tracking-tight text-white">{pageTitle}</h1>
+        <h1 className="truncate max-w-[140px] xs:max-w-[200px] sm:max-w-none text-sm sm:text-base font-semibold tracking-tight text-white">{pageTitle}</h1>
       </div>
 
       {/* Center: Search trigger on desktop, empty on mobile */}
@@ -124,7 +124,7 @@ export function Header({ onMenuClick, onToggleSidebar }: HeaderProps) {
       </div>
 
       {/* Right side: Dark Mode Toggle -> Notification Bell -> User Avatar */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
         <SyncIndicator
           pending={sync.pending}
           rejected={sync.rejected}

@@ -37,7 +37,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
           onMenuClick={() => setMobileDrawerOpen(true)}
         />
-        <main className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <main className="min-h-0 flex-1 overflow-y-auto p-3.5 sm:p-6 lg:p-8">
           {children}
         </main>
       </div>

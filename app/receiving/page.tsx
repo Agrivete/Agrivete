@@ -239,7 +239,7 @@ export default function ReceivingPage() {
         }
       >
         <form onSubmit={handleInitiateSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
             <Select
               label="Supplier"
               value={supplierId}

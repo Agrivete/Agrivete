@@ -183,8 +183,8 @@ export default function ReplenishmentsPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">Replenishments</h2>
-            <p className="text-xs text-slate-500">Purchase orders & expected delivery tracking</p>
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Replenishments</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Purchase orders & expected delivery tracking</p>
           </div>
           {hasRole('owner', 'manager') && (
             <Button leftIcon={<Plus className="h-4 w-4" />} onClick={openModal}>

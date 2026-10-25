@@ -572,8 +572,8 @@ export default function SalesPage() {
                 </div>
               )}
               {items.map((item, index) => (
-                <div key={index} className="grid grid-cols-12 items-end gap-2 border-b border-slate-100 pb-2.5 last:border-0 dark:border-slate-800">
-                  <div className="col-span-5">
+                <div key={index} className="space-y-2 border-b border-slate-100 pb-3 last:border-0 dark:border-slate-800 sm:grid sm:grid-cols-12 sm:items-end sm:gap-2 sm:space-y-0 sm:pb-2.5">
+                  <div className="w-full sm:col-span-5">
                     <Select
                       label="Product"
                       value={item.productId}
@@ -584,46 +584,49 @@ export default function SalesPage() {
                       }))}
                     />
                   </div>
-                  <div className="col-span-2">
-                    <Input
-                      label="Qty"
-                      type="number"
-                      min="1"
-                      max="1000"
-                      value={item.quantity}
-                      onChange={(e) => {
-                        const parsed = parseInt(e.target.value);
-                        const val = isNaN(parsed) ? 1 : Math.min(1000, Math.max(1, parsed));
-                        updateItem(index, { quantity: val });
-                      }}
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <Input
-                      label="Price (₱)"
-                      type="number"
-                      min="0"
-                      max="100000"
-                      step="0.01"
-                      value={item.unitPrice}
-                      onChange={(e) => {
-                        const parsed = parseFloat(e.target.value);
-                        const val = isNaN(parsed) ? 0 : Math.min(100000, Math.max(0, parsed));
-                        updateItem(index, { unitPrice: val });
-                      }}
-                    />
-                  </div>
-                  <div className="col-span-2 pb-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    {formatCurrency((item.quantity || 0) * (item.unitPrice || 0))}
-                  </div>
-                  <div className="col-span-1 pb-1.5 text-right">
-                    <button
-                      type="button"
-                      onClick={() => setItems(items.filter((_, i) => i !== index))}
-                      className="text-xs font-medium text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-                    >
-                      Remove
-                    </button>
+                  <div className="flex items-center gap-2 sm:contents">
+                    <div className="w-20 sm:col-span-2">
+                      <Input
+                        label="Qty"
+                        type="number"
+                        min="1"
+                        max="1000"
+                        value={item.quantity}
+                        onChange={(e) => {
+                          const parsed = parseInt(e.target.value);
+                          const val = isNaN(parsed) ? 1 : Math.min(1000, Math.max(1, parsed));
+                          updateItem(index, { quantity: val });
+                        }}
+                      />
+                    </div>
+                    <div className="w-24 sm:col-span-2">
+                      <Input
+                        label="Price (₱)"
+                        type="number"
+                        min="0"
+                        max="100000"
+                        step="0.01"
+                        value={item.unitPrice}
+                        onChange={(e) => {
+                          const parsed = parseFloat(e.target.value);
+                          const val = isNaN(parsed) ? 0 : Math.min(100000, Math.max(0, parsed));
+                          updateItem(index, { unitPrice: val });
+                        }}
+                      />
+                    </div>
+                    <div className="flex-1 pb-1 text-right sm:col-span-2 sm:pb-1.5 sm:text-left text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      <span className="text-[10px] text-slate-400 block sm:hidden">Subtotal</span>
+                      {formatCurrency((item.quantity || 0) * (item.unitPrice || 0))}
+                    </div>
+                    <div className="pb-1 text-right sm:col-span-1 sm:pb-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setItems(items.filter((_, i) => i !== index))}
+                        className="rounded-md px-1.5 py-1 text-xs font-medium text-red-500 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950/40"
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}

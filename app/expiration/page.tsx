@@ -44,20 +44,22 @@ export default function ExpirationPage() {
   return (
     <AppLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">Expiration Monitoring</h2>
-            <p className="text-xs text-slate-500">
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Expiration Monitoring</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               BR05: stock flagged within a {days}-day window · sorted First-Expiry-First-Out
             </p>
           </div>
-          <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white p-1">
+          <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white p-1 dark:border-slate-800 dark:bg-slate-900 self-start sm:self-auto">
             {[7, 14, 30, 60, 90].map((d) => (
               <button
                 key={d}
                 onClick={() => setDays(d)}
                 className={`rounded-lg px-3 py-1 text-xs font-medium transition ${
-                  days === d ? 'bg-brand-700 text-white' : 'text-slate-600 hover:bg-slate-100'
+                  days === d
+                    ? 'bg-brand-700 text-white'
+                    : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
                 }`}
               >
                 {d}d

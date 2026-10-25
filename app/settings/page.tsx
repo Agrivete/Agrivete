@@ -279,7 +279,7 @@ export default function SettingsPage() {
                         </div>
                       </div>
                     ) : (
-                      <div className="flex items-start justify-between gap-3 rounded-xl border border-red-200 bg-red-50/70 p-4 text-red-900 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-xl border border-red-200 bg-red-50/70 p-4 text-red-900 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300">
                         <div className="flex items-center gap-3">
                           <AlertTriangle className="h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
                           <div>

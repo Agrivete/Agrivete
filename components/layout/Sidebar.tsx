@@ -158,7 +158,9 @@ export function SyncIndicator({
       {pending > 0 && (
         <span className={`${base} bg-amber-100 text-amber-800`}>
           <RefreshCw className="h-3 w-3" aria-hidden="true" />
-          {pending} pending sync
+          <span>{pending}</span>
+          <span className="hidden sm:inline">pending sync</span>
+          <span className="sm:hidden">sync</span>
         </span>
       )}
       {flagged > 0 && (
