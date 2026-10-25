@@ -185,7 +185,7 @@ export function MobileDrawer({ open, onOpenChange }: { open: boolean; onOpenChan
               <Shield className="h-3 w-3 text-brand-600 dark:text-brand-400" />
               <span>RBAC enforced · 4 roles</span>
             </span>
-            <span className="font-mono text-[10px]">v1.0</span>
+            <span className="font-mono text-[10px]">v1.0.1</span>
           </div>
         </div>
       </SheetContent>
