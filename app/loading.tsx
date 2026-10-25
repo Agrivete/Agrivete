@@ -2,9 +2,9 @@ import { AgrivetLogo } from '@/components/brand/AgrivetLogo';
 
 export default function RootLoading() {
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-background text-foreground transition-colors duration-200">
-      <div className="flex flex-col items-center gap-6 animate-pulse">
-        <div className="scale-125 transform">
+    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-background text-foreground transition-colors duration-200 page-transition">
+      <div className="flex flex-col items-center gap-6">
+        <div className="scale-125 transform transition-transform">
           <AgrivetLogo size="lg" />
         </div>
         <div className="flex flex-col items-center gap-3">

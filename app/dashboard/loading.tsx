@@ -1,3 +1,6 @@
+'use client';
+
+import { AppLayout } from '@/components/layout';
 import { KpiCardsSkeleton } from '@/app/dashboard/components/KpiCardsSkeleton';
 import { TableSkeleton, Card, CardContent } from '@/components/ui';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -18,39 +21,41 @@ function ChartSkeleton() {
 
 export default function DashboardLoading() {
   return (
-    <div className="space-y-6">
-      {/* Title skeleton */}
-      <div className="space-y-1.5">
-        <Skeleton className="h-6 w-52" />
-        <Skeleton className="h-3.5 w-72" />
-      </div>
+    <AppLayout>
+      <div className="space-y-6">
+        {/* Title skeleton */}
+        <div className="space-y-1.5">
+          <Skeleton className="h-6 w-52" />
+          <Skeleton className="h-3.5 w-72" />
+        </div>
 
-      {/* Row 1: KPI Cards */}
-      <KpiCardsSkeleton />
+        {/* Row 1: KPI Cards */}
+        <KpiCardsSkeleton />
 
-      {/* Row 2: Sales Trend (60%) + Inventory Status (40%) */}
-      <div className="grid grid-cols-1 lg:grid-cols-[60%_40%] gap-4">
+        {/* Row 2: Sales Trend (60%) + Inventory Status (40%) */}
+        <div className="grid grid-cols-1 lg:grid-cols-[60%_40%] gap-4">
+          <ChartSkeleton />
+          <ChartSkeleton />
+        </div>
+
+        {/* Row 3: Top Products (60%) + Expiration Timeline (40%) */}
+        <div className="grid grid-cols-1 lg:grid-cols-[60%_40%] gap-4">
+          <ChartSkeleton />
+          <ChartSkeleton />
+        </div>
+
+        {/* Row 4: Stock Movement (full) */}
         <ChartSkeleton />
-        <ChartSkeleton />
+
+        {/* Row 5: Low Stock (50%) + Expiring (50%) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <TableSkeleton rows={5} cols={5} title="Low Stock Products" description="At or below configured threshold (BR04)" />
+          <TableSkeleton rows={5} cols={4} title="Expiring Products" description="Within 30-day window (BR05) · FEFO order" />
+        </div>
+
+        {/* Row 6: Recent Sales (full) */}
+        <TableSkeleton rows={5} cols={7} title="Recent Sales" description="Latest completed transactions" />
       </div>
-
-      {/* Row 3: Top Products (60%) + Expiration Timeline (40%) */}
-      <div className="grid grid-cols-1 lg:grid-cols-[60%_40%] gap-4">
-        <ChartSkeleton />
-        <ChartSkeleton />
-      </div>
-
-      {/* Row 4: Stock Movement (full) */}
-      <ChartSkeleton />
-
-      {/* Row 5: Low Stock (50%) + Expiring (50%) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <TableSkeleton rows={5} cols={5} title="Low Stock Products" description="At or below configured threshold (BR04)" />
-        <TableSkeleton rows={5} cols={4} title="Expiring Products" description="Within 30-day window (BR05) · FEFO order" />
-      </div>
-
-      {/* Row 6: Recent Sales (full) */}
-      <TableSkeleton rows={5} cols={7} title="Recent Sales" description="Latest completed transactions" />
-    </div>
+    </AppLayout>
   );
 }

@@ -212,6 +212,96 @@
   .sidebar-link-inactive {
     @apply text-green-50/70 hover:bg-white/5 hover:text-white;
   }
+
+  /* Smooth page & card transition animations */
+  .page-transition {
+    animation: agrivetPageFade 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes agrivetPageFade {
+    from {
+      opacity: 0;
+      transform: translateY(3px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Radix UI state-driven animations for modals, sheets, and drawers */
+  @keyframes agrivetFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes agrivetFadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+
+  @keyframes agrivetSlideInFromLeft {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
+  }
+
+  @keyframes agrivetSlideOutToLeft {
+    from { transform: translateX(0); }
+    to { transform: translateX(-100%); }
+  }
+
+  @keyframes agrivetSlideInFromRight {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+  }
+
+  @keyframes agrivetSlideOutToRight {
+    from { transform: translateX(0); }
+    to { transform: translateX(100%); }
+  }
+
+  /* Support Radix animation utility classes */
+  [data-state="open"].animate-in {
+    animation-duration: 220ms;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    animation-fill-mode: both;
+  }
+
+  [data-state="closed"].animate-out {
+    animation-duration: 180ms;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    animation-fill-mode: both;
+  }
+
+  [data-state="open"].data-\[state\=open\]\:fade-in-0,
+  [data-state="open"][data-state="open"].data-\[state\=open\]\:fade-in-0 {
+    animation-name: agrivetFadeIn;
+  }
+
+  [data-state="closed"].data-\[state\=closed\]\:fade-out-0,
+  [data-state="closed"][data-state="closed"].data-\[state\=closed\]\:fade-out-0 {
+    animation-name: agrivetFadeOut;
+  }
+
+  [data-state="open"].data-\[state\=open\]\:slide-in-from-left,
+  [data-state="open"][data-state="open"].data-\[state\=open\]\:slide-in-from-left {
+    animation-name: agrivetSlideInFromLeft;
+  }
+
+  [data-state="closed"].data-\[state\=closed\]\:slide-out-to-left,
+  [data-state="closed"][data-state="closed"].data-\[state\=closed\]\:slide-out-to-left {
+    animation-name: agrivetSlideOutToLeft;
+  }
+
+  [data-state="open"].data-\[state\=open\]\:slide-in-from-right,
+  [data-state="open"][data-state="open"].data-\[state\=open\]\:slide-in-from-right {
+    animation-name: agrivetSlideInFromRight;
+  }
+
+  [data-state="closed"].data-\[state\=closed\]\:slide-out-to-right,
+  [data-state="closed"][data-state="closed"].data-\[state\=closed\]\:slide-out-to-right {
+    animation-name: agrivetSlideOutToRight;
+  }
 }
 
 /* Reduced motion */

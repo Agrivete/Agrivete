@@ -18,9 +18,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
     }
   }, [loading, user, router]);
 
-  if (loading) {
+  if (loading && !user) {
     return (
-      <div className="app-background flex min-h-screen items-center justify-center">
+      <div className="app-background flex min-h-screen items-center justify-center page-transition">
         <PageLoader label="Loading Agrivet..." />
       </div>
     );
@@ -38,7 +38,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
           onMenuClick={() => setMobileDrawerOpen(true)}
         />
         <main className="min-h-0 flex-1 overflow-y-auto p-3.5 sm:p-6 lg:p-8">
-          {children}
+          <div className="page-transition">
+            {children}
+          </div>
         </main>
       </div>
     </div>

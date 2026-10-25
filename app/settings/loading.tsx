@@ -1,25 +1,32 @@
-import { Card, CardHeader, CardContent } from '@/components/ui';
+'use client';
 
-function SectionSkeleton({ cols = 3, title = 'Settings', description = 'Configuration options' }) {
-  return (
-    <Card>
-      <CardHeader title={title} description={description} className="pb-0" />
-      <CardContent className="space-y-4">
-        <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
-          {[...Array(cols * 2)].map((_, i) => (
-            <div key={i} className="h-24 bg-slate-200 rounded animate-pulse" />
-          ))}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
+import { AppLayout } from '@/components/layout';
+import { Card, CardHeader, CardContent, Skeleton } from '@/components/ui';
 
 export default function SettingsLoading() {
   return (
-    <div className="space-y-6 p-6">
-      <SectionSkeleton cols={2} title="General" description="Basic configuration" />
-      <SectionSkeleton cols={3} title="Advanced" description="Advanced settings" />
-    </div>
+    <AppLayout>
+      <div className="space-y-6">
+        <Card>
+          <CardHeader title="General Settings" description="Loading configuration..." className="pb-0" />
+          <CardContent className="space-y-4 p-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Skeleton className="h-16 w-full rounded-xl" />
+              <Skeleton className="h-16 w-full rounded-xl" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader title="Security & Governance" description="Loading access controls..." className="pb-0" />
+          <CardContent className="space-y-4 p-5">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <Skeleton className="h-20 w-full rounded-xl" />
+              <Skeleton className="h-20 w-full rounded-xl" />
+              <Skeleton className="h-20 w-full rounded-xl" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </AppLayout>
   );
 }

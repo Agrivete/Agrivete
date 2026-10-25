@@ -1,9 +1,14 @@
+'use client';
+
+import { AppLayout } from '@/components/layout';
 import { TableSkeleton } from '@/components/ui';
 
 export default function SuppliersLoading() {
   return (
-    <div className="space-y-6 p-6">
-      <TableSkeleton rows={10} cols={6} title="Suppliers" description="Supplier listings" />
-    </div>
+    <AppLayout>
+      <div className="space-y-6">
+        <TableSkeleton rows={8} cols={5} title="Suppliers" description="Loading supplier records..." />
+      </div>
+    </AppLayout>
   );
 }

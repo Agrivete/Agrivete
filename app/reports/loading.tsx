@@ -1,26 +1,24 @@
-import { Card, CardContent } from '@/components/ui';
-import { TableSkeleton } from '@/components/ui';
+'use client';
 
-function FormSkeleton() {
-  return (
-    <Card>
-      <CardContent className="space-y-4 p-4">
-        <div className="flex flex-wrap gap-3">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-10 w-40 bg-slate-200 rounded animate-pulse" />
-          ))}
-        </div>
-        <div className="h-10 w-32 bg-slate-200 rounded animate-pulse" />
-      </CardContent>
-    </Card>
-  );
-}
+import { AppLayout } from '@/components/layout';
+import { Card, CardContent, TableSkeleton, Skeleton } from '@/components/ui';
 
 export default function ReportsLoading() {
   return (
-    <div className="space-y-6 p-6">
-      <FormSkeleton />
-      <TableSkeleton rows={10} cols={8} title="Report Data" description="Generated report rows" />
-    </div>
+    <AppLayout>
+      <div className="space-y-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-4 space-y-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-7 w-32" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <TableSkeleton rows={8} cols={8} title="Reports Preview" description="Loading report metrics..." />
+      </div>
+    </AppLayout>
   );
 }
