@@ -9,6 +9,7 @@ import {
 import { ReceiptModal, type ReceiptData } from '@/components/sales/ReceiptModal';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
+import { enqueue } from '@/lib/offlineQueue';
 import { toast } from 'sonner';
 
 interface SaleRow {
@@ -181,17 +182,61 @@ export default function SalesPage() {
       return;
     }
     setSubmitting(true);
+
+    const salePayload = {
+      items: items.map((it) => ({
+        productId: it.productId,
+        quantity: Math.min(1000, Math.max(1, it.quantity)),
+        unitPrice: Math.min(100000, Math.max(0, it.unitPrice)),
+      })),
+      paymentMethod,
+      customerName: customerName.trim().slice(0, 50),
+      discount: Math.min(1000000, Math.max(0, parseFloat(discount) || 0)),
+    };
+
+    // If browser is offline, enqueue directly into IndexedDB (BR08)
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      try {
+        const queued = await enqueue('sale', salePayload);
+        toast.info('Sale saved to offline queue (BR08)', {
+          id: 'pos-toast',
+          description: 'Network offline. Transaction stored locally and will sync automatically once reconnected.',
+        });
+        setSaleModal(false);
+        setActiveReceipt({
+          saleId: queued.localId,
+          receiptNumber: queued.localId,
+          date: new Date().toISOString(),
+          customerName: customerName.trim() || 'Walk-in',
+          paymentMethod,
+          items: items.map((it) => ({
+            productId: it.productId,
+            productName: it.productName,
+            quantity: it.quantity,
+            unitPrice: it.unitPrice,
+            subtotal: it.quantity * it.unitPrice,
+          })),
+          subtotal,
+          discount: parseFloat(discount) || 0,
+          total: totalAmount,
+          status: 'pending',
+          cashierName: user?.name,
+          businessName: user?.businessName || 'Agrivet Store',
+        });
+        setItems([]);
+        setCustomerName('');
+        setDiscount('');
+        return;
+      } catch (err) {
+        toast.error('Failed to save offline sale to local queue');
+        return;
+      } finally {
+        setSubmitting(false);
+      }
+    }
+
     try {
-      const recorded = await api.post<SaleRow>('/api/sales', {
-        items: items.map((it) => ({
-          productId: it.productId,
-          quantity: Math.min(1000, Math.max(1, it.quantity)),
-          unitPrice: Math.min(100000, Math.max(0, it.unitPrice)),
-        })),
-        paymentMethod,
-        customerName: customerName.trim().slice(0, 50),
-        discount: Math.min(1000000, Math.max(0, parseFloat(discount) || 0)),
-      });
+      const recorded = await api.post<SaleRow>('/api/sales', salePayload);
 
       toast.success('Sale recorded — inventory deducted (BR01)');
       setSaleModal(false);
@@ -218,7 +263,51 @@ export default function SalesPage() {
         cashierName: user?.name,
         businessName: user?.businessName || 'Agrivet Store',
       });
+      setItems([]);
+      setCustomerName('');
+      setDiscount('');
     } catch (err) {
+      // If network dropped mid-request, fallback gracefully to offline queue (BR08)
+      const isNetworkError =
+        (typeof navigator !== 'undefined' && navigator.onLine === false) ||
+        (err instanceof Error && /failed to fetch|network|load failed/i.test(err.message));
+
+      if (isNetworkError) {
+        try {
+          const queued = await enqueue('sale', salePayload);
+          toast.info('Sale saved to offline queue (BR08)', {
+            id: 'pos-toast',
+            description: 'Network dropped during checkout. Saved locally and queued for background sync.',
+          });
+          setSaleModal(false);
+          setActiveReceipt({
+            saleId: queued.localId,
+            receiptNumber: queued.localId,
+            date: new Date().toISOString(),
+            customerName: customerName.trim() || 'Walk-in',
+            paymentMethod,
+            items: items.map((it) => ({
+              productId: it.productId,
+              productName: it.productName,
+              quantity: it.quantity,
+              unitPrice: it.unitPrice,
+              subtotal: it.quantity * it.unitPrice,
+            })),
+            subtotal,
+            discount: parseFloat(discount) || 0,
+            total: totalAmount,
+            status: 'pending',
+            cashierName: user?.name,
+            businessName: user?.businessName || 'Agrivet Store',
+          });
+          setItems([]);
+          setCustomerName('');
+          setDiscount('');
+          return;
+        } catch {
+          /* continue to error toast */
+        }
+      }
       toast.error(err instanceof Error ? err.message : 'Failed to record sale');
     } finally {
       setSubmitting(false);

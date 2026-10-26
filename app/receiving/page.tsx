@@ -8,6 +8,7 @@ import {
 } from '@/components/ui';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
+import { enqueue } from '@/lib/offlineQueue';
 import { toast } from 'sonner';
 
 interface ReceivingRow {
@@ -132,26 +133,77 @@ export default function ReceivingPage() {
 
   const handleFinalSubmit = async () => {
     setSubmitting(true);
+    const receivingPayload = {
+      supplierId,
+      referenceNo,
+      purchaseId: purchaseId || undefined,
+      receivedDate: new Date().toISOString(),
+      items: items.map((it) => ({
+        productId: it.productId,
+        orderedQuantity: it.orderedQuantity,
+        receivedQuantity: it.receivedQuantity,
+        unitCost: it.unitCost,
+        lotNo: it.lotNo,
+        expirationDate: it.expirationDate || undefined,
+      })),
+    };
+
+    // If browser is offline, enqueue directly into IndexedDB (BR08)
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      try {
+        await enqueue('receiving', receivingPayload);
+        toast.info('Receiving saved to offline queue (BR08)', {
+          id: 'receiving-toast',
+          description: 'Network offline. Stock intake queued locally and will sync once reconnected.',
+        });
+        setConfirmReceiveOpen(false);
+        setModal(false);
+        setSupplierId('');
+        setReferenceNo('');
+        setPurchaseId('');
+        setItems([]);
+        return;
+      } catch {
+        toast.error('Failed to queue offline receiving');
+        return;
+      } finally {
+        setSubmitting(false);
+      }
+    }
+
     try {
-      await api.post('/api/receiving', {
-        supplierId,
-        referenceNo,
-        purchaseId: purchaseId || undefined,
-        receivedDate: new Date().toISOString(),
-        items: items.map((it) => ({
-          productId: it.productId,
-          orderedQuantity: it.orderedQuantity,
-          receivedQuantity: it.receivedQuantity,
-          unitCost: it.unitCost,
-          lotNo: it.lotNo,
-          expirationDate: it.expirationDate || undefined,
-        })),
-      });
+      await api.post('/api/receiving', receivingPayload);
       toast.success('Receiving recorded — stock increased (BR02)');
       setConfirmReceiveOpen(false);
       setModal(false);
       load();
+      setSupplierId('');
+      setReferenceNo('');
+      setPurchaseId('');
+      setItems([]);
     } catch (err) {
+      const isNetworkError =
+        (typeof navigator !== 'undefined' && navigator.onLine === false) ||
+        (err instanceof Error && /failed to fetch|network|load failed/i.test(err.message));
+
+      if (isNetworkError) {
+        try {
+          await enqueue('receiving', receivingPayload);
+          toast.info('Receiving saved to offline queue (BR08)', {
+            id: 'receiving-toast',
+            description: 'Network dropped during intake. Queued locally for background sync.',
+          });
+          setConfirmReceiveOpen(false);
+          setModal(false);
+          setSupplierId('');
+          setReferenceNo('');
+          setPurchaseId('');
+          setItems([]);
+          return;
+        } catch {
+          /* continue to error toast */
+        }
+      }
       toast.error(err instanceof Error ? err.message : 'Failed to record receiving');
     } finally {
       setSubmitting(false);
