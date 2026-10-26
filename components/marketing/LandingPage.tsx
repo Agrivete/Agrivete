@@ -364,8 +364,8 @@ export default function LandingPage() {
               <div className="hero-photo-wrap">
                 <img
                   className="hero-photo"
-                  src="/assets/hungduan-hapao-rice-terraces-flickr.jpg"
-                  alt="Rice terraces in Hungduan, Hapao, Philippines"
+                  src="/assets/store.png"
+                  alt="Agrivet retail supply store operations"
                   fetchPriority="high"
                 />
                 <div className="photo-note">
