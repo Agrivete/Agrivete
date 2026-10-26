@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Printer, CheckCircle2, X } from 'lucide-react';
 import { Button } from '@/components/ui';
 
@@ -36,6 +37,11 @@ interface ReceiptModalProps {
 
 export function ReceiptModal({ open, onClose, receipt }: ReceiptModalProps) {
   const printButtonRef = useRef<HTMLButtonElement>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -50,7 +56,7 @@ export function ReceiptModal({ open, onClose, receipt }: ReceiptModalProps) {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [open, onClose]);
 
-  if (!open || !receipt) return null;
+  if (!open || !receipt || !mounted) return null;
 
   const handlePrint = () => {
     window.print();
@@ -72,17 +78,21 @@ export function ReceiptModal({ open, onClose, receipt }: ReceiptModalProps) {
   const totalQuantity = receipt.items.reduce((acc, it) => acc + (it.quantity || 0), 0);
   const storeName = receipt.businessName || 'Agrivet Retail & Supply';
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs">
-      {/* Click outside to close */}
-      <div className="fixed inset-0" onClick={onClose} aria-hidden="true" />
+  const content = (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+      {/* Click outside to close & Full-screen Backdrop Blur */}
+      <div
+        className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity duration-200 animate-in fade-in"
+        onClick={onClose}
+        aria-hidden="true"
+      />
 
       {/* Modal Dialog Container */}
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="receipt-title"
-        className="relative z-10 flex w-full max-w-md flex-col max-h-[92vh] rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900 overflow-hidden"
+        className="page-transition relative z-10 flex w-full max-w-md flex-col max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-3.5rem)] rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900 overflow-hidden"
       >
         {/* Header bar */}
         <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50">
@@ -220,5 +230,7 @@ export function ReceiptModal({ open, onClose, receipt }: ReceiptModalProps) {
       </div>
     </div>
   );
+
+  return createPortal(content, document.body);
 }
 
